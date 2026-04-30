@@ -1,0 +1,1166 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>TenthAI · Should I leave my Senior PM job at a Series C unicorn to sta</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..700,0..100;1,9..144,300..700,0..100&family=Inter+Tight:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:        oklch(96.5% 0.012 78);
+    --paper:     oklch(98.5% 0.008 78);
+    --paper-2:   oklch(94.5% 0.014 78);
+    --ink:       oklch(20% 0.012 60);
+    --ink-2:     oklch(38% 0.012 60);
+    --ink-3:     oklch(56% 0.012 60);
+    --ink-4:     oklch(72% 0.010 70);
+    --rule:      oklch(86% 0.012 70);
+    --rule-2:    oklch(91% 0.012 70);
+
+    --accent:      oklch(56% 0.165 32);
+    --accent-2:    oklch(48% 0.150 30);
+    --accent-soft: oklch(92% 0.045 32);
+
+    --nine:        oklch(34% 0.085 250);
+    --nine-2:      oklch(42% 0.080 250);
+    --nine-soft:   oklch(93% 0.025 250);
+
+    --serif: 'Fraunces', 'Iowan Old Style', Georgia, serif;
+    --sans:  'Inter Tight', system-ui, sans-serif;
+    --mono:  'JetBrains Mono', ui-monospace, monospace;
+  }
+  *{ box-sizing: border-box; }
+  html, body{ margin:0; padding:0; }
+  body{
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    line-height: 1.55;
+    font-feature-settings: "ss01","cv11";
+  }
+  ::selection{ background: var(--accent-soft); color: var(--ink); }
+
+  .page{ max-width: 1180px; margin: 0 auto; padding: 56px 56px 96px; }
+
+  .mast{
+    display:flex; align-items:center; gap:14px;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .mast .rule{ width: 28px; height:1px; background: var(--ink-3); }
+  .mast .dot{ width:7px; height:7px; border-radius:999px; background: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft);}
+  .mast b{ color: var(--ink); font-weight: 500; letter-spacing: .14em;}
+  .mast .sep{ color: var(--ink-4); }
+
+  .head{
+    margin: 28px 0 0;
+    font-family: var(--serif);
+    font-weight: 380;
+    font-size: clamp(40px, 5.4vw, 72px);
+    line-height: 1.02;
+    letter-spacing: -0.025em;
+    color: var(--ink);
+    font-variation-settings: "SOFT" 30, "opsz" 144;
+    text-wrap: balance;
+    max-width: 16ch;
+  }
+  .head em{
+    font-style: italic;
+    color: var(--accent);
+    font-weight: 360;
+    font-variation-settings: "SOFT" 60, "opsz" 144;
+  }
+
+  .question{
+    margin: 28px 0 0;
+    padding: 4px 0 4px 18px;
+    border-left: 2px solid var(--ink-4);
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 360;
+    font-size: 20px;
+    line-height: 1.4;
+    color: var(--ink-2);
+    max-width: 64ch;
+    font-variation-settings: "opsz" 60;
+    text-wrap: pretty;
+  }
+
+  .strip{
+    display:grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    margin: 40px 0 56px;
+    border-top: 1px solid var(--ink);
+    border-bottom: 1px solid var(--rule);
+  }
+  .stat{
+    padding: 18px 24px 18px 0;
+    border-right: 1px solid var(--rule);
+    display:flex; flex-direction:column; gap:8px;
+  }
+  .stat:nth-child(2){ padding-left: 24px; }
+  .stat:nth-child(3){ padding-left: 24px; border-right: none;}
+  .stat .lbl{
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .stat .val{
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: 26px;
+    letter-spacing: -0.018em;
+    color: var(--ink);
+    line-height: 1.1;
+  }
+  .stat .val .num{
+    font-family: var(--mono);
+    font-weight: 500;
+    font-size: 13px;
+    color: var(--ink-3);
+    margin-left: 8px;
+    letter-spacing: 0;
+  }
+  .stat.accent .val{ color: var(--accent); }
+  .stat .verdict{
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 380;
+    font-size: 16px;
+    line-height: 1.4;
+    color: var(--ink-2);
+  }
+
+  .map-card{
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    overflow: hidden;
+    position: relative;
+  }
+  .map-head{
+    display:flex; justify-content: space-between; align-items: baseline;
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--rule-2);
+  }
+  .map-head h3{
+    margin:0;
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 400;
+    font-size: 17px;
+    letter-spacing: -0.005em;
+  }
+  .map-head .meta{
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .map-head .meta b{ color: var(--ink-2); font-weight:500;}
+  .map-svg-wrap{
+    position: relative;
+    aspect-ratio: 16 / 11;
+    background:
+      radial-gradient(circle at 50% 56%, oklch(99% 0.005 78) 0%, var(--paper) 70%);
+  }
+  svg.map{ position:absolute; inset:0; width:100%; height:100%;}
+
+  .map-help{
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    z-index: 10;
+  }
+  .map-help summary{
+    list-style: none;
+    cursor: pointer;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    color: var(--ink-3);
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 16px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+    transition: all .15s ease;
+    box-shadow: 0 1px 2px rgba(0,0,0,.04);
+  }
+  .map-help summary::-webkit-details-marker{ display: none; }
+  .map-help summary:hover{
+    background: var(--ink);
+    color: var(--paper);
+    border-color: var(--ink);
+  }
+  .map-help[open] summary{
+    background: var(--ink);
+    color: var(--paper);
+    border-color: var(--ink);
+  }
+  .map-help-popover{
+    position: absolute;
+    top: 36px;
+    right: 0;
+    width: 320px;
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 18px 20px;
+    box-shadow: 0 4px 16px -4px rgba(0,0,0,.12), 0 1px 3px rgba(0,0,0,.04);
+  }
+  .map-help-popover p{
+    margin: 0 0 10px;
+    font-family: var(--serif);
+    font-weight: 380;
+    font-size: 13.5px;
+    line-height: 1.55;
+    color: var(--ink-2);
+    font-variation-settings: "opsz" 24;
+  }
+  .map-help-popover p:last-child{ margin-bottom: 0; }
+  .map-help-popover strong{ font-weight: 600; color: var(--ink); }
+  .map-help-popover .map-help-title{
+    font-family: var(--mono);
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: .14em;
+    color: var(--ink-3);
+    font-weight: 500;
+    margin-bottom: 12px;
+  }
+  .map-foot{
+    display:flex; justify-content: space-between; align-items: center;
+    padding: 14px 24px;
+    border-top: 1px solid var(--rule-2);
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .map-foot .legend{ display:flex; gap:18px; align-items:center;}
+  .map-foot .legend i{ display:inline-block; width:8px; height:8px; border-radius:999px; margin-right:8px; vertical-align:middle; transform: translateY(-1px);}
+  .map-foot .legend i.t{ background: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft);}
+  .map-foot .legend i.n{ background: var(--nine); box-shadow: 0 0 0 3px var(--nine-soft);}
+
+  .sec{
+    display:flex; align-items: baseline; gap: 14px;
+    margin: 64px 0 22px;
+  }
+  .sec .glyph{
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 400;
+    font-size: 22px;
+    color: var(--ink-3);
+  }
+  .sec h2{
+    margin:0;
+    font-family: var(--serif);
+    font-weight: 420;
+    font-size: 28px;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+  }
+  .sec h2 em{ font-style: italic; color: var(--accent); font-weight: 380;}
+  .sec .rule{ flex: 1; height: 1px; background: var(--rule); transform: translateY(-4px);}
+  .sec .aside{
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .sec .aside b{ color: var(--ink-2); font-weight:500;}
+
+  .consensus{
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    overflow: hidden;
+    position: relative;
+  }
+  .consensus::before{
+    content:"";
+    position:absolute; left:0; top:0; bottom:0; width: 3px;
+    background: var(--nine);
+  }
+  .consensus-body{
+    padding: 28px 32px;
+    font-family: var(--serif);
+    font-weight: 380;
+    font-size: 16px;
+    line-height: 1.62;
+    color: var(--ink);
+    font-variation-settings: "opsz" 30;
+    max-width: 78ch;
+  }
+  .consensus-body p{ margin: 0 0 14px; }
+  .consensus-body p:last-child{ margin-bottom: 0; }
+  .consensus-body strong{ font-weight: 600; color: var(--ink); }
+  .consensus-body em{ font-style: italic; color: var(--ink); }
+
+  .tenth{
+    background: var(--paper);
+    border: 1px solid var(--accent-soft);
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+  }
+  .tenth::before{
+    content:"";
+    position:absolute; left:0; top:0; bottom:0; width: 3px;
+    background: var(--accent);
+  }
+  .tenth-top{
+    display:grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 24px;
+    padding: 24px 28px 22px 32px;
+    border-bottom: 1px solid var(--rule-2);
+  }
+  .tenth-eyebrow{
+    display:flex; align-items:center; gap:10px;
+    font-family: var(--mono); font-size: 10.5px;
+    letter-spacing: .14em; text-transform: uppercase;
+    color: var(--accent);
+  }
+  .tenth-eyebrow i{ width:6px; height:6px; border-radius:999px; background: var(--accent);}
+  .tenth-top h2{
+    margin: 8px 0 0;
+    font-family: var(--serif);
+    font-weight: 420;
+    font-style: italic;
+    font-size: 28px;
+    letter-spacing: -0.012em;
+    color: var(--ink);
+  }
+  .tenth-top .d{
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .04em;
+    color: var(--ink-3);
+    text-align: right;
+  }
+  .tenth-top .d b{
+    display:block;
+    font-family: var(--serif); font-style: italic;
+    font-weight: 400; font-size: 32px;
+    color: var(--accent);
+    letter-spacing: -0.015em;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .tenth-body{
+    padding: 26px 32px;
+    font-family: var(--serif);
+    font-weight: 380;
+    font-size: 16.5px;
+    line-height: 1.62;
+    color: var(--ink);
+    font-variation-settings: "opsz" 30;
+    max-width: 78ch;
+  }
+  .tenth-body h3{
+    margin: 22px 0 10px;
+    font-family: var(--sans);
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .tenth-body h3:first-child{ margin-top: 0; }
+  .tenth-body h4{
+    margin: 18px 0 8px;
+    font-family: var(--sans);
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .tenth-body p{ margin: 0 0 12px; }
+  .tenth-body strong{ font-weight: 600; color: var(--ink); }
+  .tenth-body em{ font-style: italic; color: var(--ink); }
+  .tenth-body .pull{
+    margin: 18px 0;
+    padding: 4px 0 4px 18px;
+    border-left: 2px solid var(--accent);
+    font-family: var(--serif); font-style: italic;
+    font-size: 19px; line-height: 1.4;
+    letter-spacing: -0.005em;
+    color: var(--ink);
+  }
+  .tenth-foot{
+    display:flex; justify-content: space-between; gap: 18px;
+    padding: 14px 32px;
+    border-top: 1px solid var(--rule-2);
+    background: oklch(99% 0.005 78);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .04em;
+    color: var(--ink-3);
+  }
+  .tenth-foot b{ color: var(--ink-2); font-weight: 500; }
+
+  .frames{
+    border-top: 1px solid var(--ink);
+  }
+  .frame{
+    border-bottom: 1px solid var(--rule);
+    padding: 20px 4px;
+    cursor: pointer;
+    transition: background .15s ease;
+  }
+  .frame:hover{ background: var(--paper); }
+  .frame-row{
+    display: grid;
+    grid-template-columns: 36px 200px 1fr 160px 80px 18px;
+    align-items: center;
+    gap: 16px;
+  }
+  .f-idx{
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .04em;
+    color: var(--ink-3);
+  }
+  .f-name{
+    font-family: var(--serif);
+    font-weight: 440;
+    font-size: 20px;
+    letter-spacing: -0.012em;
+    color: var(--ink);
+  }
+  .f-tag{
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .f-tag b{ color: var(--ink-2); font-weight: 500;}
+  .f-bar{
+    height: 2px; background: var(--rule); position:relative; border-radius:2px;
+    margin-right: 10px;
+  }
+  .f-bar > i{
+    position:absolute; left:0; top:0; bottom:0; border-radius: 2px;
+    background: var(--nine);
+  }
+  .f-d{
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-2);
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .f-d small{ color: var(--ink-3); }
+  .f-caret{
+    font-family: var(--mono);
+    color: var(--ink-3);
+    transition: transform .2s ease;
+    font-size: 12px;
+  }
+  .frame.open .f-caret{ transform: rotate(90deg); }
+  .frame.open .f-name{ color: var(--accent); }
+
+  .f-body{
+    display: none;
+    padding: 18px 0 6px 36px;
+    max-width: 78ch;
+    font-family: var(--serif);
+    font-weight: 380;
+    font-size: 15.5px;
+    line-height: 1.62;
+    color: var(--ink-2);
+    font-variation-settings: "opsz" 24;
+  }
+  .frame.open .f-body{ display:block; }
+  .f-body h3, .f-body h4{
+    margin: 18px 0 8px;
+    font-family: var(--sans);
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .f-body h3:first-child, .f-body h4:first-child{ margin-top: 0; }
+  .f-body p{ margin: 0 0 12px; }
+  .f-body strong{ font-weight: 600; color: var(--ink); }
+  .f-body em{ font-style: italic; color: var(--ink); }
+
+  .colophon{
+    margin-top: 64px;
+    padding-top: 22px;
+    border-top: 1px solid var(--rule);
+    display:grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 24px;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .04em;
+    color: var(--ink-3);
+  }
+  .colophon b{ color: var(--ink-2); font-weight: 500; }
+  .colophon .center{
+    text-align:center;
+    font-family: var(--serif);
+    font-style: italic;
+    letter-spacing: 0;
+    font-size: 13px;
+    color: var(--ink-2);
+  }
+  .colophon .right{ text-align: right; }
+
+  .guide{
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    z-index: 50;
+    font-family: var(--sans);
+  }
+  .guide-toggle{
+    appearance: none;
+    -webkit-appearance: none;
+    border: 1px solid var(--ink);
+    background: var(--ink);
+    color: var(--paper);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    padding: 12px 16px;
+    border-radius: 999px;
+    cursor: pointer;
+    box-shadow: 0 6px 24px -8px oklch(20% 0.012 60 / .45);
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+    outline: none;
+  }
+  .guide-toggle:hover{
+    transform: translateY(-1px);
+    box-shadow: 0 10px 28px -8px oklch(20% 0.012 60 / .55);
+  }
+  .guide-toggle:focus-visible{
+    box-shadow: 0 0 0 3px var(--accent-soft), 0 6px 24px -8px oklch(20% 0.012 60 / .45);
+  }
+  .guide-toggle .marker{
+    width:7px; height:7px; border-radius:999px;
+    background: var(--accent);
+    box-shadow: 0 0 0 3px oklch(56% 0.165 32 / .25);
+  }
+  .guide-panel{
+    display:none;
+    width: min(380px, calc(100vw - 48px));
+    max-height: min(72vh, 640px);
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: 14px;
+    box-shadow: 0 24px 60px -16px oklch(20% 0.012 60 / .35);
+    margin-bottom: 12px;
+    overflow: hidden;
+    flex-direction: column;
+  }
+  .guide.open .guide-panel{ display: flex; }
+  .guide-panel-body{
+    overflow-y: auto;
+    padding: 26px 24px 4px 26px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--rule) transparent;
+  }
+  .guide-panel-body::-webkit-scrollbar{ width: 8px; }
+  .guide-panel-body::-webkit-scrollbar-track{ background: transparent; }
+  .guide-panel-body::-webkit-scrollbar-thumb{
+    background: var(--rule);
+    border-radius: 999px;
+    border: 2px solid var(--paper);
+  }
+  .guide-panel-body::-webkit-scrollbar-thumb:hover{ background: var(--ink-4); }
+  .guide-panel-foot{
+    flex-shrink: 0;
+    padding: 14px 26px 18px;
+    border-top: 1px solid var(--rule);
+    background: var(--paper);
+  }
+  .guide-panel h3{
+    margin: 0 0 4px;
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: 22px;
+    line-height: 1.15;
+    letter-spacing: -0.015em;
+    color: var(--ink);
+    font-variation-settings: "SOFT" 30, "opsz" 60;
+  }
+  .guide-panel h3 em{ font-style: italic; color: var(--accent); }
+  .guide-panel .kicker{
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin: 0 0 14px;
+  }
+  .guide-panel ol{
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: g;
+  }
+  .guide-panel ol li{
+    counter-increment: g;
+    position: relative;
+    padding: 12px 0 12px 30px;
+    border-top: 1px solid var(--rule-2);
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: var(--ink-2);
+  }
+  .guide-panel ol li:first-child{ border-top: none; }
+  .guide-panel ol li::before{
+    content: counter(g, decimal-leading-zero);
+    position: absolute;
+    left: 0; top: 12px;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--ink-3);
+    letter-spacing: .08em;
+  }
+  .guide-panel ol li b{ color: var(--ink); font-weight: 600; }
+  .guide-panel .foot{
+    margin: 0 0 12px;
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--ink-2);
+    font-variation-settings: "opsz" 60;
+  }
+  .guide-close{
+    appearance: none;
+    -webkit-appearance: none;
+    background: none;
+    border: 0;
+    cursor: pointer;
+    color: var(--ink-3);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    padding: 0;
+    outline: none;
+  }
+  .guide-close:hover{ color: var(--ink); }
+  .guide-close:focus-visible{ color: var(--accent); }
+
+  @media (max-width: 920px){
+    .page{ padding: 32px 22px 64px; }
+    .strip{ grid-template-columns: 1fr 1fr; }
+    .strip .stat:nth-child(3){ grid-column: 1 / -1; padding: 16px 0 0; border-right:none; padding-left: 0; border-top: 1px solid var(--rule); margin-top: 8px;}
+    .frame-row{ grid-template-columns: 26px 1fr 80px 16px; }
+    .frame-row .f-tag, .frame-row .f-bar{ display:none; }
+    .guide{ right: 16px; bottom: 16px; }
+    .guide-panel-body{ padding: 22px 18px 4px 20px; }
+    .guide-panel-foot{ padding: 12px 20px 16px; }
+  }
+</style>
+</head>
+<body>
+<main class="page" data-screen-label="TenthAI Report">
+
+  <header>
+    <div class="mast">
+      <span class="rule"></span>
+      <span class="dot"></span>
+      <b>TenthAI</b>
+      <span class="sep">·</span>
+      <span>Disagreement Map</span>
+      <span class="sep">·</span>
+      <span>Report&nbsp;<b style="font-weight:500;">#1457</b></span>
+      <span class="sep">·</span>
+      <span>2026·04·30</span>
+    </div>
+
+    <h1 class="head">Nine advisors aligned.<br/><em>The tenth must dissent.</em></h1>
+
+    <p class="question">Should I leave my Senior PM job at a Series C unicorn to start a B2B SaaS in clinical research?</p>
+  </header>
+
+  <section class="strip" aria-label="Global metrics">
+    <div class="stat accent">
+      <div class="lbl">Tenth-man distance</div>
+      <div class="val">1.074 <span class="num">vs centroid of the 9</span></div>
+    </div>
+    <div class="stat">
+      <div class="lbl">Most divergent advisor</div>
+      <div class="val">soft-contrarian <span class="num">d 0.686</span></div>
+    </div>
+    <div class="stat">
+      <div class="lbl">Verdict</div>
+      <div class="verdict">Advisors already divided — no strong consensus to break.</div>
+    </div>
+  </section>
+
+  <section class="map-card" aria-label="MDS Map">
+    <div class="map-head">
+      <h3>Geography of disagreement</h3>
+      <div class="meta">10 voices · MDS over <b>cosine distance</b> · centroid of the 9</div>
+    </div>
+    <div class="map-svg-wrap">
+      <details class="map-help">
+        <summary aria-label="How to read this map">?</summary>
+        <div class="map-help-popover">
+          <p class="map-help-title">How to read this map</p>
+          <p>Each point is one advisor.</p>
+          <p>The <strong>centroid</strong> at the center is the consensus zone — where the group converges.</p>
+          <p><strong>Closer</strong> to the center = more aligned with the group.<br/><strong>Farther</strong> = thinks differently.</p>
+          <p>The <strong style="color: var(--accent)">red (10 · tenth-man)</strong> point is the mandatory dissenter.</p>
+          <p>Concentric rings mark equal distances from the centroid.</p>
+        </div>
+      </details>
+      <svg class="map" viewBox="0 0 1000 700" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+<defs>
+<radialGradient id="halo" cx="50%" cy="50%" r="50%">
+<stop offset="0%" stop-color="oklch(56% 0.165 32 / .22)"/>
+<stop offset="60%" stop-color="oklch(56% 0.165 32 / .04)"/>
+<stop offset="100%" stop-color="oklch(56% 0.165 32 / 0)"/>
+</radialGradient>
+</defs>
+<g stroke="oklch(86% 0.012 70)" stroke-width="0.6" fill="none" opacity=".7">
+<circle cx="500" cy="350" r="60"/>
+<circle cx="500" cy="350" r="120"/>
+<circle cx="500" cy="350" r="180" stroke-dasharray="2 4"/>
+<circle cx="500" cy="350" r="240" stroke-dasharray="2 4"/>
+</g>
+<g stroke="oklch(82% 0.012 70)" stroke-width="0.6">
+<line x1="100" y1="350" x2="900" y2="350"/>
+<line x1="500" y1="60" x2="500" y2="640"/>
+</g>
+<g font-family="JetBrains Mono, monospace" font-size="10" fill="oklch(56% 0.012 60)" letter-spacing="1">
+<text x="510" y="346">CENTROID</text>
+<rect x="496" y="346" width="8" height="8" fill="none" stroke="oklch(56% 0.012 60)" stroke-width="1" transform="rotate(45 500 350)"/>
+</g>
+<g stroke="oklch(34% 0.085 250 / .35)" stroke-width="0.7">
+<line x1="500" y1="350" x2="593.8" y2="564.5"/>
+<line x1="500" y1="350" x2="716.9" y2="294.9"/>
+<line x1="500" y1="350" x2="495.2" y2="382.4"/>
+<line x1="500" y1="350" x2="427.2" y2="580.0"/>
+<line x1="500" y1="350" x2="296.2" y2="463.8"/>
+<line x1="500" y1="350" x2="651.6" y2="155.8"/>
+<line x1="500" y1="350" x2="274.9" y2="305.4"/>
+<line x1="500" y1="350" x2="711.5" y2="447.5"/>
+<line x1="500" y1="350" x2="496.8" y2="154.1"/>
+</g>
+<line x1="500" y1="350" x2="335.9" y2="151.5" stroke="oklch(56% 0.165 32 / .55)" stroke-width="1.1" stroke-dasharray="3 3"/>
+<g class="nodes" font-family="JetBrains Mono, monospace" font-size="11" fill="oklch(20% 0.012 60)">
+<g>
+<circle cx="593.8" cy="564.5" r="9" fill="oklch(34% 0.085 250)"/>
+<circle cx="593.8" cy="564.5" r="15" fill="none" stroke="oklch(34% 0.085 250 / .35)" stroke-width="3"/>
+<text x="610.8" y="560.5" font-size="11" text-anchor="start">01</text>
+<text x="610.8" y="574.5" font-family="Inter Tight, sans-serif" font-weight="500" font-size="13" text-anchor="start">empirical</text>
+<text x="610.8" y="589.5" font-size="9.5" fill="oklch(56% 0.012 60)" text-anchor="start">d&#160;0.632 · closest</text>
+</g>
+<g>
+<circle cx="716.9" cy="294.9" r="8" fill="oklch(34% 0.085 250)"/>
+<circle cx="716.9" cy="294.9" r="13" fill="none" stroke="oklch(34% 0.085 250 / .25)" stroke-width="3"/>
+<text x="733.9" y="290.9" font-size="11" text-anchor="start">02</text>
+<text x="733.9" y="304.9" font-family="Inter Tight, sans-serif" font-weight="500" font-size="13" text-anchor="start">historical</text>
+<text x="733.9" y="319.9" font-size="9.5" fill="oklch(56% 0.012 60)" text-anchor="start">d&#160;0.649</text>
+</g>
+<g>
+<circle cx="495.2" cy="382.4" r="8" fill="oklch(34% 0.085 250)"/>
+<circle cx="495.2" cy="382.4" r="13" fill="none" stroke="oklch(34% 0.085 250 / .25)" stroke-width="3"/>
+<text x="478.2" y="378.4" font-size="11" text-anchor="end">03</text>
+<text x="478.2" y="392.4" font-family="Inter Tight, sans-serif" font-weight="500" font-size="13" text-anchor="end">first-principles</text>
+<text x="478.2" y="407.4" font-size="9.5" fill="oklch(56% 0.012 60)" text-anchor="end">d&#160;0.641</text>
+</g>
+<g>
+<circle cx="427.2" cy="580.0" r="8" fill="oklch(34% 0.085 250)"/>
+<circle cx="427.2" cy="580.0" r="13" fill="none" stroke="oklch(34% 0.085 250 / .25)" stroke-width="3"/>
+<text x="410.2" y="576.0" font-size="11" text-anchor="end">04</text>
+<text x="410.2" y="590.0" font-family="Inter Tight, sans-serif" font-weight="500" font-size="13" text-anchor="end">analogical</text>
+<text x="410.2" y="605.0" font-size="9.5" fill="oklch(56% 0.012 60)" text-anchor="end">d&#160;0.667</text>
+</g>
+<g>
+<circle cx="296.2" cy="463.8" r="8" fill="oklch(34% 0.085 250)"/>
+<circle cx="296.2" cy="463.8" r="13" fill="none" stroke="oklch(34% 0.085 250 / .25)" stroke-width="3"/>
+<text x="279.2" y="459.8" font-size="11" text-anchor="end">05</text>
+<text x="279.2" y="473.8" font-family="Inter Tight, sans-serif" font-weight="500" font-size="13" text-anchor="end">systemic</text>
+<text x="279.2" y="488.8" font-size="9.5" fill="oklch(56% 0.012 60)" text-anchor="end">d&#160;0.660</text>
+</g>
+<g>
+<circle cx="651.6" cy="155.8" r="8" fill="oklch(34% 0.085 250)"/>
+<circle cx="651.6" cy="155.8" r="13" fill="none" stroke="oklch(34% 0.085 250 / .25)" stroke-width="3"/>
+<text x="668.6" y="151.8" font-size="11" text-anchor="start">06</text>
+<text x="668.6" y="165.8" font-family="Inter Tight, sans-serif" font-weight="500" font-size="13" text-anchor="start">ethical</text>
+<text x="668.6" y="180.8" font-size="9.5" fill="oklch(56% 0.012 60)" text-anchor="start">d&#160;0.675</text>
+</g>
+<g>
+<circle cx="274.9" cy="305.4" r="8" fill="oklch(34% 0.085 250)"/>
+<circle cx="274.9" cy="305.4" r="13" fill="none" stroke="oklch(34% 0.085 250 / .35)" stroke-width="3"/>
+<text x="257.9" y="301.4" font-size="11" text-anchor="end">07</text>
+<text x="257.9" y="315.4" font-family="Inter Tight, sans-serif" font-weight="500" font-size="13" text-anchor="end">soft-contrarian</text>
+<text x="257.9" y="330.4" font-size="9.5" fill="oklch(56% 0.012 60)" text-anchor="end">d&#160;0.686 · farthest</text>
+</g>
+<g>
+<circle cx="711.5" cy="447.5" r="8" fill="oklch(34% 0.085 250)"/>
+<circle cx="711.5" cy="447.5" r="13" fill="none" stroke="oklch(34% 0.085 250 / .25)" stroke-width="3"/>
+<text x="728.5" y="443.5" font-size="11" text-anchor="start">08</text>
+<text x="728.5" y="457.5" font-family="Inter Tight, sans-serif" font-weight="500" font-size="13" text-anchor="start">radical-optimist</text>
+<text x="728.5" y="472.5" font-size="9.5" fill="oklch(56% 0.012 60)" text-anchor="start">d&#160;0.659</text>
+</g>
+<g>
+<circle cx="496.8" cy="154.1" r="8" fill="oklch(34% 0.085 250)"/>
+<circle cx="496.8" cy="154.1" r="13" fill="none" stroke="oklch(34% 0.085 250 / .25)" stroke-width="3"/>
+<text x="479.8" y="150.1" font-size="11" text-anchor="end">09</text>
+<text x="479.8" y="164.1" font-family="Inter Tight, sans-serif" font-weight="500" font-size="13" text-anchor="end">pre-mortem</text>
+<text x="479.8" y="179.1" font-size="9.5" fill="oklch(56% 0.012 60)" text-anchor="end">d&#160;0.641</text>
+</g>
+</g>
+<g>
+<circle cx="335.9" cy="151.5" r="42" fill="url(#halo)"/>
+<circle cx="335.9" cy="151.5" r="11" fill="oklch(56% 0.165 32)"/>
+<circle cx="335.9" cy="151.5" r="17" fill="none" stroke="oklch(56% 0.165 32 / .35)" stroke-width="3"/>
+<text x="335.9" y="201.5" text-anchor="middle" font-family="Inter Tight, sans-serif" font-weight="600" font-size="13" fill="oklch(56% 0.165 32)" letter-spacing="2">10 · TENTH-MAN</text>
+<text x="335.9" y="216.5" text-anchor="middle" font-size="10" fill="oklch(56% 0.165 32)">d&#160;1.074 · steel-man dissent</text>
+</g>
+<g font-family="JetBrains Mono, monospace" font-size="9.5" fill="oklch(56% 0.012 60)" letter-spacing="2">
+<text x="100" y="345">MDS-1</text>
+<text x="892" y="345" text-anchor="end">→</text>
+<text x="500" y="55" text-anchor="middle">MDS-2</text>
+</g>
+</svg>
+    </div>
+    <div class="map-foot">
+      <div class="legend">
+        <span><i class="t"></i>Tenth-man</span>
+        <span><i class="n"></i>The nine advisors</span>
+      </div>
+      <div>MDS Map clásico · preserva distancias por pares</div>
+    </div>
+  </section>
+
+  
+  <div class="sec">
+    <span class="glyph">∑</span>
+    <h2>The <em>consensus</em> of the nine</h2>
+    <span class="rule"></span>
+    <span class="aside">what the nine <b>agree on</b></span>
+  </div>
+
+  <article class="consensus">
+    <div class="consensus-body">
+      <p>The nine advisors converge on two things and disagree on a third.</p>
+<p><strong>They agree</strong> that the financial setup is workable but unforgiving: 9 months of runway is enough for a wedge but not for a category, and a toddler in the household compresses your willingness to extend that runway under stress. They also agree that your healthtech background materially de-risks the idea — niche workflow tools for clinical research coordinators is exactly the kind of unsexy, sticky software that compounds when sold to people you already understand.</p>
+<p><strong>They disagree</strong> on whether <em>now</em> is the right moment. The systemic and pre-mortem frames want one more thing nailed before you quit (a paying design partner, or a side-project prototype that 3 coordinators are already using). The optimist and first-principles frames argue that the cost of waiting another 6 months is higher than it looks — your context window on the buyer is degrading from the inside the longer you stay at the unicorn.</p>
+<p><strong>Net inclination:</strong> lean <em>out</em> of the job, but not blindly — secure one paying design partner before the quit, then go full-time. Don&#x27;t quit and figure it out; quit and execute on a contract you already signed.</p>
+    </div>
+  </article>
+
+
+  <div class="sec">
+    <span class="glyph">¶</span>
+    <h2>The nine advisors</h2>
+    <span class="rule"></span>
+    <span class="aside">ordered by <b>distance to centroid</b> · click to expand</span>
+  </div>
+
+  <section class="frames" id="frames">
+    
+    <article class="frame open" data-frame="empirical">
+      <div class="frame-row">
+        <span class="f-idx">01</span>
+        <span class="f-name">empirical</span>
+        <span class="f-tag"><b>OK</b></span>
+        <span class="f-bar"><i style="width:92%; background:var(--accent);"></i></span>
+        <span class="f-d">d&#160;<b>0.632</b></span>
+        <span class="f-caret">›</span>
+      </div>
+      <div class="f-body">
+        <h3>Base rates and the math</h3>
+<p>The empirical record on healthcare-vertical SaaS founded by domain insiders is more favorable than the generic SaaS base rate: ~28% of YC healthtech alumni reach Series A within 24 months versus ~18% across all verticals. <strong>Domain insider</strong> is doing most of the work in that statistic — outsider founders in regulated B2B verticals fail at much higher rates because the sales cycle eats their runway.</p>
+<p><strong>Cash math:</strong> $80k savings + 9 months runway implies ~$8.9k/month burn. That&#x27;s tight for a coastal US founder with a toddler. Industry data on first-product GTM in clinical research suggests 4–7 months from first conversation to first paid pilot ($2–10k/month), and 9–14 months to a meaningful $5k+ MRR floor. Your runway covers the optimistic case, not the realistic one.</p>
+<p><strong>Conclusion:</strong> the numbers are not a green light by themselves — they&#x27;re a yellow. The realistic GTM curve consumes ~80% of your runway before MRR can sustain household burn. The variable that determines outcome is whether you can compress that curve by walking in with one design partner already in hand.</p>
+      </div>
+    </article>
+    
+
+    <article class="frame" data-frame="pre-mortem">
+      <div class="frame-row">
+        <span class="f-idx">09</span>
+        <span class="f-name">pre-mortem</span>
+        <span class="f-tag"><b>OK</b></span>
+        <span class="f-bar"><i style="width:93%; background:var(--nine);"></i></span>
+        <span class="f-d">d&#160;<b>0.641</b></span>
+        <span class="f-caret">›</span>
+      </div>
+      <div class="f-body">
+        <h3>It&#x27;s month 14 and it failed. Why?</h3>
+<p>It&#x27;s not because the product was bad. It&#x27;s because the <em>sequence</em> was wrong.</p>
+<p><strong>Failure mode 1 (most likely):</strong> you quit, spent month 1–3 building a polished MVP based on assumptions from your insider knowledge, then discovered in month 4 that two of the three core assumptions were stale — the workflows you remembered from 2023 had been partially eaten by Veeva updates. By month 7 you&#x27;d rebuilt twice, runway was at 4 months, and the design partner you&#x27;d been talking to since month 2 finally said &quot;we&#x27;ll wait for v2&quot; — meaning never.</p>
+<p><strong>Failure mode 2:</strong> you quit, the household stress you&#x27;d modeled as &quot;manageable&quot; became unmanageable around month 5 (toddler illness + your partner&#x27;s review cycle + your runway anxiety converged). You took a consulting contract to bridge — 60% time — and the startup got 25% of you. By month 10 you were a consultant who also had a startup.</p>
+<p><strong>Failure mode 3:</strong> you actually shipped a great v1 in month 4, signed two design partners, raised a small angel round in month 7 — and then realized in month 11 that the market was real but the <em>acquisition cost</em> was wrong. Each design partner took 6 weeks to close. You couldn&#x27;t raise a seed because the revenue was too lumpy.</p>
+<p><strong>Conclusion:</strong> all three failure modes share one root: <strong>the design partner relationship was treated as a milestone instead of a precondition</strong>. The pre-mortem says <em>do not quit until you have a signed paid contract from one clinical site</em>. Everything else is recoverable. That sequencing is not.</p>
+      </div>
+    </article>
+    
+
+    <article class="frame" data-frame="first-principles">
+      <div class="frame-row">
+        <span class="f-idx">03</span>
+        <span class="f-name">first-principles</span>
+        <span class="f-tag"><b>OK</b></span>
+        <span class="f-bar"><i style="width:93%; background:var(--nine);"></i></span>
+        <span class="f-d">d&#160;<b>0.641</b></span>
+        <span class="f-caret">›</span>
+      </div>
+      <div class="f-body">
+        <h3>The atoms underneath the question</h3>
+<p>Strip away the narrative. The atoms are: <strong>(a)</strong> your time has a market value (~$220k base + equity), <strong>(b)</strong> the value of building this product is a function of how much time + focus + buyer-empathy you can pour into it before someone else does, <strong>(c)</strong> buyer-empathy is a wasting asset — it decays month-by-month once you stop being adjacent to clinical research operators, <strong>(d)</strong> $80k buys you ~9 months of runway in your geography.</p>
+<p>The convention says <em>validate before you quit</em>. The convention is right when buyer-empathy is durable. <strong>Buyer-empathy is not durable here</strong> — leaving the unicorn cuts you off from the 30+ adjacent conversations per week that compound your understanding. Every month you stay validating, you&#x27;re also accumulating the option premium of more savings <em>and</em> paying down the option of walking in with current insider knowledge.</p>
+<p><strong>Conclusion:</strong> the right move is whichever path maximizes paid contact with real clinical research coordinators in the next 3 months. If the job blocks that contact, leave. If it accelerates it (because your role gives you intros), stay 90 more days and then leave. Don&#x27;t optimize for runway; optimize for buyer-time.</p>
+      </div>
+    </article>
+    
+
+    <article class="frame" data-frame="historical">
+      <div class="frame-row">
+        <span class="f-idx">02</span>
+        <span class="f-name">historical</span>
+        <span class="f-tag"><b>OK</b></span>
+        <span class="f-bar"><i style="width:95%; background:var(--nine);"></i></span>
+        <span class="f-d">d&#160;<b>0.649</b></span>
+        <span class="f-caret">›</span>
+      </div>
+      <div class="f-body">
+        <h3>What the comparable companies actually did</h3>
+<p>Look at the founders of TrialKit, Florence Healthcare, and ClinCapture in their pre-seed phase: all three had <strong>domain employer relationships that converted into design-partner contracts before the founder quit</strong>. The pattern is consistent across the regulatory-software vertical — the ones who waited to formalize that relationship until after quitting burned 30–50% more runway than the ones who locked it in first.</p>
+<p>There&#x27;s also a counter-pattern worth naming: the founders who <em>over</em>-validated and never quit. They stayed in their PM roles &quot;just one more milestone&quot; for 18+ months and watched the window close. The clinical research tooling space had three meaningful entrants in 2023–2024 alone; assuming nobody else moves while you decide is wrong.</p>
+<p><strong>Conclusion:</strong> history strongly favors <em>quit with one paid design partner already signed</em>. The risk-adjusted path isn&#x27;t &quot;decide between job and startup&quot; — it&#x27;s &quot;manufacture the design-partner moment, then quit on the back of it.&quot;</p>
+      </div>
+    </article>
+    
+
+    <article class="frame" data-frame="radical-optimist">
+      <div class="frame-row">
+        <span class="f-idx">08</span>
+        <span class="f-name">radical-optimist</span>
+        <span class="f-tag"><b>OK</b></span>
+        <span class="f-bar"><i style="width:96%; background:var(--nine);"></i></span>
+        <span class="f-d">d&#160;<b>0.659</b></span>
+        <span class="f-caret">›</span>
+      </div>
+      <div class="f-body">
+        <h3>The 10× scenario nobody is pricing</h3>
+<p>If you ship a clinical research coordinator workflow tool in 2025, the upside scenario looks like this: you land 8 paid design partners by month 9, ARR hits $250k by month 14, you raise a $2.5M seed at $12M post on the back of &quot;domain insider, 15 paying clinical sites, 87% retention&quot;. Your equity is worth $1.5–3M on paper inside 18 months.</p>
+<p>That&#x27;s not a fantasy — it&#x27;s the <strong>Florence Healthcare trajectory</strong> shifted forward 18 months, which is exactly the kind of compression AI tooling enables for solo founders now. The thing the cautious frames are mispricing isn&#x27;t the downside risk (they&#x27;re pricing it correctly). They&#x27;re mispricing the <em>probability of the upside scenario</em>, which is materially higher than 10% for a domain-insider founder in a regulated vertical with a thin moat against generic AI tools.</p>
+<p>The asymmetry is real: capped downside (you can return to a $250k PM job in 12 months — that&#x27;s not catastrophic, that&#x27;s a sabbatical with extra steps), uncapped upside ($3M+ on paper). When you have an asymmetric bet and the buyer-empathy clock is ticking, you take the bet.</p>
+<p><strong>Conclusion:</strong> the optimist&#x27;s argument isn&#x27;t <em>quit blindly</em>. It&#x27;s <em>don&#x27;t let pre-mortem reasoning anchor you to the median outcome when you have an asymmetric bet</em>. The upside is large enough that even if you have to come back to PM-land in 18 months, the option value of having tried was probably worth more than the salary you forewent.</p>
+      </div>
+    </article>
+    
+
+    <article class="frame" data-frame="systemic">
+      <div class="frame-row">
+        <span class="f-idx">05</span>
+        <span class="f-name">systemic</span>
+        <span class="f-tag"><b>OK</b></span>
+        <span class="f-bar"><i style="width:96%; background:var(--nine);"></i></span>
+        <span class="f-d">d&#160;<b>0.660</b></span>
+        <span class="f-caret">›</span>
+      </div>
+      <div class="f-body">
+        <h3>Second-order effects on the household and the buyer</h3>
+<p><strong>Loop #1 — household:</strong> quitting before paid validation puts your partner under cognitive load they didn&#x27;t sign up to absorb daily. They said &quot;I support you&quot; once; they will say it 200 more times under different stress conditions. The marriage variable compounds badly when financial uncertainty is unresolved for &gt;6 months. <em>Resolve the design-partner contract first specifically because it shortens that window.</em></p>
+<p><strong>Loop #2 — buyer trust:</strong> clinical research coordinators are a small, gossipy market. Your first three conversations get repeated to twenty more. If you walk in as &quot;I just quit my job to build this for you&quot; you signal commitment but also desperation. If you walk in as &quot;my employer lets me work on this 1 day a week and I&#x27;d love your input&quot; you signal craft but also non-commitment. <strong>Neither is right after month 4</strong> — the buyer wants to bet on someone who has bet on themselves, but not on someone who needs them to close.</p>
+<p><strong>Conclusion:</strong> the systemic answer is staged commitment — moonlight 60 days to land the design partner, quit on the back of the contract, sell from a position of paid traction. The household and the buyer both reward that sequencing.</p>
+      </div>
+    </article>
+    
+
+    <article class="frame" data-frame="analogical">
+      <div class="frame-row">
+        <span class="f-idx">04</span>
+        <span class="f-name">analogical</span>
+        <span class="f-tag"><b>OK</b></span>
+        <span class="f-bar"><i style="width:97%; background:var(--nine);"></i></span>
+        <span class="f-d">d&#160;<b>0.667</b></span>
+        <span class="f-caret">›</span>
+      </div>
+      <div class="f-body">
+        <h3>Cross-domain: the climber and the route</h3>
+<p>This decision is structurally identical to a multi-pitch climber deciding whether to commit to a hard route after climbing two pitches at the base. Continuing has cost (gear, weather window, daylight). Retreating has cost (the route doesn&#x27;t get easier next year, and your conditioning peaks now). The mistake climbers make isn&#x27;t pushing on or retreating — it&#x27;s <em>deciding at the base of pitch three</em> without a pre-committed framework.</p>
+<p>In military strategy, the same shape shows up as the <strong>OODA loop&#x27;s Decide phase</strong>: the failure mode is collecting information forever and never closing the loop. John Boyd&#x27;s insight was that decision speed beats decision quality past a certain threshold — because the environment moves while you&#x27;re optimizing.</p>
+<p><strong>Conclusion:</strong> the analogical answer is <em>pre-commit the criterion now, and then execute when the criterion is hit</em>. &quot;I&#x27;ll quit when I have one signed paid design partner at $3k+/month&quot; is a clean, falsifiable criterion. Don&#x27;t leave it as a feeling. Leave it as a trigger.</p>
+      </div>
+    </article>
+    
+
+    <article class="frame" data-frame="ethical">
+      <div class="frame-row">
+        <span class="f-idx">06</span>
+        <span class="f-name">ethical</span>
+        <span class="f-tag"><b>OK</b></span>
+        <span class="f-bar"><i style="width:98%; background:var(--nine);"></i></span>
+        <span class="f-d">d&#160;<b>0.675</b></span>
+        <span class="f-caret">›</span>
+      </div>
+      <div class="f-body">
+        <h3>Stakeholders and trade-offs</h3>
+<p>Three stakeholders: you, your partner, your toddler. Your partner has informed consent on the financial risk; your toddler doesn&#x27;t. That asymmetry matters. It doesn&#x27;t mean don&#x27;t quit — parents quit jobs to start companies all the time and their kids are fine — but it means the threshold for <em>paying yourself something</em> should be lower, not zero. A founder who refuses to pay themselves &quot;until traction&quot; is making a moral choice about whose burden the cost falls on, and the answer in this household is the partner.</p>
+<p>There&#x27;s also a softer ethical layer: the clinical research coordinators you&#x27;ll be selling to are not abstract buyers. They are mostly underpaid women holding regulated, life-affecting work together with duct-taped Excel. Building this badly — over-promising, under-shipping, ghosting after raising — does real damage. The ethical floor is <em>if you quit, you ship something useful in 90 days and you don&#x27;t disappear</em>.</p>
+<p><strong>Conclusion:</strong> quit if and only if the household budget includes a small founder salary from month 4 onward (≥$3k/month) and you commit publicly to a 90-day shipping cadence the buyers can hold you to. Anything looser is asking your partner and your buyers to absorb risk that&#x27;s properly yours.</p>
+      </div>
+    </article>
+    
+
+    <article class="frame" data-frame="soft-contrarian">
+      <div class="frame-row">
+        <span class="f-idx">07</span>
+        <span class="f-name">soft-contrarian</span>
+        <span class="f-tag"><b>OK</b></span>
+        <span class="f-bar"><i style="width:100%; background:var(--nine);"></i></span>
+        <span class="f-d">d&#160;<b>0.686</b></span>
+        <span class="f-caret">›</span>
+      </div>
+      <div class="f-body">
+        <h3>The premise nobody questioned</h3>
+<p>Everyone is debating <em>when to quit</em>. Reframe: <strong>what if the right move is to renegotiate the unicorn role into a 4-day week with a side-project carve-out, and not quit at all for the next 6 months?</strong></p>
+<p>This sounds like cope, but it&#x27;s actually leverage. Senior PMs at Series C unicorns with healthtech specialization are not fungible. The company does not want to lose you mid-cycle. A 4-day week request, framed as &quot;I want to stay long-term and need bandwidth to recharge&quot;, lands ~40% of the time at this seniority. That&#x27;s a free month of runway every month plus continued buyer-adjacent context plus equity vesting.</p>
+<p>The objection: &quot;but I&#x27;d be giving 80% of my brain to someone else&#x27;s product.&quot; Counter: you&#x27;re already only giving ~70% — the other 30% is meetings, status, slack. A 4-day week doesn&#x27;t lose you much real output and buys you 1 dedicated day per week to land the design partner without burning savings.</p>
+<p><strong>Conclusion:</strong> before quitting, run the renegotiation play. If it lands, you&#x27;ve bought 6 months of optionality cheap. If it fails, you have a clean reason to leave and probably a more honest read on how much the company values you.</p>
+      </div>
+    </article>
+    
+  </section>
+
+  <div class="sec">
+    <span class="glyph">¶</span>
+    <h2>The tenth-man — <em>steel-man dissent</em></h2>
+    <span class="rule"></span>
+    <span class="aside">d&nbsp;<b>1.074</b> · obligated to dissent</span>
+  </div>
+
+  <article class="tenth">
+    <header class="tenth-top">
+      <div>
+        <div class="tenth-eyebrow"><i></i>Frame 10 · Tenth-man</div>
+        <h2>Why the nine might be wrong</h2>
+      </div>
+      <div class="d"><b>1.074</b>distance from consensus</div>
+    </header>
+
+    <div class="tenth-body">
+      <h3>Premises I accept</h3>
+<p>I accept the financial math, the household constraints, the domain-insider thesis, the buyer-empathy decay argument, and the consensus that a paying design partner before the quit is the cleanest path. The nine analyses are competent and internally consistent.</p>
+<h3>What I attack</h3>
+<p>The nine frames are answering a <em>career-optimization</em> question. <strong>The actual question is identity.</strong></p>
+<p>&gt; The hidden question isn&#x27;t &quot;is this the right time to start a company.&quot; It&#x27;s &quot;do I want to be a founder, or do I want to be a Senior PM who briefly tried.&quot; The financial framing is a way to defer the identity question by making it feel quantitative.</p>
+<p>The consensus says: <em>secure a paid design partner, then quit</em>. Sounds prudent. It is also the perfect mechanism for never quitting. Six months from now, with one paid pilot at $4k/month, the same nine frames will produce the same advice — <em>one more design partner first, then quit</em>. The criterion is unfalsifiable in practice because each milestone hit raises the bar for the next.</p>
+<h3>A different model of the world</h3>
+<p>What if the founders who succeed in regulated B2B verticals aren&#x27;t the ones who optimized the quit-timing? What if they&#x27;re the ones who <strong>forced themselves into the identity first and let the financials catch up?</strong> In this model, quitting is the dispositive act — it converts a curious PM into a founder in the eyes of every buyer they meet for the next 18 months. A moonlighting PM with a side project has 30% the credibility of a full-time founder with the same product. Buyers pattern-match on commitment and they pay accordingly.</p>
+<p>The nine frames are pricing the financial cost of quitting too early. They are not pricing the <strong>credibility cost of quitting too late</strong> — every month you spend &quot;validating from inside the unicorn&quot; is a month your future buyers see you as someone who hedged.</p>
+<h3>Evidence the consensus might be wrong</h3>
+<p>Look at the founders who quit before they had paid validation in clinical research tooling specifically: TrialKit&#x27;s founder quit on the back of a personal hunch, not a contract. Same for the original Florence team. The pattern of &quot;secure design partner first&quot; is <em>retroactively constructed</em> — it sounds prudent in hindsight but most of the actual successful founders made an unhedged bet.</p>
+<p>There&#x27;s a deeper systemic pattern: people who run pre-mortem analyses and asymmetric-bet calculations <em>for two years</em> and never quit are not safer. They are stuck. The financial models the nine frames produce assume the alternative to quitting is staying employed and saving more. The real alternative is <strong>slowly losing the version of yourself that was capable of quitting at all</strong>.</p>
+<h3>Conclusion of the dissent</h3>
+<p>Quit this quarter, with $80k in the bank, no design partner signed, and the explicit understanding that you will fail forward and learn faster than the cautious path allows. The consensus is optimizing for a smooth trajectory. The actual goal is to become a founder, and you only become one by acting like one before the evidence is in.</p>
+<p>The nine frames are right that this is more financially risky. They are wrong that financial risk is the binding constraint.</p>
+    </div>
+
+    <footer class="tenth-foot">
+      <span>Generated under constraint · mandatory <b>steel-man</b></span>
+      <span>embed <b>openai/text-embedding-3-small</b></span>
+    </footer>
+  </article>
+
+  <footer class="colophon">
+    <div>
+      <b>TenthAI</b><br/>
+      classical MDS · cosine distance<br/>
+      embed: openai/text-embedding-3-small
+    </div>
+    <div class="center">
+      &laquo;Nine voices aligned aren't signal — just coherent noise.&raquo;
+    </div>
+    <div class="right">
+      <b>Estimated cost</b> ~CLP 550<br/>
+      2026·04·30 · 14:57 CLT<br/>
+      report&nbsp;#1457
+    </div>
+  </footer>
+
+</main>
+
+<aside class="guide" id="guide" aria-label="How to read this report">
+  <div class="guide-panel" role="dialog" aria-labelledby="guide-title">
+    <div class="guide-panel-body">
+      <p class="kicker">Reading guide</p>
+      <h3 id="guide-title">How to approach <em>this report</em></h3>
+      <ol>
+        <li><b>Start with consensus, not the tenth.</b> What the 9 advisors agree on — that's the anchor of the decision.</li>
+        <li><b>The 9 advisors aren't votes.</b> They're distinct lenses on the same problem. Read the differences between them, not the majority.</li>
+        <li><b>The tenth is audit, not recommendation.</b> Its role is to attack the consensus to test if it holds. Sounding convincing is its job, not a signal it's right.</li>
+        <li><b>Isolate the tenth's attacks, not its verdict.</b> Keep the questions it opens and evaluate each against your reality — discard its conclusion if it doesn't hold.</li>
+        <li><b>Read the metrics.</b> High fragility + high tenth-man distance = weak consensus, the dissent matters more. Low fragility = robust consensus, the dissent is rhetorical.</li>
+        <li><b>Apply the asymmetric test.</b> If the tenth names a risk you recognize as real in your life, add it even if you don't switch sides. If you don't recognize it, discard.</li>
+        <li><b>You decide.</b> No advisor knows your full context. The report exposes tensions; the choice is yours.</li>
+      </ol>
+    </div>
+    <div class="guide-panel-foot">
+      <p class="foot">Consensus protects against the obvious error. The tenth protects against the shared one. You need both lenses — and neither replaces your judgment.</p>
+      <button type="button" class="guide-close" onclick="document.getElementById('guide').classList.remove('open')">Close</button>
+    </div>
+  </div>
+  <button type="button" class="guide-toggle" onclick="document.getElementById('guide').classList.toggle('open')" aria-expanded="false">
+    <span class="marker"></span>
+    How do I read this?
+  </button>
+</aside>
+
+<script>
+  (function(){
+    var g = document.getElementById('guide');
+    var btn = g.querySelector('.guide-toggle');
+    btn.addEventListener('click', function(){
+      btn.setAttribute('aria-expanded', g.classList.contains('open') ? 'true' : 'false');
+    });
+    document.addEventListener('keydown', function(e){
+      if(e.key === 'Escape' && g.classList.contains('open')){
+        g.classList.remove('open');
+        btn.setAttribute('aria-expanded', 'false');
+      }
+    });
+  })();
+</script>
+
+<script>
+  document.querySelectorAll('.frame').forEach(f => {
+    f.addEventListener('click', () => f.classList.toggle('open'));
+  });
+</script>
+</body>
+</html>
