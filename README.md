@@ -6,8 +6,6 @@ Ask any decision. **9 advisors** respond — each from a distinct cognitive angl
 
 You don't get an answer. You get a **map** — a 2D projection of the response space where you see at a glance whether the 9 are aligned or divided, with the steel-manned dissent of the 10th in full.
 
-The mechanic comes from the **tenth man rule**: a doctrine adopted by Israeli intelligence after the 1973 Yom Kippur surprise (popularized in *World War Z*). When 9 analysts agree, the 10th is institutionally obligated to disagree — a structural defense against groupthink. TenthAI ports that discipline into LLM advice.
-
 ## Quick install (5 min)
 
 ```bash
