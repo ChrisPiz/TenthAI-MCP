@@ -14,10 +14,7 @@ then individual conclusions, then the dissent as punchline at the end.
 import html as html_mod
 import math
 import re
-import tempfile
-import webbrowser
 from datetime import datetime
-from pathlib import Path
 
 
 FRAME_INDEX = {
@@ -253,7 +250,12 @@ def _build_frame_card(frame, response, status, distance, max_dist, idx_str, is_o
 
 
 def render(question, results, coords_2d, distances, provider, model, cost_estimate_clp, consensus=None):
-    """Render editorial disagreement report. Returns absolute path. Auto-opens.
+    """Render the editorial disagreement report. Returns the full HTML as a string.
+
+    Persistence and browser-open are handled by the caller (server.py orchestrates
+    storage.write_record + webbrowser.open). Keeping render() pure makes it easy
+    to test, embed, and post-process (the demo pipes through an English-chrome
+    rewrite before writing to disk).
 
     Layout order: masthead → headline → question → stats → map → consensus →
     9 frames (sorted by distance, closest open) → tenth-man feature → colophon.
@@ -1188,15 +1190,4 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
 </body>
 </html>"""
 
-    out_dir = Path(tempfile.gettempdir())
-    timestamp_file = datetime.now().strftime("%Y%m%d-%H%M%S")
-    safe_q = "".join(c if c.isalnum() else "_" for c in question[:40])
-    path = out_dir / f"tenthai_{timestamp_file}_{safe_q}.html"
-    path.write_text(page, encoding="utf-8")
-
-    try:
-        webbrowser.open(f"file://{path.absolute()}")
-    except Exception:
-        pass
-
-    return str(path)
+    return page

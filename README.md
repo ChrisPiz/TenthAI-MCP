@@ -152,6 +152,12 @@ pytest tests/ -v
 
 </details>
 
+### Where reports live
+
+Every invocation persists to `~/.tenthai/reports/<id>/` with both a `report.html` (the editorial visualization) and a `report.json` (raw data: question, context, 10 responses, distances, summary, cost). A browseable `index.html` lists every past run, newest first.
+
+Override the location with `TENTHAI_REPORTS_DIR=/path/to/dir` in your `.env` if you want them elsewhere. There is no auto-purge — you decide when to clean up.
+
 ---
 
 ## Core principle

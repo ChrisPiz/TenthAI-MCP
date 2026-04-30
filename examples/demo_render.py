@@ -289,7 +289,7 @@ def main() -> None:
     results = [(name, FRAMES[name], "ok") for name in frame_order]
     results.append(("tenth-man", TENTH_MAN, "ok"))
 
-    rendered_path_str = render(
+    html = render(
         question=QUESTION,
         results=results,
         consensus=CONSENSUS,
@@ -299,15 +299,12 @@ def main() -> None:
         model="text-embedding-3-small",
         cost_estimate_clp=550,
     )
-    rendered_path = Path(rendered_path_str)
-    html = rendered_path.read_text(encoding="utf-8")
     html = _english_chrome(html)
 
     out_dir = Path(__file__).resolve().parent.parent / "docs"
     out_dir.mkdir(exist_ok=True)
     out_file = out_dir / "demo.html"
     out_file.write_text(html, encoding="utf-8")
-    rendered_path.unlink(missing_ok=True)
 
     print(f"Demo report written to: {out_file}")
     if not args.no_open:

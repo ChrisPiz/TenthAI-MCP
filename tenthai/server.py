@@ -6,6 +6,8 @@ mid-invocation.
 """
 import os
 import sys
+import webbrowser
+from datetime import datetime
 from pathlib import Path
 
 from anthropic import AsyncAnthropic
@@ -16,6 +18,7 @@ from .agents import run_agents, TENTH_MAN
 from .consensus import synthesize_consensus
 from .embed import embed_responses, project_mds
 from .scoping import generate_questions
+from .storage import make_report_dir, make_report_id, write_index, write_record
 from .viz import render
 
 # Load .env from project root regardless of cwd (Claude Code may spawn subprocess elsewhere).
@@ -158,7 +161,7 @@ async def decide(question: str, context: str | None = None, skip_scoping: bool =
 
     cost_clp = 580.0  # rough avg; range CLP 430-730 with 1500/3500 token cap + Haiku consensus + scoping
 
-    viz_path = render(
+    html = render(
         question=question,
         results=results,
         consensus=consensus_text,
@@ -168,6 +171,69 @@ async def decide(question: str, context: str | None = None, skip_scoping: bool =
         model=embed_result["model"],
         cost_estimate_clp=cost_clp,
     )
+
+    # Persist the run: report.html + report.json + regenerate index.html
+    distances_list = proj["distance_to_centroid_of_9"]
+    coords_list = proj["coords_2d"]
+    frame_distances = distances_list[:9]
+    max_frame_distance = max(frame_distances)
+    min_frame_distance = min(frame_distances)
+    most_divergent_frame = results[frame_distances.index(max_frame_distance)][0]
+    closest_frame = results[frame_distances.index(min_frame_distance)][0]
+
+    report_id = make_report_id(question)
+    report_dir = make_report_dir(report_id)
+    payload = {
+        "schema_version": "1",
+        "id": report_id,
+        "timestamp": datetime.now().astimezone().isoformat(),
+        "question": question,
+        "context": context,
+        "consensus": consensus_text,
+        "advisors": [
+            {
+                "frame": frame,
+                "status": status,
+                "response": response,
+                "distance_to_centroid_of_9": distances_list[i],
+                "embedding_2d": coords_list[i],
+            }
+            for i, (frame, response, status) in enumerate(results[:9])
+        ],
+        "tenth_man": {
+            "response": results[9][1],
+            "distance": distances_list[9],
+            "embedding_2d": coords_list[9],
+        },
+        "summary": {
+            "tenth_man_distance": distances_list[9],
+            "max_frame_distance": max_frame_distance,
+            "min_frame_distance": min_frame_distance,
+            "most_divergent_frame": most_divergent_frame,
+            "closest_frame": closest_frame,
+            "consensus_fragility": (
+                "fragile (tenth-man lives in another world)"
+                if distances_list[9] > 2 * max_frame_distance
+                else "moderate (frames already dispersed, no strong consensus)"
+            ),
+            "n_frames_succeeded": sum(1 for _, _, s in results[:9] if s == "ok"),
+        },
+        "embed": {
+            "provider": embed_result["provider"],
+            "model": embed_result["model"],
+        },
+        "cost_clp": cost_clp,
+    }
+
+    html_path, json_path = write_record(report_dir, html, payload)
+    index_path = write_index()
+
+    try:
+        webbrowser.open(f"file://{html_path.absolute()}")
+    except Exception:
+        pass
+
+    viz_path = str(html_path)
 
     # Frames truncated to ~300 chars in JSON (full text lives in HTML viz).
     # Tenth-man kept full because Claude must cite it literally per the slash command.
@@ -179,7 +245,11 @@ async def decide(question: str, context: str | None = None, skip_scoping: bool =
 
     return {
         "viz_path": viz_path,
-        "viz_note": "Full responses are in the HTML viz. Open it in browser. JSON below contains summaries only (consensus + tenth-man are full).",
+        "report_id": report_id,
+        "report_dir": str(report_dir),
+        "json_path": str(json_path),
+        "index_path": str(index_path),
+        "viz_note": "Persisted at viz_path (HTML) + json_path (raw data). index_path is the browseable ledger. JSON below contains summaries only (consensus + tenth-man are full).",
         "consensus": consensus_text or "(consensus synthesis failed)",
         "frames": [
             {
