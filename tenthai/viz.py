@@ -98,6 +98,51 @@ def _md_to_html(text: str) -> str:
     return "\n".join(out)
 
 
+def _split_failure_modes(text: str):
+    """Pull a [FAILURE_MODES]...[/FAILURE_MODES] block out of the tenth-man response.
+
+    Returns (main_body, modes) where modes is a list of (title, body) tuples
+    parsed from ``### Title\\nbody`` items. If the block is absent or malformed,
+    returns (text, []) so the caller falls back to plain prose rendering.
+    """
+    match = re.search(
+        r"\[FAILURE_MODES\](.+?)\[/FAILURE_MODES\]",
+        text,
+        flags=re.DOTALL | re.IGNORECASE,
+    )
+    if not match:
+        return text.strip(), []
+    inner = match.group(1).strip()
+    main = (text[:match.start()] + text[match.end():]).strip()
+    modes = []
+    for chunk in re.split(r"\n###\s+", "\n" + inner):
+        chunk = chunk.strip()
+        if not chunk:
+            continue
+        lines = chunk.split("\n", 1)
+        title = lines[0].lstrip("#").strip()
+        body = lines[1].strip() if len(lines) > 1 else ""
+        if title and body:
+            modes.append((title, body))
+    if len(modes) != 3:
+        # Don't render a partial grid — fall back to plain prose.
+        return text.strip(), []
+    return main, modes
+
+
+def _style_section_markers(html: str) -> str:
+    """Wrap ``§N`` prefix in tenth-body h3 headings with a terracotta accent span.
+
+    Pattern in the rendered HTML: ``<h3>§1 Hechos que acepto</h3>``. We wrap
+    the §N portion in a dedicated span the CSS picks up.
+    """
+    return re.sub(
+        r"<h3>(§\s*\d+)\s+(.+?)</h3>",
+        r'<h3><span class="ord">\1</span>\2</h3>',
+        html,
+    )
+
+
 def _extract_conclusion(text: str, max_chars: int = 360) -> str:
     """Last paragraph, assumed conclusion per prompt structure."""
     paragraphs = [p.strip() for p in re.split(r"\n\s*\n", text.strip()) if p.strip()]
@@ -337,7 +382,21 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
         for i in frame_order
     )
 
-    tenth_response_html = _md_to_html(responses[9])
+    tenth_main, tenth_modes = _split_failure_modes(responses[9])
+    tenth_response_html = _style_section_markers(_md_to_html(tenth_main))
+    if tenth_modes:
+        mode_cards = []
+        for i, (title, body) in enumerate(tenth_modes, start=1):
+            mode_cards.append(
+                f'<div class="mode">'
+                f'<div class="ord">Modo de fallo · {i}</div>'
+                f'<h4>{html_mod.escape(title)}</h4>'
+                f'<p>{html_mod.escape(body)}</p>'
+                f'</div>'
+            )
+        tenth_modes_html = '<div class="modes">' + "".join(mode_cards) + '</div>'
+    else:
+        tenth_modes_html = ""
 
     # Consensus block (optional)
     consensus_block_html = ""
@@ -754,6 +813,7 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
     color: var(--ink-3);
   }}
   .tenth-body h3:first-child{{ margin-top: 0; }}
+  .tenth-body h3 .ord{{ color: var(--accent); margin-right: 10px; letter-spacing: .08em; }}
   .tenth-body h4{{
     margin: 18px 0 8px;
     font-family: var(--sans);
@@ -774,6 +834,43 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
     font-size: 19px; line-height: 1.4;
     letter-spacing: -0.005em;
     color: var(--ink);
+  }}
+  .tenth-body .modes{{
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    border-top: 1px solid var(--rule-2);
+    margin-top: 28px;
+    padding-top: 8px;
+  }}
+  .tenth-body .mode{{
+    padding: 18px 22px 4px 0;
+    border-right: 1px dashed var(--rule);
+  }}
+  .tenth-body .mode:nth-child(2){{ padding: 18px 22px 4px 22px; }}
+  .tenth-body .mode:last-child{{ padding: 18px 0 4px 22px; border-right: none; }}
+  .tenth-body .mode .ord{{
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }}
+  .tenth-body .mode h4{{
+    margin: 6px 0 8px;
+    font-family: var(--serif);
+    font-weight: 460;
+    font-size: 16px;
+    letter-spacing: -0.005em;
+    text-transform: none;
+    color: var(--ink);
+  }}
+  .tenth-body .mode p{{
+    margin: 0;
+    font-family: var(--sans);
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--ink-2);
   }}
   .tenth-foot{{
     display:flex; justify-content: space-between; gap: 18px;
@@ -1050,6 +1147,15 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
     .guide{{ right: 16px; bottom: 16px; }}
     .guide-panel-body{{ padding: 22px 18px 4px 20px; }}
     .guide-panel-foot{{ padding: 12px 20px 16px; }}
+    .tenth-body .modes{{ grid-template-columns: 1fr; }}
+    .tenth-body .mode,
+    .tenth-body .mode:nth-child(2),
+    .tenth-body .mode:last-child{{
+      padding: 16px 0;
+      border-right: none;
+      border-bottom: 1px dashed var(--rule);
+    }}
+    .tenth-body .mode:last-child{{ border-bottom: none; }}
   }}
 </style>
 </head>
@@ -1148,6 +1254,7 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
 
     <div class="tenth-body">
       {tenth_response_html}
+      {tenth_modes_html}
     </div>
 
     <footer class="tenth-foot">

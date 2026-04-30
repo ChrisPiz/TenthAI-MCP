@@ -389,6 +389,7 @@
     color: var(--ink-3);
   }
   .tenth-body h3:first-child{ margin-top: 0; }
+  .tenth-body h3 .ord{ color: var(--accent); margin-right: 10px; letter-spacing: .08em; }
   .tenth-body h4{
     margin: 18px 0 8px;
     font-family: var(--sans);
@@ -409,6 +410,43 @@
     font-size: 19px; line-height: 1.4;
     letter-spacing: -0.005em;
     color: var(--ink);
+  }
+  .tenth-body .modes{
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    border-top: 1px solid var(--rule-2);
+    margin-top: 28px;
+    padding-top: 8px;
+  }
+  .tenth-body .mode{
+    padding: 18px 22px 4px 0;
+    border-right: 1px dashed var(--rule);
+  }
+  .tenth-body .mode:nth-child(2){ padding: 18px 22px 4px 22px; }
+  .tenth-body .mode:last-child{ padding: 18px 0 4px 22px; border-right: none; }
+  .tenth-body .mode .ord{
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .tenth-body .mode h4{
+    margin: 6px 0 8px;
+    font-family: var(--serif);
+    font-weight: 460;
+    font-size: 16px;
+    letter-spacing: -0.005em;
+    text-transform: none;
+    color: var(--ink);
+  }
+  .tenth-body .mode p{
+    margin: 0;
+    font-family: var(--sans);
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--ink-2);
   }
   .tenth-foot{
     display:flex; justify-content: space-between; gap: 18px;
@@ -685,6 +723,15 @@
     .guide{ right: 16px; bottom: 16px; }
     .guide-panel-body{ padding: 22px 18px 4px 20px; }
     .guide-panel-foot{ padding: 12px 20px 16px; }
+    .tenth-body .modes{ grid-template-columns: 1fr; }
+    .tenth-body .mode,
+    .tenth-body .mode:nth-child(2),
+    .tenth-body .mode:last-child{
+      padding: 16px 0;
+      border-right: none;
+      border-bottom: 1px dashed var(--rule);
+    }
+    .tenth-body .mode:last-child{ border-bottom: none; }
   }
 </style>
 </head>
@@ -699,7 +746,7 @@
       <span class="sep">·</span>
       <span>Disagreement Map</span>
       <span class="sep">·</span>
-      <span>Report&nbsp;<b style="font-weight:500;">#1635</b></span>
+      <span>Report&nbsp;<b style="font-weight:500;">#1648</b></span>
       <span class="sep">·</span>
       <span>2026·04·30</span>
     </div>
@@ -1074,21 +1121,15 @@
     </header>
 
     <div class="tenth-body">
-      <h3>Premises I accept</h3>
+      <h3><span class="ord">§1</span>Premises I accept</h3>
 <p>I accept the financial math, the household constraints, the domain-insider thesis, the buyer-empathy decay argument, and the consensus that a paying design partner before the quit is the cleanest path. The nine analyses are competent and internally consistent.</p>
-<h3>What I attack</h3>
+<h3><span class="ord">§2</span>Where the consensus fails</h3>
 <p>The nine frames are answering a <em>career-optimization</em> question. <strong>The actual question is identity.</strong></p>
-<p>&gt; The hidden question isn&#x27;t &quot;is this the right time to start a company.&quot; It&#x27;s &quot;do I want to be a founder, or do I want to be a Senior PM who briefly tried.&quot; The financial framing is a way to defer the identity question by making it feel quantitative.</p>
+<p>&gt; The hidden question isn&#x27;t &quot;is this the right time to start a company.&quot; It&#x27;s &quot;do I want to be a founder, or a Senior PM who briefly tried.&quot; The financial framing is a way to defer the identity question by making it feel quantitative.</p>
 <p>The consensus says: <em>secure a paid design partner, then quit</em>. Sounds prudent. It is also the perfect mechanism for never quitting. Six months from now, with one paid pilot at $4k/month, the same nine frames will produce the same advice — <em>one more design partner first, then quit</em>. The criterion is unfalsifiable in practice because each milestone hit raises the bar for the next.</p>
-<h3>A different model of the world</h3>
-<p>What if the founders who succeed in regulated B2B verticals aren&#x27;t the ones who optimized the quit-timing? What if they&#x27;re the ones who <strong>forced themselves into the identity first and let the financials catch up?</strong> In this model, quitting is the dispositive act — it converts a curious PM into a founder in the eyes of every buyer they meet for the next 18 months. A moonlighting PM with a side project has 30% the credibility of a full-time founder with the same product. Buyers pattern-match on commitment and they pay accordingly.</p>
-<p>The nine frames are pricing the financial cost of quitting too early. They are not pricing the <strong>credibility cost of quitting too late</strong> — every month you spend &quot;validating from inside the unicorn&quot; is a month your future buyers see you as someone who hedged.</p>
-<h3>Evidence the consensus might be wrong</h3>
-<p>Look at the founders who quit before they had paid validation in clinical research tooling specifically: TrialKit&#x27;s founder quit on the back of a personal hunch, not a contract. Same for the original Florence team. The pattern of &quot;secure design partner first&quot; is <em>retroactively constructed</em> — it sounds prudent in hindsight but most of the actual successful founders made an unhedged bet.</p>
-<p>There&#x27;s a deeper systemic pattern: people who run pre-mortem analyses and asymmetric-bet calculations <em>for two years</em> and never quit are not safer. They are stuck. The financial models the nine frames produce assume the alternative to quitting is staying employed and saving more. The real alternative is <strong>slowly losing the version of yourself that was capable of quitting at all</strong>.</p>
-<h3>Conclusion of the dissent</h3>
-<p>Quit this quarter, with $80k in the bank, no design partner signed, and the explicit understanding that you will fail forward and learn faster than the cautious path allows. The consensus is optimizing for a smooth trajectory. The actual goal is to become a founder, and you only become one by acting like one before the evidence is in.</p>
-<p>The nine frames are right that this is more financially risky. They are wrong that financial risk is the binding constraint.</p>
+<h3><span class="ord">§3</span>The question behind the question</h3>
+<p>What if the founders who succeed in regulated B2B verticals aren&#x27;t the ones who optimized the quit-timing? What if they&#x27;re the ones who <strong>forced themselves into the identity first and let the financials catch up?</strong> Quitting is the dispositive act — it converts a curious PM into a founder in the eyes of every buyer they meet for the next 18 months. A moonlighting PM with a side project has 30% the credibility of a full-time founder with the same product. Buyers pattern-match on commitment and they pay accordingly. The nine frames price the financial cost of quitting too early. They do not price the credibility cost of quitting too late.</p>
+      <div class="modes"><div class="mode"><div class="ord">Failure mode · 1</div><h4>Validation infinite-loop</h4><p>Each milestone hit raises the bar for the next. &quot;One paid design partner&quot; becomes &quot;one with retention&quot;, then &quot;with expansion revenue&quot;. The criterion never lets you quit.</p></div><div class="mode"><div class="ord">Failure mode · 2</div><h4>Buyer-empathy decay</h4><p>Every month inside the unicorn dulls your context window on the clinical-research operator. By the time you &quot;feel ready&quot;, you are no longer the domain insider you were when the idea was hot.</p></div><div class="mode"><div class="ord">Failure mode · 3</div><h4>Identity hedging</h4><p>Moonlighting signals you bet on yourself with one foot still planted. Buyers pattern-match on commitment. A full-time founder with no contract closes design partners faster than a part-time PM with two pilots.</p></div></div>
     </div>
 
     <footer class="tenth-foot">
@@ -1108,8 +1149,8 @@
     </div>
     <div class="right">
       <b>Estimated cost</b> ~CLP 550<br/>
-      2026·04·30 · 16:35 CLT<br/>
-      report&nbsp;#1635
+      2026·04·30 · 16:48 CLT<br/>
+      report&nbsp;#1648
     </div>
   </footer>
 

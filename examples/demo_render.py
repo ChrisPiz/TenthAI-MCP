@@ -129,35 +129,32 @@ It's not because the product was bad. It's because the *sequence* was wrong.
 **Conclusion:** all three failure modes share one root: **the design partner relationship was treated as a milestone instead of a precondition**. The pre-mortem says *do not quit until you have a signed paid contract from one clinical site*. Everything else is recoverable. That sequencing is not."""
 }
 
-TENTH_MAN = """## Premises I accept
+TENTH_MAN = """## §1 Premises I accept
 
 I accept the financial math, the household constraints, the domain-insider thesis, the buyer-empathy decay argument, and the consensus that a paying design partner before the quit is the cleanest path. The nine analyses are competent and internally consistent.
 
-## What I attack
+## §2 Where the consensus fails
 
 The nine frames are answering a *career-optimization* question. **The actual question is identity.**
 
-> The hidden question isn't "is this the right time to start a company." It's "do I want to be a founder, or do I want to be a Senior PM who briefly tried." The financial framing is a way to defer the identity question by making it feel quantitative.
+> The hidden question isn't "is this the right time to start a company." It's "do I want to be a founder, or a Senior PM who briefly tried." The financial framing is a way to defer the identity question by making it feel quantitative.
 
 The consensus says: *secure a paid design partner, then quit*. Sounds prudent. It is also the perfect mechanism for never quitting. Six months from now, with one paid pilot at $4k/month, the same nine frames will produce the same advice — *one more design partner first, then quit*. The criterion is unfalsifiable in practice because each milestone hit raises the bar for the next.
 
-## A different model of the world
+## §3 The question behind the question
 
-What if the founders who succeed in regulated B2B verticals aren't the ones who optimized the quit-timing? What if they're the ones who **forced themselves into the identity first and let the financials catch up?** In this model, quitting is the dispositive act — it converts a curious PM into a founder in the eyes of every buyer they meet for the next 18 months. A moonlighting PM with a side project has 30% the credibility of a full-time founder with the same product. Buyers pattern-match on commitment and they pay accordingly.
+What if the founders who succeed in regulated B2B verticals aren't the ones who optimized the quit-timing? What if they're the ones who **forced themselves into the identity first and let the financials catch up?** Quitting is the dispositive act — it converts a curious PM into a founder in the eyes of every buyer they meet for the next 18 months. A moonlighting PM with a side project has 30% the credibility of a full-time founder with the same product. Buyers pattern-match on commitment and they pay accordingly. The nine frames price the financial cost of quitting too early. They do not price the credibility cost of quitting too late.
 
-The nine frames are pricing the financial cost of quitting too early. They are not pricing the **credibility cost of quitting too late** — every month you spend "validating from inside the unicorn" is a month your future buyers see you as someone who hedged.
+[FAILURE_MODES]
+### Validation infinite-loop
+Each milestone hit raises the bar for the next. "One paid design partner" becomes "one with retention", then "with expansion revenue". The criterion never lets you quit.
 
-## Evidence the consensus might be wrong
+### Buyer-empathy decay
+Every month inside the unicorn dulls your context window on the clinical-research operator. By the time you "feel ready", you are no longer the domain insider you were when the idea was hot.
 
-Look at the founders who quit before they had paid validation in clinical research tooling specifically: TrialKit's founder quit on the back of a personal hunch, not a contract. Same for the original Florence team. The pattern of "secure design partner first" is *retroactively constructed* — it sounds prudent in hindsight but most of the actual successful founders made an unhedged bet.
-
-There's a deeper systemic pattern: people who run pre-mortem analyses and asymmetric-bet calculations *for two years* and never quit are not safer. They are stuck. The financial models the nine frames produce assume the alternative to quitting is staying employed and saving more. The real alternative is **slowly losing the version of yourself that was capable of quitting at all**.
-
-## Conclusion of the dissent
-
-Quit this quarter, with $80k in the bank, no design partner signed, and the explicit understanding that you will fail forward and learn faster than the cautious path allows. The consensus is optimizing for a smooth trajectory. The actual goal is to become a founder, and you only become one by acting like one before the evidence is in.
-
-The nine frames are right that this is more financially risky. They are wrong that financial risk is the binding constraint."""
+### Identity hedging
+Moonlighting signals you bet on yourself with one foot still planted. Buyers pattern-match on commitment. A full-time founder with no contract closes design partners faster than a part-time PM with two pilots.
+[/FAILURE_MODES]"""
 
 
 # Chrome translations Spanish → English. Keys are exact substrings to replace.
@@ -215,6 +212,10 @@ CHROME = [
     ("Frame 10 · Tenth-man", "Frame 10 · Tenth-man"),  # already English
     ("Por qué los nueve podrían estar equivocados", "Why the nine might be wrong"),
     ("distancia al consenso", "distance from consensus"),
+    # Failure modes grid
+    ("Modo de fallo · 1", "Failure mode · 1"),
+    ("Modo de fallo · 2", "Failure mode · 2"),
+    ("Modo de fallo · 3", "Failure mode · 3"),
     ("Generado bajo restricción · <b>steel-man</b> obligatorio",
      "Generated under constraint · mandatory <b>steel-man</b>"),
     # Colophon
