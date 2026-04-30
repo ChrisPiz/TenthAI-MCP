@@ -6,6 +6,8 @@ It runs multiple cognitive frames over a decision, measures alignment, and gener
 
 > Agreement is not a signal. It's just coherent noise — unless you measure it.
 
+**[→ Live demo report](https://raw.githack.com/ChrisPiz/TenthAI-MCP/main/docs/demo.html)** — see what TenthAI returns for a real founder decision.
+
 ---
 
 ## What it does
@@ -44,6 +46,36 @@ The goal is to give it a specialized tool for:
 ---
 
 ## Setup
+
+### Option A · One-shot install with Claude Code (recommended)
+
+Paste this prompt into Claude Code and let it do the install for you:
+
+```
+Install TenthAI MCP from https://github.com/ChrisPiz/TenthAI-MCP into ~/TenthAI-MCP.
+
+Steps:
+1. git clone the repo into ~/TenthAI-MCP
+2. cd into it, create a Python 3.11+ venv at .venv, activate it, pip install -r requirements.txt
+3. Ask me for my ANTHROPIC_API_KEY and OPENAI_API_KEY (one at a time, don't print them back). Write them into .env using cp .env.example .env as the starting point.
+4. Verify the keys by running `python -m tenthai.server` for ~5 seconds — it must print "✓ keys validated" to stderr. Kill it after that confirmation.
+5. Register globally: `claude mcp add -s user tenthai "$HOME/TenthAI-MCP/.venv/bin/python" -- -m tenthai.server`
+6. Confirm with `claude mcp list` — the tenthai row must show ✓ Connected.
+7. Create the slash command at ~/.claude/commands/decide.md with this content:
+   ---
+   description: Invokes TenthAI — disagreement map of 9 advisors + 1 dissenter.
+   ---
+   Use the `decide` MCP tool from the `tenthai` server to analyze: $ARGUMENTS. When the JSON returns: cite viz_path, summarize the consensus first, list the 9 advisors' conclusions, then quote the tenth-man verbatim.
+
+After step 6, tell me to restart Claude Code and try `/decide should I take the new job?`
+```
+
+After Claude Code finishes, restart it once so the new MCP server is picked up.
+
+### Option B · Manual install
+
+<details>
+<summary>Click to expand manual steps</summary>
 
 **1. Clone and install dependencies**
 
@@ -94,11 +126,11 @@ Or, if you prefer editing config by hand, add to `~/.claude.json` (or your clien
 
 Restart Claude Code (or your MCP client). Verify with `claude mcp list` — `tenthai` should report `✓ Connected`.
 
-**4. Optional: add a `/decidir` slash command**
+**4. Optional: add a `/decide` slash command**
 
 ```bash
 mkdir -p ~/.claude/commands
-cat > ~/.claude/commands/decidir.md <<'MD'
+cat > ~/.claude/commands/decide.md <<'MD'
 ---
 description: Invokes TenthAI — disagreement map of 9 advisors + 1 dissenter.
 ---
@@ -117,6 +149,8 @@ pytest tests/ -v
 ```
 
 5 critical tests on design invariants + 2 smoke tests + provider-error handling. Suite runs in <5s with mocked SDK calls.
+
+</details>
 
 ---
 
