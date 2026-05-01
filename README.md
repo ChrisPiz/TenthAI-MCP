@@ -247,23 +247,20 @@ All paths reach the same MCP server and call the same `decide` tool. Reports per
 
 ### Claude Desktop
 
-Edit `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS):
+Edit `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) and add the `henge` block under `mcpServers`. The server loads `~/Henge/.env` automatically, so `cwd` and inline `env` are not required:
 
 ```json
 {
   "mcpServers": {
     "henge": {
-      "command": "python",
-      "args": ["-m", "henge.server"],
-      "cwd": "/absolute/path/to/Henge",
-      "env": {
-        "ANTHROPIC_API_KEY": "...",
-        "OPENAI_API_KEY": "..."
-      }
+      "command": "/Users/<you>/Henge/.venv/bin/python",
+      "args": ["-m", "henge.server"]
     }
   }
 }
 ```
+
+Use the absolute path to the venv's Python — `~` is not expanded by every host. Quit Claude Desktop fully (not just close the window) and reopen for the change to load.
 
 ### Cursor
 
@@ -436,9 +433,7 @@ henge/
 
 Henge needs to compute distance between the 10 advisor responses to draw the disagreement map, and that requires **embeddings** (text → vector). Anthropic does not currently offer an embeddings API, so a second provider is unavoidable for the math layer.
 
-**Default: OpenAI `text-embedding-3-small`** — ~USD 0.0005/run. Most devs already have a key. Recommended.
-
-**Voyage AI (advanced opt-in).** Higher embedding quality for Spanish, but the free tier is unusable: without a payment method on file, Voyage caps at **3 RPM / 10K TPM**, and a single Henge run embeds 10 advisor responses in one call — that trips the TPM cap and fails the run. To use Voyage you must add a payment method on https://dashboard.voyageai.com/ first (the 200M free tokens/month still apply, the payment method only unlocks standard rate limits). Then set `EMBED_PROVIDER=voyage` + `VOYAGE_API_KEY=...` in `.env`. Otherwise leave it on OpenAI.
+**OpenAI `text-embedding-3-small`** — ~USD 0.0005/run. Most devs already have a key.
 
 A local-embeddings option (no API key, sentence-transformers on-device) is on the [Roadmap](#roadmap).
 
@@ -468,4 +463,3 @@ Tested with:
 | `pyenv install` shows an `lzma` warning | Non-fatal, ignore. (Optional cleanup: `brew install xz` and re-run.) |
 | Server validates keys then exits immediately | Expected. It's a stdio MCP server; without a client on stdin, it shuts down once `✓ keys validated` is printed. |
 | `claude mcp add` rejects the path with $HOME | Pass an absolute path: `~/Henge/.venv/bin/python` (Claude Code expands `~`, but other shells re-expand `$HOME` after registration). |
-| `embed_failed` with Voyage `RateLimitError` (3 RPM / 10K TPM) | Voyage free tier without payment method can't run Henge. Add a payment method at https://dashboard.voyageai.com/ — or remove `EMBED_PROVIDER=voyage` from `.env` to fall back to OpenAI. |
