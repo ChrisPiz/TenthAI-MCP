@@ -272,7 +272,7 @@ Two-phase. Phase 1 returns clarifying questions; phase 2 runs the ten advisors w
 // call
 {
   "question": "Should I hire someone now?",
-  "context": "Net income CLP 2.4M / month, runway 8 months, role: senior engineer, ..."
+  "context": "Net income USD 2.6K / month, runway 8 months, role: senior engineer, ..."
 }
 
 // response: full disagreement-map JSON (see `Output structure` above)
@@ -314,7 +314,7 @@ The JSON is the source of truth. The HTML is a pure render of it — delete a di
 | Tenth-man dissent  | Claude Opus 4.7      | hardest reasoning, fully sequential|
 | Embeddings         | OpenAI / Voyage      | `text-embedding-3-small` by default|
 
-Typical cost per full run: **~CLP 580** (≈ USD 0.65). Range CLP 430–730 depending on token spread.
+Typical cost per full run: **~USD 0.65** (range USD 0.50–0.80 depending on token spread).
 
 ---
 
@@ -328,7 +328,7 @@ const phase1 = await mcp.tools.decide({
 
 const phase2 = await mcp.tools.decide({
   question: "Should I expand my business?",
-  context: "Revenue CLP 2.4M, expenses 500K, 8 months runway, ..."
+  context: "Revenue USD 2.6K, expenses 550, 8 months runway, ..."
 })
 // phase2.viz_path → opens HTML
 // phase2.summary.consensus_state → drives downstream agent logic
