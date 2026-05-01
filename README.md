@@ -65,7 +65,7 @@ Install Henge from https://github.com/ChrisPiz/Henge-MCP into ~/Henge.
 
 Steps:
 1. git clone https://github.com/ChrisPiz/Henge-MCP.git ~/Henge
-2. cd into it, create a Python 3.11+ venv at .venv, activate it, pip install -r requirements.txt
+2. cd into it, create a Python 3.11+ venv at .venv, activate it, then `pip install -e .` (editable install — registers the `henge` package in the venv so it imports from any cwd, which is what the MCP server spawn needs).
 3. Ask me for my ANTHROPIC_API_KEY and OPENAI_API_KEY (one at a time, don't print them back). Write them into .env using cp .env.example .env as the starting point.
 4. Verify the keys by running `python -m henge.server` for ~5 seconds — it must print "✓ keys validated" to stderr. Kill it after that confirmation.
 5. Register globally: `claude mcp add -s user henge "$HOME/Henge/.venv/bin/python" -- -m henge.server`
