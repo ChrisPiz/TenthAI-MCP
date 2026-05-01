@@ -37,14 +37,6 @@ Henge runs your question through ten cognitive perspectives and:
 
 ---
 
-## Core principle
-
-Forcing disagreement without consensus is noise.
-
-Henge does not simulate debate. It analyzes the structure of thought, then quantifies the distance between voices so the dissent has somewhere to land.
-
----
-
 ## Why this is different
 
 | Approach              | Problem                       | Henge                              |
@@ -56,104 +48,11 @@ Henge does not simulate debate. It analyzes the structure of thought, then quant
 
 ---
 
-## How it works
+## Core principle
 
-```
-question
-   ↓
-┌─ phase 1 ─────────────────────┐
-│ scoping (Haiku 4.5)           │
-│ → 4–7 clarifying questions    │
-└───────────────────────────────┘
-   ↓ user answers
-┌─ phase 2 ─────────────────────┐
-│ 9 frames in parallel (Sonnet) │
-│ ↓                             │
-│ embeddings (OpenAI / Voyage)  │
-│ ↓                             │
-│ classical MDS + cosine        │
-│ ↓                             │
-│ consensus synthesis (Haiku)   │
-│ ↓                             │
-│ tenth-man steel-man (Opus)    │
-│ ↓                             │
-│ disagreement map + report     │
-└───────────────────────────────┘
-```
+Forcing disagreement without consensus is noise.
 
-The verdict is one of three states:
-
-- **aligned-stable** — the nine cluster tightly and the tenth's dissent is moderate
-- **aligned-fragile** — the nine are tight but the tenth pushes far enough to break it coherently
-- **divided** — the nine themselves are spread; there was no real consensus to attack
-
----
-
-## Cognitive frames
-
-Nine consensus frames + one mandatory dissenter:
-
-| # | Frame              | Lens                                                      |
-|---|--------------------|-----------------------------------------------------------|
-| 1 | empirical          | quantification, base rates, [assumption] markers          |
-| 2 | historical         | precedents — what happened the last 3–5 times             |
-| 3 | first-principles   | reduce to physical / economic / logical atoms             |
-| 4 | analogical         | cross-domain mappings (biology, military, finance)        |
-| 5 | systemic           | feedback loops, second- and third-order effects           |
-| 6 | ethical            | deontological + consequentialist tension                  |
-| 7 | soft-contrarian    | surgical reframe of the loaded silent assumption          |
-| 8 | radical-optimist   | what unlocks if it goes 10× better                        |
-| 9 | pre-mortem         | assume it failed in 12 months — describe how              |
-| 10| **tenth-man**      | steel-man dissent, mandatory, after the nine align        |
-
-All frames respond in the **same language as the question** (Spanish question → Spanish answer; English → English).
-
----
-
-## Output structure
-
-```jsonc
-{
-  "viz_path": "/Users/you/.henge/reports/20260501-2247_should-i-hire-now/report.html",
-  "report_id": "20260501-2247_should-i-hire-now",
-  "report_dir": "/Users/you/.henge/reports/20260501-2247_should-i-hire-now",
-  "consensus": "# Validate before hiring — asymmetric risk dominates\n\n## (1) Where the nine converge ...",
-  "frames": [
-    { "frame": "empirical",        "status": "ok", "distance": 0.046, "summary": "..." },
-    { "frame": "first-principles", "status": "ok", "distance": 0.069, "summary": "..." }
-    // 7 more
-  ],
-  "tenth_man": {
-    "distance": 0.148,
-    "response": "## §1 Facts I accept\n... ## §2 Where the consensus fails ..."
-  },
-  "summary": {
-    "tenth_man_distance": 0.148,
-    "max_frame_distance": 0.085,
-    "consensus_state": "aligned-stable",       // or "aligned-fragile" | "divided"
-    "consensus_fragility": "Advisors aligned — dissent sounds reasonable but consensus holds.",
-    "n_frames_succeeded": 9,
-    "embed_provider": "openai",
-    "embed_model": "text-embedding-3-small"
-  },
-  "cost_usd": 0.65
-}
-```
-
-The HTML at `viz_path` ships with the disagreement map, sortable frames table, consensus card, tenth-man steel-man, and a per-run hero painting bundled inside `report_dir/assets/`.
-
----
-
-## MCP integration
-
-Henge speaks Model Context Protocol. Any MCP-compatible client can drive it as a reasoning tool.
-
-Tested with:
-
-- **Claude Code** (one-shot install)
-- **Claude Desktop** (manual config)
-- **Cursor** (manual config)
-- Any other MCP-compatible agent or local AI pipeline
+Henge does not simulate debate. It analyzes the structure of thought, then quantifies the distance between voices so the dissent has somewhere to land.
 
 ---
 
@@ -243,6 +142,19 @@ Add the same `mcpServers.henge` block to Cursor's MCP config (`Settings → MCP 
 
 ---
 
+## MCP integration
+
+Henge speaks Model Context Protocol. Any MCP-compatible client can drive it as a reasoning tool.
+
+Tested with:
+
+- **Claude Code** (one-shot install)
+- **Claude Desktop** (manual config)
+- **Cursor** (manual config)
+- Any other MCP-compatible agent or local AI pipeline
+
+---
+
 ## Tool API
 
 ### `decide(question, context=None, skip_scoping=False)`
@@ -277,7 +189,7 @@ Two-phase. Phase 1 returns clarifying questions; phase 2 runs the ten advisors w
   "context": "Net income USD 2.6K / month, runway 8 months, role: senior engineer, ..."
 }
 
-// response: full disagreement-map JSON (see `Output structure` above)
+// response: full disagreement-map JSON (see `Output structure` below)
 ```
 
 #### Skip scoping
@@ -285,6 +197,58 @@ Two-phase. Phase 1 returns clarifying questions; phase 2 runs the ten advisors w
 ```jsonc
 { "question": "...", "skip_scoping": true }   // when the question already has rich context
 ```
+
+---
+
+## Example usage (agent)
+
+```ts
+const phase1 = await mcp.tools.decide({
+  question: "Should I expand my business?"
+})
+// phase1.questions → present to user, collect answers
+
+const phase2 = await mcp.tools.decide({
+  question: "Should I expand my business?",
+  context: "Revenue USD 2.6K, expenses 550, 8 months runway, ..."
+})
+// phase2.viz_path → opens HTML
+// phase2.summary.consensus_state → drives downstream agent logic
+```
+
+---
+
+## Output structure
+
+```jsonc
+{
+  "viz_path": "/Users/you/.henge/reports/20260501-2247_should-i-hire-now/report.html",
+  "report_id": "20260501-2247_should-i-hire-now",
+  "report_dir": "/Users/you/.henge/reports/20260501-2247_should-i-hire-now",
+  "consensus": "# Validate before hiring — asymmetric risk dominates\n\n## (1) Where the nine converge ...",
+  "frames": [
+    { "frame": "empirical",        "status": "ok", "distance": 0.046, "summary": "..." },
+    { "frame": "first-principles", "status": "ok", "distance": 0.069, "summary": "..." }
+    // 7 more
+  ],
+  "tenth_man": {
+    "distance": 0.148,
+    "response": "## §1 Facts I accept\n... ## §2 Where the consensus fails ..."
+  },
+  "summary": {
+    "tenth_man_distance": 0.148,
+    "max_frame_distance": 0.085,
+    "consensus_state": "aligned-stable",       // or "aligned-fragile" | "divided"
+    "consensus_fragility": "Advisors aligned — dissent sounds reasonable but consensus holds.",
+    "n_frames_succeeded": 9,
+    "embed_provider": "openai",
+    "embed_model": "text-embedding-3-small"
+  },
+  "cost_usd": 0.65
+}
+```
+
+The HTML at `viz_path` ships with the disagreement map, sortable frames table, consensus card, tenth-man steel-man, and a per-run hero painting bundled inside `report_dir/assets/`.
 
 ---
 
@@ -306,6 +270,60 @@ The JSON is the source of truth. The HTML is a pure render of it — delete a di
 
 ---
 
+## How it works
+
+```
+question
+   ↓
+┌─ phase 1 ─────────────────────┐
+│ scoping (Haiku 4.5)           │
+│ → 4–7 clarifying questions    │
+└───────────────────────────────┘
+   ↓ user answers
+┌─ phase 2 ─────────────────────┐
+│ 9 frames in parallel (Sonnet) │
+│ ↓                             │
+│ embeddings (OpenAI / Voyage)  │
+│ ↓                             │
+│ classical MDS + cosine        │
+│ ↓                             │
+│ consensus synthesis (Haiku)   │
+│ ↓                             │
+│ tenth-man steel-man (Opus)    │
+│ ↓                             │
+│ disagreement map + report     │
+└───────────────────────────────┘
+```
+
+The verdict is one of three states:
+
+- **aligned-stable** — the nine cluster tightly and the tenth's dissent is moderate
+- **aligned-fragile** — the nine are tight but the tenth pushes far enough to break it coherently
+- **divided** — the nine themselves are spread; there was no real consensus to attack
+
+---
+
+## Cognitive frames
+
+Nine consensus frames + one mandatory dissenter:
+
+| # | Frame              | Lens                                                      |
+|---|--------------------|-----------------------------------------------------------|
+| 1 | empirical          | quantification, base rates, [assumption] markers          |
+| 2 | historical         | precedents — what happened the last 3–5 times             |
+| 3 | first-principles   | reduce to physical / economic / logical atoms             |
+| 4 | analogical         | cross-domain mappings (biology, military, finance)        |
+| 5 | systemic           | feedback loops, second- and third-order effects           |
+| 6 | ethical            | deontological + consequentialist tension                  |
+| 7 | soft-contrarian    | surgical reframe of the loaded silent assumption          |
+| 8 | radical-optimist   | what unlocks if it goes 10× better                        |
+| 9 | pre-mortem         | assume it failed in 12 months — describe how              |
+| 10| **tenth-man**      | steel-man dissent, mandatory, after the nine align        |
+
+All frames respond in the **same language as the question** (Spanish question → Spanish answer; English → English).
+
+---
+
 ## Models & costs
 
 | Stage              | Model                | Why                                |
@@ -320,20 +338,19 @@ Typical cost per full run: **~USD 0.65** (range USD 0.50–0.80 depending on tok
 
 ---
 
-## Example usage (agent)
+## Architecture
 
-```ts
-const phase1 = await mcp.tools.decide({
-  question: "Should I expand my business?"
-})
-// phase1.questions → present to user, collect answers
-
-const phase2 = await mcp.tools.decide({
-  question: "Should I expand my business?",
-  context: "Revenue USD 2.6K, expenses 550, 8 months runway, ..."
-})
-// phase2.viz_path → opens HTML
-// phase2.summary.consensus_state → drives downstream agent logic
+```
+henge/
+  agents.py        # 9 frames in parallel + tenth-man sequencing
+  embed.py         # provider-agnostic embeddings + classical MDS
+  scoping.py       # 4–7 clarifying questions (Haiku)
+  consensus.py     # synthesis of the nine (Haiku)
+  viz.py           # editorial HTML report + disagreement map SVG
+  storage.py       # report.json + report.html + ledger
+  server.py        # MCP entrypoint
+  prompts/         # 10 cognitive-frame markdowns
+  assets/          # bundled hero painting
 ```
 
 ---
@@ -357,23 +374,6 @@ const phase2 = await mcp.tools.decide({
 - not a vibe-checker
 
 It is a **decision-quality** tool. The output is a measurable structure of agreement and disagreement, not a longer answer.
-
----
-
-## Architecture
-
-```
-henge/
-  agents.py        # 9 frames in parallel + tenth-man sequencing
-  embed.py         # provider-agnostic embeddings + classical MDS
-  scoping.py       # 4–7 clarifying questions (Haiku)
-  consensus.py     # synthesis of the nine (Haiku)
-  viz.py           # editorial HTML report + disagreement map SVG
-  storage.py       # report.json + report.html + ledger
-  server.py        # MCP entrypoint
-  prompts/         # 10 cognitive-frame markdowns
-  assets/          # bundled hero painting
-```
 
 ---
 
