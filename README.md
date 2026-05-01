@@ -202,18 +202,27 @@ Runs a structured dissent analysis over a user question.
 
 ## Cognitive frames
 
-TenthAI can reason through frames such as:
+Each advisor runs a distinct reasoning frame. The point isn't to add ten voices — it's to get ten *different* angles on the same question and surface where they agree and where they don't.
 
-- empirical
-- historical
-- first-principles
-- systemic
-- ethical
-- analogical
-- soft-contrarian
-- radical-optimist
-- pre-mortem
-- tenth-man
+- **empirical** — Quantifies with numbers, base rates and evidence. Cites magnitudes and sources, marks every unverified premise as `[supuesto]`. Refuses to speculate when there are no real data.
+
+- **historical** — Cites 2–3 analogous cases from the past and extracts the pattern. Asks "what happened the last three times someone tried this?" Stops first-principles reasoning when precedent is abundant.
+
+- **first-principles** — Reduces the problem to its physical, economic or logical atoms and rebuilds without assuming the conventional approach. Asks "what would have to be true for the standard solution to be optimal?"
+
+- **analogical** — Pulls the *functional mechanism* from another domain — biology, military strategy, chess, finance, complex systems — and adapts it. Avoids surface metaphors; demands structural isomorphism.
+
+- **systemic** — Maps feedback loops, second- and third-order effects. Asks "what happens if everyone does this?" and "who changes their behavior in response?" Refuses to reason in partial equilibrium.
+
+- **ethical** — Crosses the deontological lens (rights, dignity, promises) with the consequentialist one (outcomes at 1, 5, 10 years). Names the tension between them when it exists instead of ducking it.
+
+- **soft-contrarian** — Accepts the question and reframes one silent assumption. *"Yes, but consider that X isn't necessarily true if Y."* Surgical nuance, not opposition. Won't say "it depends".
+
+- **radical-optimist** — Lights the 10× upside scenario. Asks "what unlocks if everything goes right?" and looks for asymmetric bets (capped downside, uncapped upside). Names risks briefly; doesn't dwell on them.
+
+- **pre-mortem** — Assumes the decision already failed at 12 months and describes why. Lists concrete operational failure modes ranked by likelihood, not severity. Diagnoses; doesn't recommend mitigations.
+
+- **tenth-man** — Reads the other nine and is *required* to dissent. Steel-mans the contrarian view: accepts observable facts, attacks shared interpretations, builds the most coherent counter-case it can find. Sounds convincing on purpose — that's its job, not a signal it's right.
 
 ---
 
