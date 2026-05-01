@@ -8,6 +8,8 @@ One must disagree.
 
 Henge is a structured-dissent engine exposed as an MCP server. It helps AI agents — and the humans behind them — detect consensus, measure it, and challenge it only when it actually matters.
 
+**[→ See a live demo report](https://chrispiz.github.io/Henge-MCP/demo.html)**
+
 ---
 
 ## The problem
