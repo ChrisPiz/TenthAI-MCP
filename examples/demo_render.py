@@ -40,9 +40,9 @@ The financial setup is workable but unforgiving — 9 months of runway is enough
 
 Tension persists on **whether *now* is the right moment**. The systemic and pre-mortem frames want one more thing nailed before the quit — a paying design partner, or a side-project prototype that three coordinators are already using. The optimist and first-principles frames argue the cost of waiting another six months is higher than it looks: your context window on the buyer degrades from the inside the longer you stay at the unicorn. Both sides are pricing the same risk; they disagree on which clock runs faster.
 
-## (3) Inclinación neta
+## (3) Net inclination
 
-**Inclinación neta:** lean *out* of the job, but not blindly. Secure one paying design partner before the quit, then go full-time on the back of that contract. Don't quit and figure it out — quit and execute on a contract you already signed. The sequencing matters more than the timing."""
+**Net inclination:** lean *out* of the job, but not blindly. Secure one paying design partner before the quit, then go full-time on the back of that contract. Don't quit and figure it out — quit and execute on a contract you already signed. The sequencing matters more than the timing."""
 
 
 FRAMES = {
@@ -178,6 +178,14 @@ CHROME = [
     ("vs centroide de los 9", "vs centroid of the 9"),
     ("Consejero más en contra", "Most divergent advisor"),
     ("Veredicto", "Verdict"),
+    # 3-state verdicts produced by viz.consensus_verdict()
+    ("Consejeros alineados — el disenso suena pero el consenso aguanta.",
+     "Advisors aligned — the dissent is audible but the consensus holds."),
+    ("Consenso fuerte pero frágil — el disidente lo rompe coherentemente.",
+     "Tight consensus but fragile — the dissenter coherently breaks it."),
+    ("Consejeros divididos — no había consenso fuerte para empezar.",
+     "Advisors already divided — no strong consensus to break."),
+    # Legacy 2-state verdict strings (kept for old reports)
     ("Disidente vive en otro mundo — consenso frágil que vale la pena romper.",
      "Dissenter lives in another world — fragile consensus worth breaking."),
     ("Consejeros divididos — no había consenso fuerte que romper.",
@@ -185,9 +193,10 @@ CHROME = [
     # Map card
     ("10 voces · MDS sobre <b>cosine distance</b> · centroide de los 9",
      "10 voices · MDS over <b>cosine distance</b> · centroid of the 9"),
-    ("Mapa MDS", "MDS Map"),
+    # Longer pattern first so "Mapa MDS" replacement doesn't shadow it
     ("Mapa MDS clásico · preserva distancias por pares",
      "Classical MDS · preserves pairwise distances"),
+    ("Mapa MDS", "MDS Map"),
     ("Décimo hombre", "Tenth-man"),
     # Map help popover
     (">Cómo leer este mapa<", ">How to read this map<"),
