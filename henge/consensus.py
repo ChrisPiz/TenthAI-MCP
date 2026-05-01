@@ -1,7 +1,7 @@
 """Consensus synthesis — Haiku reads the 9 frames and extracts what they agree on.
 
 Why: a reader needs to see consensus BEFORE the dissent. Otherwise the tenth-man
-has no anchor to attack, narratively. Cost: ~CLP 30, +3-5s latency.
+has no anchor to attack, narratively. Cost: ~USD 0.04, +3-5s latency.
 """
 
 HAIKU = "claude-haiku-4-5-20251001"

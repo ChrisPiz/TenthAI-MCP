@@ -134,7 +134,7 @@ All frames respond in the **same language as the question** (Spanish question â†
     "embed_provider": "openai",
     "embed_model": "text-embedding-3-small"
   },
-  "cost_clp": 580.0
+  "cost_usd": 0.65
 }
 ```
 

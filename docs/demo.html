@@ -3,1010 +3,893 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Henge · Should I leave my Senior PM job at a Series C unicorn to sta</title>
+<title>TenthAI · Disagreement Map</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..700,0..100;1,9..144,300..700,0..100&family=Inter+Tight:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,450;9..40,500;9..40,600&family=Fraunces:opsz,wght@9..144,400;9..144,500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:        oklch(96.5% 0.012 78);
-    --paper:     oklch(98.5% 0.008 78);
-    --paper-2:   oklch(94.5% 0.014 78);
-    --ink:       oklch(20% 0.012 60);
-    --ink-2:     oklch(38% 0.012 60);
-    --ink-3:     oklch(56% 0.012 60);
-    --ink-4:     oklch(72% 0.010 70);
-    --rule:      oklch(86% 0.012 70);
-    --rule-2:    oklch(91% 0.012 70);
+    --midnight-navy: #1b2540;
+    --deep-cosmos: #001033;
+    --chartreuse: #d0f100;
+    --ice-veil: #e0f6ff;
+    --ghost-canvas: #f8f9fc;
+    --pure: #ffffff;
+    --slate-ink: #6b7184;
+    --ash: #7c8293;
+    --storm: #596075;
+    --fog: #b1b5c0;
 
-    --accent:      oklch(56% 0.165 32);
-    --accent-2:    oklch(48% 0.150 30);
-    --accent-soft: oklch(92% 0.045 32);
+    --shadow-xl: rgba(0,39,80,0.03) 0 56px 72px -16px, rgba(0,39,80,0.03) 0 32px 32px -16px, rgba(0,39,80,0.04) 0 6px 12px -3px, rgba(0,39,80,0.04) 0 0 0 1px;
+    --shadow-md: rgba(0,39,80,0.08) 0 6px 16px -3px, rgba(0,39,80,0.04) 0 0 0 1px;
+    --shadow-subtle: rgba(255,255,255,0.72) 0 1px 1px 0 inset, rgba(4,33,80,0.02) 0 8px 16px 0, rgba(4,33,80,0.03) 0 4px 12px 0, rgba(4,33,80,0.06) 0 1px 2px 0, rgba(4,33,80,0.04) 0 0 0 1px;
 
-    --nine:        oklch(34% 0.085 250);
-    --nine-2:      oklch(42% 0.080 250);
-    --nine-soft:   oklch(93% 0.025 250);
-
-    --serif: 'Fraunces', 'Iowan Old Style', Georgia, serif;
-    --sans:  'Inter Tight', system-ui, sans-serif;
+    --sans:  'DM Sans', ui-sans-serif, system-ui, sans-serif;
+    --serif: 'Fraunces', Georgia, serif;
     --mono:  'JetBrains Mono', ui-monospace, monospace;
   }
   *{ box-sizing: border-box; }
   html, body{ margin:0; padding:0; }
   body{
+    background: var(--ghost-canvas);
+    color: var(--midnight-navy);
     font-family: var(--sans);
-    background: var(--bg);
-    color: var(--ink);
+    font-size: 16px;
+    line-height: 1.5;
+    letter-spacing: -0.16px;
     -webkit-font-smoothing: antialiased;
-    text-rendering: optimizeLegibility;
-    line-height: 1.55;
-    font-feature-settings: "ss01","cv11";
   }
-  ::selection{ background: var(--accent-soft); color: var(--ink); }
+  ::selection{ background: var(--chartreuse); color: var(--midnight-navy); }
 
-  .page{ max-width: 1180px; margin: 0 auto; padding: 56px 56px 96px; }
-
-  .mast{
-    display:flex; align-items:center; gap:14px;
-    font-family: var(--mono);
-    font-size: 11px;
-    letter-spacing: .14em;
-    text-transform: uppercase;
-    color: var(--ink-3);
+  /* Compact masthead */
+  .masthead{
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 18px 32px 14px;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid rgba(0,39,80,0.08);
   }
-  .mast .rule{ width: 28px; height:1px; background: var(--ink-3); }
-  .mast .dot{ width:7px; height:7px; border-radius:999px; background: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft);}
-  .mast b{ color: var(--ink); font-weight: 500; letter-spacing: .14em;}
-  .mast .sep{ color: var(--ink-4); }
-
-  .head{
-    margin: 28px 0 0;
+  .logo{
+    display:flex; align-items:center; gap: 10px;
     font-family: var(--serif);
-    font-weight: 380;
-    font-size: clamp(40px, 5.4vw, 72px);
-    line-height: 1.02;
-    letter-spacing: -0.025em;
-    color: var(--ink);
-    font-variation-settings: "SOFT" 30, "opsz" 144;
-    text-wrap: balance;
-    max-width: 16ch;
+    font-weight: 500; font-size: 18px; letter-spacing: -0.01em;
+    color: var(--midnight-navy);
   }
-  .head em{
-    font-style: italic;
-    color: var(--accent);
-    font-weight: 360;
-    font-variation-settings: "SOFT" 60, "opsz" 144;
+  .logo .mk{
+    width: 22px; height: 22px; border-radius: 6px;
+    background: var(--midnight-navy);
+    display: inline-flex; align-items: center; justify-content: center;
+    color: var(--chartreuse);
+    font-family: var(--mono); font-size: 11px; font-weight: 500;
   }
+  .mast-meta{
+    font-family: var(--mono); font-size: 12px;
+    color: var(--slate-ink); letter-spacing: 0.02em;
+  }
+  .mast-meta b{ color: var(--midnight-navy); font-weight: 500; }
+  .mast-meta .sep{ color: var(--fog); margin: 0 8px; }
 
-  .question{
-    margin: 28px 0 0;
-    padding: 4px 0 4px 18px;
-    border-left: 2px solid var(--ink-4);
-    font-family: var(--serif);
-    font-style: italic;
-    font-weight: 360;
-    font-size: 20px;
-    line-height: 1.4;
-    color: var(--ink-2);
-    max-width: 64ch;
-    font-variation-settings: "opsz" 60;
-    text-wrap: pretty;
-  }
-
-  .strip{
-    display:grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0;
-    margin: 40px 0 56px;
-    border-top: 1px solid var(--ink);
-    border-bottom: 1px solid var(--rule);
-  }
-  .stat{
-    padding: 18px 24px 18px 0;
-    border-right: 1px solid var(--rule);
-    display:flex; flex-direction:column; gap:8px;
-  }
-  .stat:nth-child(2){ padding-left: 24px; }
-  .stat:nth-child(3){ padding-left: 24px; border-right: none;}
-  .stat .lbl{
-    font-family: var(--mono);
-    font-size: 10.5px;
-    letter-spacing: .14em;
-    text-transform: uppercase;
-    color: var(--ink-3);
-  }
-  .stat .val{
-    font-family: var(--serif);
-    font-weight: 400;
-    font-size: 26px;
-    letter-spacing: -0.018em;
-    color: var(--ink);
-    line-height: 1.1;
-  }
-  .stat .val .num{
-    font-family: var(--mono);
-    font-weight: 500;
-    font-size: 13px;
-    color: var(--ink-3);
-    margin-left: 8px;
-    letter-spacing: 0;
-  }
-  .stat.accent .val{ color: var(--accent); }
-  .stat .verdict{
-    font-family: var(--serif);
-    font-style: italic;
-    font-weight: 380;
-    font-size: 16px;
-    line-height: 1.4;
-    color: var(--ink-2);
-  }
-
-  .map-card{
-    background: var(--paper);
-    border: 1px solid var(--rule);
-    border-radius: 2px;
+  /* Hero */
+  .hero{
+    max-width: 1200px;
+    margin: 24px auto 0;
+    border-radius: 20px;
     overflow: hidden;
     position: relative;
+    box-shadow: var(--shadow-xl);
+    color: #fafeff;
+    isolation: isolate;
   }
-  .map-head{
-    display:flex; justify-content: space-between; align-items: baseline;
-    padding: 18px 24px;
-    border-bottom: 1px solid var(--rule-2);
+  .hero-bg{
+    position: absolute; inset: 0;
+    background-image: url('assets/header-painting.jpg');
+    background-size: cover;
+    background-position: center 40%;
+    z-index: -2;
   }
-  .map-head h3{
-    margin:0;
-    font-family: var(--serif);
-    font-style: italic;
-    font-weight: 400;
-    font-size: 17px;
-    letter-spacing: -0.005em;
-  }
-  .map-head .meta{
-    font-family: var(--mono);
-    font-size: 10.5px;
-    letter-spacing: .12em;
-    text-transform: uppercase;
-    color: var(--ink-3);
-  }
-  .map-head .meta b{ color: var(--ink-2); font-weight:500;}
-  .map-svg-wrap{
-    position: relative;
-    aspect-ratio: 16 / 11;
+  .hero::after{
+    content:"";
+    position:absolute; inset:0; z-index:-1;
     background:
-      radial-gradient(circle at 50% 56%, oklch(99% 0.005 78) 0%, var(--paper) 70%);
+      linear-gradient(180deg, rgba(0,16,51,0.18) 0%, rgba(0,16,51,0.55) 60%, rgba(0,16,51,0.82) 100%),
+      linear-gradient(90deg, rgba(0,16,51,0.55) 0%, rgba(0,16,51,0.10) 50%);
   }
-  svg.map{ position:absolute; inset:0; width:100%; height:100%;}
-
-  .map-help{
-    position: absolute;
-    top: 14px;
-    right: 14px;
-    z-index: 10;
-  }
-  .map-help summary{
-    list-style: none;
-    cursor: pointer;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    background: var(--paper);
-    border: 1px solid var(--rule);
-    color: var(--ink-3);
-    font-family: var(--serif);
-    font-style: italic;
-    font-size: 16px;
-    font-weight: 500;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    user-select: none;
-    transition: all .15s ease;
-    box-shadow: 0 1px 2px rgba(0,0,0,.04);
-  }
-  .map-help summary::-webkit-details-marker{ display: none; }
-  .map-help summary:hover{
-    background: var(--ink);
-    color: var(--paper);
-    border-color: var(--ink);
-  }
-  .map-help[open] summary{
-    background: var(--ink);
-    color: var(--paper);
-    border-color: var(--ink);
-  }
-  .map-help-popover{
-    position: absolute;
-    top: 36px;
-    right: 0;
-    width: 320px;
-    background: var(--paper);
-    border: 1px solid var(--rule);
-    border-radius: 4px;
-    padding: 18px 20px;
-    box-shadow: 0 4px 16px -4px rgba(0,0,0,.12), 0 1px 3px rgba(0,0,0,.04);
-  }
-  .map-help-popover p{
-    margin: 0 0 10px;
-    font-family: var(--serif);
-    font-weight: 380;
-    font-size: 13.5px;
-    line-height: 1.55;
-    color: var(--ink-2);
-    font-variation-settings: "opsz" 24;
-  }
-  .map-help-popover p:last-child{ margin-bottom: 0; }
-  .map-help-popover strong{ font-weight: 600; color: var(--ink); }
-  .map-help-popover .map-help-title{
-    font-family: var(--mono);
-    font-size: 10.5px;
-    text-transform: uppercase;
-    letter-spacing: .14em;
-    color: var(--ink-3);
-    font-weight: 500;
-    margin-bottom: 12px;
-  }
-  .map-foot{
-    display:flex; justify-content: space-between; align-items: center;
-    padding: 14px 24px;
-    border-top: 1px solid var(--rule-2);
-    font-family: var(--mono);
-    font-size: 10.5px;
-    letter-spacing: .12em;
-    text-transform: uppercase;
-    color: var(--ink-3);
-  }
-  .map-foot .legend{ display:flex; gap:18px; align-items:center;}
-  .map-foot .legend i{ display:inline-block; width:8px; height:8px; border-radius:999px; margin-right:8px; vertical-align:middle; transform: translateY(-1px);}
-  .map-foot .legend i.t{ background: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft);}
-  .map-foot .legend i.n{ background: var(--nine); box-shadow: 0 0 0 3px var(--nine-soft);}
-
-  .sec{
-    display:flex; align-items: baseline; gap: 14px;
-    margin: 64px 0 22px;
-  }
-  .sec .glyph{
-    font-family: var(--serif);
-    font-style: italic;
-    font-weight: 400;
-    font-size: 22px;
-    color: var(--ink-3);
-  }
-  .sec h2{
-    margin:0;
-    font-family: var(--serif);
-    font-weight: 420;
-    font-size: 28px;
-    letter-spacing: -0.02em;
-    color: var(--ink);
-  }
-  .sec h2 em{ font-style: italic; color: var(--accent); font-weight: 380;}
-  .sec .rule{ flex: 1; height: 1px; background: var(--rule); transform: translateY(-4px);}
-  .sec .aside{
-    font-family: var(--mono);
-    font-size: 10.5px;
-    letter-spacing: .12em;
-    text-transform: uppercase;
-    color: var(--ink-3);
-  }
-  .sec .aside b{ color: var(--ink-2); font-weight:500;}
-
-  .consensus{
-    background: var(--paper);
-    border: 1px solid var(--rule);
-    border-radius: 2px;
-    overflow: hidden;
-  }
-  .consensus-top{
+  .hero-inner{
+    padding: 56px 40px 28px;
     display: grid;
-    grid-template-columns: 1fr auto;
-    align-items: center;
-    gap: 24px;
-    padding: 22px 32px;
-    border-bottom: 1px solid var(--rule);
-    background: linear-gradient(180deg, var(--nine-soft), var(--paper) 100%);
+    grid-template-columns: 1.4fr 1fr;
+    gap: 40px;
+    align-items: end;
   }
-  .consensus-top .lbl{
-    font-family: var(--mono);
-    font-size: 10.5px;
-    letter-spacing: .14em;
-    text-transform: uppercase;
-    color: var(--nine);
-    font-weight: 500;
-  }
-  .consensus-top h3{
-    margin: 4px 0 0;
-    font-family: var(--serif);
-    font-weight: 420;
-    font-size: 24px;
-    letter-spacing: -0.018em;
-    color: var(--ink);
-    text-wrap: balance;
-  }
-  .consensus-top .d{
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--ink-3);
-    text-align: right;
-    letter-spacing: .04em;
-  }
-  .consensus-top .d b{
-    display: block;
+  h1.hero-h{
+    margin: 0 0 14px;
     font-family: var(--serif);
     font-weight: 400;
-    font-size: 26px;
-    color: var(--nine);
-    line-height: 1;
-    margin-bottom: 4px;
-    letter-spacing: -0.01em;
+    font-size: clamp(30px, 3.6vw, 44px);
+    line-height: 1.05;
+    letter-spacing: -0.4px;
+    text-wrap: balance;
+    max-width: 20ch;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.18);
+  }
+  .hero-h em{ font-style: italic; color: var(--chartreuse); }
+  .hero-dek{
+    margin: 0;
+    max-width: 52ch;
+    font-size: 15.5px; line-height: 1.5;
+    color: rgba(224,246,255,0.92);
+    letter-spacing: -0.09px;
+  }
+
+  .hero-stats{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .hero-stat{
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(224,246,255,0.18);
+    border-radius: 14px;
+    padding: 14px 16px;
+  }
+  .hero-stat .lbl{
+    font-family: var(--mono); font-size: 10.5px;
+    color: rgba(224,246,255,0.78);
+    text-transform: uppercase; letter-spacing: 0.04em;
+    margin-bottom: 6px;
+  }
+  .hero-stat .val{
+    font-family: var(--serif); font-weight: 400;
+    font-size: 22px; line-height: 1; letter-spacing: -0.22px;
+    color: #fafeff;
     font-variant-numeric: tabular-nums;
   }
-  .consensus-body{
-    padding: 28px 32px 36px;
-    column-count: 2;
-    column-gap: 40px;
-    column-rule: 1px solid var(--rule-2);
-    font-family: var(--serif);
-    font-weight: 380;
-    font-size: 15px;
-    line-height: 1.62;
-    color: var(--ink);
-    font-variation-settings: "opsz" 24;
+  .hero-stat .val.acc{ color: var(--chartreuse); }
+  .hero-stat .sub{
+    margin-top: 4px;
+    font-size: 12px; color: rgba(224,246,255,0.70);
   }
-  .consensus-body h3{
-    margin: 0 0 10px;
-    font-family: var(--sans);
-    font-weight: 600;
-    font-size: 11px;
-    letter-spacing: .14em;
-    text-transform: uppercase;
-    color: var(--ink-3);
-    break-after: avoid;
-  }
-  .consensus-body h3:not(:first-child){ margin-top: 22px; }
-  .consensus-body p{ margin: 0 0 12px; break-inside: avoid-column; }
-  .consensus-body p:last-child{ margin-bottom: 0; }
-  .consensus-body strong{ font-weight: 600; color: var(--ink); }
-  .consensus-body em{ font-style: italic; color: var(--ink); }
 
-  .tenth{
-    background: var(--paper);
-    border: 1px solid var(--accent-soft);
-    border-radius: 4px;
+  /* Sections */
+  .page{ background: var(--ghost-canvas); }
+  .section{
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 80px 32px 0;
+  }
+  .sec-head{
+    display: flex; align-items: end; justify-content: space-between; gap: 24px;
+    margin-bottom: 28px;
+  }
+  .sec-head .l{ max-width: 64ch; }
+  .sec-eyebrow{
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--mono); font-size: 12px;
+    color: var(--slate-ink);
+    text-transform: uppercase; letter-spacing: 0.04em;
+    margin-bottom: 12px;
+  }
+  .sec-eyebrow .n{
+    background: var(--midnight-navy); color: var(--pure);
+    padding: 2px 7px; border-radius: 9999px;
+    font-size: 10.5px; letter-spacing: 0.06em;
+  }
+  .sec-head h2{
+    margin: 0;
+    font-family: var(--serif); font-weight: 400;
+    font-size: 40px; letter-spacing: -0.4px;
+    line-height: 1.05; color: var(--midnight-navy);
+    text-wrap: balance;
+  }
+  .sec-head h2 em{ font-style: italic; color: var(--midnight-navy); }
+  .sec-head .sub{
+    margin: 12px 0 0;
+    font-size: 16px; color: var(--storm); letter-spacing: -0.16px;
+  }
+
+  /* Map card */
+  .map-card{
+    background: var(--pure);
+    border-radius: 20px;
+    box-shadow: var(--shadow-xl);
     overflow: hidden;
+  }
+  .map-top{
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid rgba(0,39,80,0.06);
+  }
+  .map-top .l{ display:flex; align-items:center; gap: 14px; }
+  .map-top .pill{
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--ghost-canvas);
+    border-radius: 9999px;
+    padding: 5px 12px;
+    font-family: var(--mono); font-size: 11px;
+    color: var(--midnight-navy);
+    box-shadow: rgba(0,39,80,0.04) 0 0 0 1px;
+  }
+  .map-top .pill .d{ width: 6px; height: 6px; border-radius: 9999px; background: var(--chartreuse); }
+  .map-top .meta{
+    font-family: var(--mono); font-size: 12px; color: var(--slate-ink);
+  }
+  .legend-row{ display:flex; gap: 16px; align-items: center; font-size: 13px; color: var(--slate-ink); }
+  .legend-row .ld{
+    display: inline-block; width: 9px; height: 9px;
+    border-radius: 9999px; margin-right: 7px; transform: translateY(-1px);
+  }
+  .legend-row .ld.t{ background: var(--chartreuse); box-shadow: 0 0 0 3px rgba(208,241,0,0.18); }
+  .legend-row .ld.n{ background: var(--midnight-navy); }
+
+  .map-svg{
+    aspect-ratio: 16 / 8.5;
+    background: var(--pure);
     position: relative;
   }
-  .tenth::before{
-    content:"";
-    position:absolute; left:0; top:0; bottom:0; width: 3px;
-    background: var(--accent);
+  .map-svg svg{ width: 100%; height: 100%; display: block; }
+
+  .map-foot{
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 0;
+    border-top: 1px solid rgba(0,39,80,0.06);
+  }
+  .map-foot .cell{
+    padding: 16px 20px;
+    border-right: 1px solid rgba(0,39,80,0.06);
+  }
+  .map-foot .cell:last-child{ border-right: 0; }
+  .map-foot .cell .lbl{
+    font-family: var(--mono); font-size: 11px;
+    color: var(--slate-ink); text-transform: uppercase;
+    letter-spacing: 0.04em; margin-bottom: 6px;
+  }
+  .map-foot .cell .val{
+    font-family: var(--serif); font-weight: 400;
+    font-size: 22px; letter-spacing: -0.22px;
+    color: var(--midnight-navy);
+    font-variant-numeric: tabular-nums;
+  }
+  .map-foot .cell .val .badge{
+    display: inline-block;
+    background: var(--chartreuse); color: var(--midnight-navy);
+    font-family: var(--mono); font-size: 11px; font-weight: 500;
+    padding: 2px 8px; border-radius: 9999px;
+    margin-left: 8px; letter-spacing: 0.04em; text-transform: uppercase;
+    transform: translateY(-2px);
+  }
+  .map-foot .cell .sub{
+    margin-top: 4px;
+    font-size: 13px; color: var(--slate-ink);
+  }
+
+  /* Consensus card (navy-themed) */
+  .consensus-card{
+    background: var(--pure);
+    border-radius: 20px;
+    box-shadow: var(--shadow-xl);
+    overflow: hidden;
+    margin-top: 24px;
+    position: relative;
+  }
+  .consensus-card::before{
+    content: "";
+    position: absolute; left: 0; top: 0; bottom: 0;
+    width: 4px; background: var(--midnight-navy);
+  }
+  .consensus-top{
+    display: grid; grid-template-columns: 1fr auto;
+    align-items: start; gap: 24px;
+    padding: 24px 28px;
+    border-bottom: 1px solid rgba(0,39,80,0.06);
+  }
+  .consensus-tag{
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--midnight-navy); color: var(--pure);
+    border-radius: 9999px; padding: 4px 10px;
+    font-family: var(--mono); font-size: 11px;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    margin-bottom: 12px;
+  }
+  .consensus-tag .d{ width: 5px; height: 5px; border-radius: 9999px; background: var(--chartreuse); }
+  .consensus-top h3{
+    margin: 0;
+    font-family: var(--serif); font-weight: 400;
+    font-size: 28px; letter-spacing: -0.4px; line-height: 1.08;
+    color: var(--midnight-navy);
+    text-wrap: balance;
+    max-width: 28ch;
+  }
+  .consensus-d{
+    text-align: right;
+    background: var(--ghost-canvas);
+    border-radius: 16px;
+    padding: 14px 18px;
+    box-shadow: rgba(0,39,80,0.04) 0 0 0 1px;
+    font-family: var(--mono); font-size: 11px;
+    color: var(--slate-ink);
+    text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .consensus-d b{
+    display: block;
+    font-family: var(--serif); font-weight: 400;
+    font-size: 28px; letter-spacing: -0.4px; line-height: 1;
+    color: var(--midnight-navy);
+    margin-bottom: 4px;
+    text-transform: none;
+  }
+  .consensus-body{
+    padding: 28px 32px;
+    column-count: 2;
+    column-gap: 40px;
+    column-rule: 1px solid rgba(0,39,80,0.06);
+    font-size: 16px;
+    line-height: 1.55;
+    color: var(--midnight-navy);
+    letter-spacing: -0.16px;
+  }
+  .consensus-body p{ margin: 0 0 12px; break-inside: avoid-column; }
+  .consensus-body p:last-child{ margin-bottom: 0; }
+  .consensus-body h2,
+  .consensus-body h3,
+  .consensus-body h4{
+    margin: 0 0 10px;
+    font-family: var(--mono); font-weight: 500;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--slate-ink);
+    break-after: avoid;
+  }
+  .consensus-body h2:not(:first-child),
+  .consensus-body h3:not(:first-child),
+  .consensus-body h4:not(:first-child){ margin-top: 22px; }
+  .consensus-body strong{ font-weight: 600; color: var(--midnight-navy); }
+  .consensus-body em{ font-style: italic; color: var(--midnight-navy); }
+  .consensus-body .pull{
+    margin: 16px 0;
+    background: var(--ghost-canvas);
+    border-radius: 16px;
+    padding: 14px 18px;
+    box-shadow: rgba(0,39,80,0.04) 0 0 0 1px;
+    font-family: var(--serif); font-weight: 400;
+    font-size: 18px; line-height: 1.35; letter-spacing: -0.18px;
+    color: var(--midnight-navy);
+    break-inside: avoid-column;
+  }
+
+  /* Tenth-man feature card */
+  .tenth-card{
+    background: var(--pure);
+    border-radius: 20px;
+    box-shadow: var(--shadow-xl);
+    overflow: hidden;
+    margin-top: 24px;
+    position: relative;
+  }
+  .tenth-card::before{
+    content: "";
+    position: absolute; left: 0; top: 0; bottom: 0;
+    width: 4px; background: var(--chartreuse);
   }
   .tenth-top{
-    display:grid;
-    grid-template-columns: 1fr auto;
-    align-items: center;
-    gap: 24px;
-    padding: 24px 28px 22px 32px;
-    border-bottom: 1px solid var(--rule-2);
+    display: grid; grid-template-columns: 1fr auto;
+    align-items: start; gap: 24px;
+    padding: 24px 28px;
+    border-bottom: 1px solid rgba(0,39,80,0.06);
   }
-  .tenth-eyebrow{
-    display:flex; align-items:center; gap:10px;
-    font-family: var(--mono); font-size: 10.5px;
-    letter-spacing: .14em; text-transform: uppercase;
-    color: var(--accent);
+  .tenth-tag{
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--midnight-navy); color: var(--chartreuse);
+    border-radius: 9999px; padding: 4px 10px;
+    font-family: var(--mono); font-size: 11px;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    margin-bottom: 12px;
   }
-  .tenth-eyebrow i{ width:6px; height:6px; border-radius:999px; background: var(--accent);}
-  .tenth-top h2{
-    margin: 8px 0 0;
-    font-family: var(--serif);
-    font-weight: 420;
-    font-style: italic;
-    font-size: 28px;
-    letter-spacing: -0.012em;
-    color: var(--ink);
+  .tenth-tag .d{ width: 5px; height: 5px; border-radius: 9999px; background: var(--chartreuse); }
+  .tenth-top h3{
+    margin: 0;
+    font-family: var(--serif); font-weight: 400;
+    font-size: 32px; letter-spacing: -0.4px; line-height: 1.05;
+    color: var(--midnight-navy);
+    text-wrap: balance;
+    max-width: 24ch;
   }
-  .tenth-top .d{
-    font-family: var(--mono);
-    font-size: 11px;
-    letter-spacing: .04em;
-    color: var(--ink-3);
+  .tenth-top h3 em{ font-style: italic; }
+
+  .tenth-d-stat{
     text-align: right;
+    background: var(--ghost-canvas);
+    border-radius: 16px;
+    padding: 14px 18px;
+    box-shadow: rgba(0,39,80,0.04) 0 0 0 1px;
+    font-family: var(--mono); font-size: 11px;
+    color: var(--slate-ink);
+    text-transform: uppercase; letter-spacing: 0.04em;
   }
-  .tenth-top .d b{
-    display:block;
-    font-family: var(--serif); font-style: italic;
-    font-weight: 400; font-size: 32px;
-    color: var(--accent);
-    letter-spacing: -0.015em;
-    line-height: 1;
+  .tenth-d-stat b{
+    display: block;
+    font-family: var(--serif); font-weight: 400;
+    font-size: 32px; letter-spacing: -0.4px; line-height: 1;
+    color: var(--midnight-navy);
     margin-bottom: 4px;
+    text-transform: none;
   }
+
   .tenth-body{
-    padding: 26px 32px;
-    font-family: var(--serif);
-    font-weight: 380;
-    font-size: 16.5px;
-    line-height: 1.62;
-    color: var(--ink);
-    font-variation-settings: "opsz" 30;
+    padding: 24px 28px;
     max-width: 78ch;
   }
-  .tenth-body h3{
-    margin: 22px 0 10px;
-    font-family: var(--sans);
-    font-weight: 600;
-    font-size: 11px;
-    letter-spacing: .14em;
-    text-transform: uppercase;
-    color: var(--ink-3);
-  }
-  .tenth-body h3:first-child{ margin-top: 0; }
-  .tenth-body h3 .ord{ color: var(--accent); margin-right: 10px; letter-spacing: .08em; }
   .tenth-body h4{
-    margin: 18px 0 8px;
-    font-family: var(--sans);
-    font-weight: 600;
-    font-size: 11px;
-    letter-spacing: .14em;
-    text-transform: uppercase;
-    color: var(--ink-3);
+    margin: 24px 0 8px;
+    font-family: var(--mono); font-weight: 500;
+    font-size: 11px; text-transform: uppercase;
+    letter-spacing: 0.04em; color: var(--slate-ink);
   }
-  .tenth-body p{ margin: 0 0 12px; }
-  .tenth-body strong{ font-weight: 600; color: var(--ink); }
-  .tenth-body em{ font-style: italic; color: var(--ink); }
+  .tenth-body h4:first-child{ margin-top: 0; }
+  .tenth-body h4 .ord{ color: var(--midnight-navy); margin-right: 8px; }
+  .tenth-body p{
+    margin: 0 0 12px;
+    font-size: 16px; line-height: 1.5;
+    color: var(--midnight-navy);
+    letter-spacing: -0.16px;
+  }
+  .tenth-body strong{ font-weight: 600; }
+  .tenth-body em{ font-style: italic; color: var(--midnight-navy); }
   .tenth-body .pull{
-    margin: 18px 0;
-    padding: 4px 0 4px 18px;
-    border-left: 2px solid var(--accent);
-    font-family: var(--serif); font-style: italic;
-    font-size: 19px; line-height: 1.4;
-    letter-spacing: -0.005em;
-    color: var(--ink);
+    margin: 16px 0;
+    background: var(--ghost-canvas);
+    border-radius: 16px;
+    padding: 18px 20px;
+    box-shadow: rgba(0,39,80,0.04) 0 0 0 1px;
+    font-family: var(--serif); font-weight: 400;
+    font-size: 22px; line-height: 1.29; letter-spacing: -0.22px;
+    color: var(--midnight-navy);
   }
-  .tenth-body .modes{
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0;
-    border-top: 1px solid var(--rule-2);
-    margin-top: 28px;
-    padding-top: 8px;
-  }
-  .tenth-body .mode{
-    padding: 18px 22px 4px 0;
-    border-right: 1px dashed var(--rule);
-  }
-  .tenth-body .mode:nth-child(2){ padding: 18px 22px 4px 22px; }
-  .tenth-body .mode:last-child{ padding: 18px 0 4px 22px; border-right: none; }
-  .tenth-body .mode .ord{
-    font-family: var(--mono);
-    font-size: 10.5px;
-    letter-spacing: .14em;
-    text-transform: uppercase;
-    color: var(--accent);
-  }
-  .tenth-body .mode h4{
-    margin: 6px 0 8px;
+  .tenth-body .pull::before{
+    content:"\201C";
     font-family: var(--serif);
-    font-weight: 460;
-    font-size: 16px;
-    letter-spacing: -0.005em;
-    text-transform: none;
-    color: var(--ink);
+    font-size: 36px; line-height: 0;
+    margin-right: 6px;
+    color: var(--chartreuse);
+    vertical-align: -8px;
   }
-  .tenth-body .mode p{
-    margin: 0;
-    font-family: var(--sans);
-    font-size: 13px;
-    line-height: 1.55;
-    color: var(--ink-2);
-  }
-  .tenth-foot{
-    display:flex; justify-content: space-between; gap: 18px;
-    padding: 14px 32px;
-    border-top: 1px solid var(--rule-2);
-    background: oklch(99% 0.005 78);
-    font-family: var(--mono);
-    font-size: 11px;
-    letter-spacing: .04em;
-    color: var(--ink-3);
-  }
-  .tenth-foot b{ color: var(--ink-2); font-weight: 500; }
 
+  .modes{
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 12px; margin-top: 12px;
+  }
+  .mode{
+    background: var(--ghost-canvas);
+    border-radius: 16px;
+    padding: 18px;
+    box-shadow: rgba(0,39,80,0.04) 0 0 0 1px;
+  }
+  .mode .ord{
+    font-family: var(--mono); font-size: 11px;
+    color: var(--slate-ink);
+    text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .mode h5{
+    margin: 8px 0 6px;
+    font-family: var(--sans); font-weight: 480;
+    font-size: 17px; letter-spacing: -0.09px;
+    color: var(--midnight-navy);
+  }
+  .mode p{
+    margin: 0;
+    font-size: 14px; line-height: 1.5;
+    color: var(--storm); letter-spacing: -0.16px;
+  }
+
+  .tenth-foot{
+    padding: 14px 28px;
+    border-top: 1px solid rgba(0,39,80,0.06);
+    background: var(--ghost-canvas);
+    display: flex; justify-content: space-between;
+    font-family: var(--mono); font-size: 12px;
+    color: var(--slate-ink);
+  }
+  .tenth-foot b{ color: var(--midnight-navy); }
+
+  /* Frames table */
   .frames{
-    border-top: 1px solid var(--ink);
+    margin-top: 4px;
+    background: var(--pure);
+    border-radius: 20px;
+    box-shadow: var(--shadow-xl);
+    overflow: hidden;
+  }
+  .frames-head{
+    display: grid;
+    grid-template-columns: 60px 220px 1fr 160px 100px 24px;
+    gap: 16px;
+    padding: 14px 24px;
+    border-bottom: 1px solid rgba(0,39,80,0.06);
+    background: var(--ghost-canvas);
+    font-family: var(--mono); font-size: 11px;
+    color: var(--slate-ink);
+    text-transform: uppercase; letter-spacing: 0.04em;
   }
   .frame{
-    border-bottom: 1px solid var(--rule);
-    padding: 20px 4px;
+    border-bottom: 1px solid rgba(0,39,80,0.06);
     cursor: pointer;
     transition: background .15s ease;
   }
-  .frame:hover{ background: var(--paper); }
+  .frame:last-child{ border-bottom: 0; }
+  .frame:hover{ background: var(--ghost-canvas); }
+  .frame.open{ background: var(--ghost-canvas); }
   .frame-row{
     display: grid;
-    grid-template-columns: 36px 200px 1fr 160px 80px 18px;
-    align-items: center;
+    grid-template-columns: 60px 220px 1fr 160px 100px 24px;
     gap: 16px;
+    align-items: center;
+    padding: 16px 24px;
   }
   .f-idx{
-    font-family: var(--mono);
-    font-size: 11px;
-    letter-spacing: .04em;
-    color: var(--ink-3);
+    font-family: var(--mono); font-size: 12px; color: var(--slate-ink);
   }
   .f-name{
-    font-family: var(--serif);
-    font-weight: 440;
-    font-size: 20px;
-    letter-spacing: -0.012em;
-    color: var(--ink);
+    font-family: var(--sans); font-weight: 480;
+    font-size: 17px; letter-spacing: -0.09px;
+    color: var(--midnight-navy);
   }
   .f-tag{
-    font-family: var(--mono);
-    font-size: 10.5px;
-    letter-spacing: .14em;
-    text-transform: uppercase;
-    color: var(--ink-3);
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--pure);
+    border-radius: 9999px;
+    padding: 4px 10px;
+    font-family: var(--mono); font-size: 11px;
+    color: var(--storm);
+    box-shadow: rgba(0,39,80,0.04) 0 0 0 1px;
+    width: max-content;
   }
-  .f-tag b{ color: var(--ink-2); font-weight: 500;}
+  .f-tag .d{ width: 5px; height: 5px; border-radius: 9999px; background: var(--chartreuse); }
+  .f-tag b{ color: var(--midnight-navy); font-weight: 500; }
   .f-bar{
-    height: 2px; background: var(--rule); position:relative; border-radius:2px;
-    margin-right: 10px;
+    height: 6px; background: rgba(27,37,64,0.08);
+    border-radius: 9999px;
+    position: relative; overflow: hidden;
   }
   .f-bar > i{
-    position:absolute; left:0; top:0; bottom:0; border-radius: 2px;
-    background: var(--nine);
+    display: block; height: 100%;
+    background: var(--midnight-navy);
+    border-radius: 9999px;
   }
   .f-d{
-    font-family: var(--mono);
-    font-size: 12px;
-    color: var(--ink-2);
+    font-family: var(--mono); font-size: 13px;
+    color: var(--midnight-navy);
     text-align: right;
     font-variant-numeric: tabular-nums;
   }
-  .f-d small{ color: var(--ink-3); }
+  .f-d b{ font-weight: 500; }
   .f-caret{
+    color: var(--slate-ink);
     font-family: var(--mono);
-    color: var(--ink-3);
-    transition: transform .2s ease;
-    font-size: 12px;
+    transition: transform .15s ease;
+    text-align: center;
   }
   .frame.open .f-caret{ transform: rotate(90deg); }
-  .frame.open .f-name{ color: var(--accent); }
 
   .f-body{
     display: none;
-    padding: 18px 0 6px 36px;
-    max-width: 78ch;
-    font-family: var(--serif);
-    font-weight: 380;
-    font-size: 15.5px;
-    line-height: 1.62;
-    color: var(--ink-2);
-    font-variation-settings: "opsz" 24;
+    padding: 4px 24px 22px 304px;
+    max-width: 100%;
   }
-  .frame.open .f-body{ display:block; }
-  .f-body h3, .f-body h4{
-    margin: 18px 0 8px;
-    font-family: var(--sans);
-    font-weight: 600;
-    font-size: 11px;
-    letter-spacing: .14em;
-    text-transform: uppercase;
-    color: var(--ink-3);
+  .frame.open .f-body{ display: block; }
+  .f-body p{
+    margin: 0 0 10px;
+    font-size: 15px; line-height: 1.55;
+    color: var(--storm); letter-spacing: -0.16px;
   }
-  .f-body h3:first-child, .f-body h4:first-child{ margin-top: 0; }
-  .f-body p{ margin: 0 0 12px; }
-  .f-body strong{ font-weight: 600; color: var(--ink); }
-  .f-body em{ font-style: italic; color: var(--ink); }
+  .f-body strong{ color: var(--midnight-navy); font-weight: 500; }
+  .f-body em{ color: var(--midnight-navy); font-style: italic; }
+  .f-body .pull{
+    margin: 12px 0;
+    padding: 4px 0 4px 14px;
+    border-left: 2px solid var(--midnight-navy);
+    font-family: var(--serif); font-style: italic;
+    font-size: 16px; line-height: 1.4; letter-spacing: -0.09px;
+    color: var(--midnight-navy);
+  }
 
-  .colophon{
-    margin-top: 64px;
-    padding-top: 22px;
-    border-top: 1px solid var(--rule);
-    display:grid;
+  /* Colophon */
+  footer.colophon{
+    max-width: 1200px;
+    margin: 80px auto 0;
+    padding: 32px;
+    border-top: 1px solid rgba(0,39,80,0.08);
+    display: grid;
     grid-template-columns: 1fr 1fr 1fr;
     gap: 24px;
-    font-family: var(--mono);
-    font-size: 11px;
-    letter-spacing: .04em;
-    color: var(--ink-3);
+    font-family: var(--mono); font-size: 12px;
+    color: var(--slate-ink);
   }
-  .colophon b{ color: var(--ink-2); font-weight: 500; }
-  .colophon .center{
-    text-align:center;
-    font-family: var(--serif);
-    font-style: italic;
-    letter-spacing: 0;
-    font-size: 13px;
-    color: var(--ink-2);
-  }
-  .colophon .right{ text-align: right; }
-
-  .guide{
-    position: fixed;
-    right: 24px;
-    bottom: 24px;
-    z-index: 50;
-    font-family: var(--sans);
-  }
-  .guide-toggle{
-    appearance: none;
-    -webkit-appearance: none;
-    border: 1px solid var(--ink);
-    background: var(--ink);
-    color: var(--paper);
-    font-family: var(--mono);
-    font-size: 11px;
-    letter-spacing: .14em;
-    text-transform: uppercase;
-    padding: 12px 16px;
-    border-radius: 999px;
-    cursor: pointer;
-    box-shadow: 0 6px 24px -8px oklch(20% 0.012 60 / .45);
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
-    outline: none;
-  }
-  .guide-toggle:hover{
-    transform: translateY(-1px);
-    box-shadow: 0 10px 28px -8px oklch(20% 0.012 60 / .55);
-  }
-  .guide-toggle:focus-visible{
-    box-shadow: 0 0 0 3px var(--accent-soft), 0 6px 24px -8px oklch(20% 0.012 60 / .45);
-  }
-  .guide-toggle .marker{
-    width:7px; height:7px; border-radius:999px;
-    background: var(--accent);
-    box-shadow: 0 0 0 3px oklch(56% 0.165 32 / .25);
-  }
-  .guide-panel{
-    display:none;
-    width: min(380px, calc(100vw - 48px));
-    max-height: min(72vh, 640px);
-    background: var(--paper);
-    border: 1px solid var(--rule);
-    border-radius: 14px;
-    box-shadow: 0 24px 60px -16px oklch(20% 0.012 60 / .35);
-    margin-bottom: 12px;
-    overflow: hidden;
-    flex-direction: column;
-  }
-  .guide.open .guide-panel{ display: flex; }
-  .guide-panel-body{
-    overflow-y: auto;
-    padding: 26px 24px 4px 26px;
-    scrollbar-width: thin;
-    scrollbar-color: var(--rule) transparent;
-  }
-  .guide-panel-body::-webkit-scrollbar{ width: 8px; }
-  .guide-panel-body::-webkit-scrollbar-track{ background: transparent; }
-  .guide-panel-body::-webkit-scrollbar-thumb{
-    background: var(--rule);
-    border-radius: 999px;
-    border: 2px solid var(--paper);
-  }
-  .guide-panel-body::-webkit-scrollbar-thumb:hover{ background: var(--ink-4); }
-  .guide-panel-foot{
-    flex-shrink: 0;
-    padding: 14px 26px 18px;
-    border-top: 1px solid var(--rule);
-    background: var(--paper);
-  }
-  .guide-panel h3{
-    margin: 0 0 4px;
-    font-family: var(--serif);
-    font-weight: 400;
-    font-size: 22px;
-    line-height: 1.15;
-    letter-spacing: -0.015em;
-    color: var(--ink);
-    font-variation-settings: "SOFT" 30, "opsz" 60;
-  }
-  .guide-panel h3 em{ font-style: italic; color: var(--accent); }
-  .guide-panel .kicker{
-    font-family: var(--mono);
-    font-size: 10px;
-    letter-spacing: .16em;
-    text-transform: uppercase;
-    color: var(--ink-3);
-    margin: 0 0 14px;
-  }
-  .guide-panel ol{
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    counter-reset: g;
-  }
-  .guide-panel ol li{
-    counter-increment: g;
-    position: relative;
-    padding: 12px 0 12px 30px;
-    border-top: 1px solid var(--rule-2);
-    font-size: 13.5px;
-    line-height: 1.5;
-    color: var(--ink-2);
-  }
-  .guide-panel ol li:first-child{ border-top: none; }
-  .guide-panel ol li::before{
-    content: counter(g, decimal-leading-zero);
-    position: absolute;
-    left: 0; top: 12px;
-    font-family: var(--mono);
-    font-size: 10.5px;
-    color: var(--ink-3);
-    letter-spacing: .08em;
-  }
-  .guide-panel ol li b{ color: var(--ink); font-weight: 600; }
-  .guide-panel .foot{
-    margin: 0 0 12px;
-    font-family: var(--serif);
-    font-style: italic;
-    font-size: 13px;
-    line-height: 1.45;
-    color: var(--ink-2);
-    font-variation-settings: "opsz" 60;
-  }
-  .guide-close{
-    appearance: none;
-    -webkit-appearance: none;
-    background: none;
-    border: 0;
-    cursor: pointer;
-    color: var(--ink-3);
-    font-family: var(--mono);
-    font-size: 11px;
-    letter-spacing: .14em;
-    text-transform: uppercase;
-    padding: 0;
-    outline: none;
-  }
-  .guide-close:hover{ color: var(--ink); }
-  .guide-close:focus-visible{ color: var(--accent); }
+  footer.colophon b{ color: var(--midnight-navy); font-weight: 500; }
+  footer.colophon .center{ text-align: center; font-style: italic; font-family: var(--serif); }
+  footer.colophon .right{ text-align: right; }
 
   @media (max-width: 920px){
-    .page{ padding: 32px 22px 64px; }
-    .strip{ grid-template-columns: 1fr 1fr; }
-    .strip .stat:nth-child(3){ grid-column: 1 / -1; padding: 16px 0 0; border-right:none; padding-left: 0; border-top: 1px solid var(--rule); margin-top: 8px;}
-    .frame-row{ grid-template-columns: 26px 1fr 80px 16px; }
-    .frame-row .f-tag, .frame-row .f-bar{ display:none; }
-    .guide{ right: 16px; bottom: 16px; }
-    .guide-panel-body{ padding: 22px 18px 4px 20px; }
-    .guide-panel-foot{ padding: 12px 20px 16px; }
-    .consensus-body{ column-count: 1; }
+    .hero-inner{ grid-template-columns: 1fr; padding: 40px 24px 24px; }
+    .hero-stats{ grid-template-columns: 1fr 1fr; }
+    .map-foot{ grid-template-columns: 1fr 1fr; }
+    .map-foot .cell{ border-bottom: 1px solid rgba(0,39,80,0.06); }
+    .modes{ grid-template-columns: 1fr; }
+    .frames-head{ display: none; }
+    .frame-row{ grid-template-columns: 40px 1fr 80px 16px; }
+    .frame-row .f-tag, .frame-row .f-bar{ display: none; }
+    .f-body{ padding: 4px 24px 22px 24px; }
+    .tenth-top{ grid-template-columns: 1fr; }
+    .tenth-d-stat{ text-align: left; }
     .consensus-top{ grid-template-columns: 1fr; }
-    .consensus-top .d{ text-align: left; margin-top: 8px; }
-    .tenth-body .modes{ grid-template-columns: 1fr; }
-    .tenth-body .mode,
-    .tenth-body .mode:nth-child(2),
-    .tenth-body .mode:last-child{
-      padding: 16px 0;
-      border-right: none;
-      border-bottom: 1px dashed var(--rule);
-    }
-    .tenth-body .mode:last-child{ border-bottom: none; }
+    .consensus-d{ text-align: left; }
+    .consensus-body{ column-count: 1; }
   }
 </style>
 </head>
 <body>
-<main class="page" data-screen-label="Henge Report">
+<main data-screen-label="TenthAI Report">
 
-  <header>
-    <div class="mast">
-      <span class="rule"></span>
-      <span class="dot"></span>
-      <b>Henge</b>
-      <span class="sep">·</span>
-      <span>Disagreement Map</span>
-      <span class="sep">·</span>
-      <span>Report&nbsp;<b style="font-weight:500;">#2337</b></span>
-      <span class="sep">·</span>
-      <span>2026·04·30</span>
+  <header class="masthead">
+    <div class="logo"><span class="mk">10</span> TenthAI</div>
+    <div class="mast-meta">
+      <b>Report #1033</b><span class="sep">·</span>2026·05·01 10:33 CLT<span class="sep">·</span>v0.4
     </div>
-
-    <h1 class="head">Nine advisors aligned.<br/><em>The tenth must dissent.</em></h1>
-
-    <p class="question">Should I leave my Senior PM job at a Series C unicorn to start a B2B SaaS in clinical research?</p>
   </header>
 
-  <section class="strip" aria-label="Global metrics">
-    <div class="stat accent">
-      <div class="lbl">Tenth-man distance</div>
-      <div class="val">1.074 <span class="num">vs centroid of the 9</span></div>
-    </div>
-    <div class="stat">
-      <div class="lbl">Most divergent advisor</div>
-      <div class="val">soft-contrarian <span class="num">d 0.686</span></div>
-    </div>
-    <div class="stat">
-      <div class="lbl">Verdict</div>
-      <div class="verdict">Advisors already divided — no strong consensus to break.</div>
+  <section class="hero">
+    <div class="hero-bg" aria-hidden="true"></div>
+    <div class="hero-inner">
+      <div>
+        <h1 class="hero-h">Nine advisors aligned.<br><em>The tenth must dissent.</em></h1>
+        <p class="hero-dek">Your question runs through nine cognitive frames. We measure the consensus and force a tenth to disagree with rigor.</p>
+      </div>
+
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <div class="lbl">Tenth · d</div>
+          <div class="val acc">1.074</div>
+          <div class="sub">vs centroid</div>
+        </div>
+        <div class="hero-stat">
+          <div class="lbl">Closest</div>
+          <div class="val">0.632</div>
+          <div class="sub">empirical</div>
+        </div>
+        <div class="hero-stat">
+          <div class="lbl">Most divergent</div>
+          <div class="val">0.686</div>
+          <div class="sub">soft-contrarian</div>
+        </div>
+        <div class="hero-stat">
+          <div class="lbl">Verdict</div>
+          <div class="val">Divided</div>
+          <div class="sub">no strong consensus</div>
+        </div>
+      </div>
     </div>
   </section>
 
-  <section class="map-card" aria-label="MDS Map">
-    <div class="map-head">
-      <h3>Geography of disagreement</h3>
-      <div class="meta">10 voices · MDS over <b>cosine distance</b> · centroid of the 9</div>
+  <div class="page">
+
+  <section class="section">
+    <div class="sec-head">
+      <div class="l">
+        <div class="sec-eyebrow"><span class="n">01</span>Report · #1033</div>
+        <h2>The question <em>the nine answered</em></h2>
+        <p class="sub">Should I leave my Senior PM job at a Series C unicorn to start a B2B SaaS in clinical research?</p>
+      </div>
     </div>
-    <div class="map-svg-wrap">
-      <details class="map-help">
-        <summary aria-label="How to read this map">?</summary>
-        <div class="map-help-popover">
-          <p class="map-help-title">How to read this map</p>
-          <p>Each point is one advisor.</p>
-          <p>The <strong>centroid</strong> at the center is the consensus zone — where the group converges.</p>
-          <p><strong>Closer</strong> to the center = more aligned with the group.<br/><strong>Farther</strong> = thinks differently.</p>
-          <p>The <strong style="color: var(--accent)">red (10 · tenth-man)</strong> point is the mandatory dissenter.</p>
-          <p>Concentric rings mark equal distances from the centroid.</p>
+
+    <section class="map-card">
+      <div class="map-top">
+        <div class="l">
+          <span class="pill"><span class="d"></span>fig.01 · disagreement map</span>
+          <span class="meta">10 voices · MDS · cosine</span>
         </div>
-      </details>
-      <svg class="map" viewBox="0 0 1000 700" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
-<defs>
-<radialGradient id="halo" cx="50%" cy="50%" r="50%">
-<stop offset="0%" stop-color="oklch(56% 0.165 32 / .22)"/>
-<stop offset="60%" stop-color="oklch(56% 0.165 32 / .04)"/>
-<stop offset="100%" stop-color="oklch(56% 0.165 32 / 0)"/>
-</radialGradient>
-</defs>
-<g stroke="oklch(86% 0.012 70)" stroke-width="0.6" fill="none" opacity=".7">
-<circle cx="500" cy="350" r="60"/>
-<circle cx="500" cy="350" r="120"/>
-<circle cx="500" cy="350" r="180" stroke-dasharray="2 4"/>
-<circle cx="500" cy="350" r="240" stroke-dasharray="2 4"/>
+        <div class="legend-row">
+          <span><i class="ld t"></i>Tenth man</span>
+          <span><i class="ld n"></i>Consensus frames</span>
+        </div>
+      </div>
+
+      <div class="map-svg">
+        <svg viewBox="0 0 1200 638" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+<g stroke="rgba(0,39,80,0.06)" stroke-width="0.5">
+<line x1="600" y1="40" x2="600" y2="598"/>
+<line x1="80" y1="319" x2="1120" y2="319"/>
 </g>
-<g stroke="oklch(82% 0.012 70)" stroke-width="0.6">
-<line x1="100" y1="350" x2="900" y2="350"/>
-<line x1="500" y1="60" x2="500" y2="640"/>
-</g>
-<g font-family="JetBrains Mono, monospace" font-size="10" fill="oklch(56% 0.012 60)" letter-spacing="1">
-<text x="510" y="346">CENTROID</text>
-<rect x="496" y="346" width="8" height="8" fill="none" stroke="oklch(56% 0.012 60)" stroke-width="1" transform="rotate(45 500 350)"/>
-</g>
-<g stroke="oklch(34% 0.085 250 / .35)" stroke-width="0.7">
-<line x1="500" y1="350" x2="593.8" y2="564.5"/>
-<line x1="500" y1="350" x2="716.9" y2="294.9"/>
-<line x1="500" y1="350" x2="495.2" y2="382.4"/>
-<line x1="500" y1="350" x2="427.2" y2="580.0"/>
-<line x1="500" y1="350" x2="296.2" y2="463.8"/>
-<line x1="500" y1="350" x2="651.6" y2="155.8"/>
-<line x1="500" y1="350" x2="274.9" y2="305.4"/>
-<line x1="500" y1="350" x2="711.5" y2="447.5"/>
-<line x1="500" y1="350" x2="496.8" y2="154.1"/>
-</g>
-<line x1="500" y1="350" x2="335.9" y2="151.5" stroke="oklch(56% 0.165 32 / .55)" stroke-width="1.1" stroke-dasharray="3 3"/>
-<g class="nodes" font-family="JetBrains Mono, monospace" font-size="11" fill="oklch(20% 0.012 60)">
-<g>
-<circle cx="593.8" cy="564.5" r="9" fill="oklch(34% 0.085 250)"/>
-<circle cx="593.8" cy="564.5" r="15" fill="none" stroke="oklch(34% 0.085 250 / .35)" stroke-width="3"/>
-<text x="610.8" y="560.5" font-size="11" text-anchor="start">01</text>
-<text x="610.8" y="574.5" font-family="Inter Tight, sans-serif" font-weight="500" font-size="13" text-anchor="start">empirical</text>
-<text x="610.8" y="589.5" font-size="9.5" fill="oklch(56% 0.012 60)" text-anchor="start">d&#160;0.632 · closest</text>
+<g stroke="rgba(0,39,80,0.10)" stroke-width="0.7" fill="none">
+<circle cx="600" cy="319" r="60"/>
+<circle cx="600" cy="319" r="120" stroke-dasharray="3 5"/>
+<circle cx="600" cy="319" r="200" stroke-dasharray="3 5"/>
 </g>
 <g>
-<circle cx="716.9" cy="294.9" r="8" fill="oklch(34% 0.085 250)"/>
-<circle cx="716.9" cy="294.9" r="13" fill="none" stroke="oklch(34% 0.085 250 / .25)" stroke-width="3"/>
-<text x="733.9" y="290.9" font-size="11" text-anchor="start">02</text>
-<text x="733.9" y="304.9" font-family="Inter Tight, sans-serif" font-weight="500" font-size="13" text-anchor="start">historical</text>
-<text x="733.9" y="319.9" font-size="9.5" fill="oklch(56% 0.012 60)" text-anchor="start">d&#160;0.649</text>
+<rect x="592" y="311" width="16" height="16" fill="none" stroke="#1b2540" stroke-width="1" transform="rotate(45 600 319)"/>
+<text x="618" y="316" font-family="JetBrains Mono, monospace" font-size="11" fill="#6b7184" letter-spacing="1">CENTROID</text>
+</g>
+<g stroke="rgba(27,37,64,0.20)" stroke-width="0.7">
+<line x1="600" y1="319" x2="681.6" y2="505.5"/>
+<line x1="600" y1="319" x2="788.6" y2="271.1"/>
+<line x1="600" y1="319" x2="595.8" y2="347.2"/>
+<line x1="600" y1="319" x2="536.7" y2="519.0"/>
+<line x1="600" y1="319" x2="422.8" y2="418.0"/>
+<line x1="600" y1="319" x2="731.8" y2="150.1"/>
+<line x1="600" y1="319" x2="404.3" y2="280.3"/>
+<line x1="600" y1="319" x2="783.9" y2="403.8"/>
+<line x1="600" y1="319" x2="597.2" y2="148.7"/>
+</g>
+<line x1="600" y1="319" x2="457.3" y2="146.4" stroke="#d0f100" stroke-width="1.5" stroke-dasharray="4 4"/>
+<rect x="498.7" y="221.7" width="60" height="22" rx="11" fill="#1b2540"/>
+<text x="528.7" y="236.7" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" font-weight="500" fill="#d0f100">d 1.074</text>
+<g font-family="DM Sans, sans-serif" font-size="13" fill="#1b2540">
+<g>
+<circle cx="681.6" cy="505.5" r="7" fill="#1b2540"/>
+<circle cx="681.6" cy="505.5" r="14" fill="none" stroke="#1b2540" stroke-width="1" stroke-dasharray="2 2"/>
+<text x="696.6" y="502.5" font-weight="500" text-anchor="start">01 empirical</text>
+<text x="696.6" y="517.5" font-family="JetBrains Mono, monospace" font-size="10.5" fill="#6b7184" text-anchor="start">d 0.632 · closest</text>
 </g>
 <g>
-<circle cx="495.2" cy="382.4" r="8" fill="oklch(34% 0.085 250)"/>
-<circle cx="495.2" cy="382.4" r="13" fill="none" stroke="oklch(34% 0.085 250 / .25)" stroke-width="3"/>
-<text x="478.2" y="378.4" font-size="11" text-anchor="end">03</text>
-<text x="478.2" y="392.4" font-family="Inter Tight, sans-serif" font-weight="500" font-size="13" text-anchor="end">first-principles</text>
-<text x="478.2" y="407.4" font-size="9.5" fill="oklch(56% 0.012 60)" text-anchor="end">d&#160;0.641</text>
+<circle cx="788.6" cy="271.1" r="6" fill="#1b2540"/>
+<text x="803.6" y="268.1" font-weight="500" text-anchor="start">02 historical</text>
+<text x="803.6" y="283.1" font-family="JetBrains Mono, monospace" font-size="10.5" fill="#6b7184" text-anchor="start">d 0.649</text>
 </g>
 <g>
-<circle cx="427.2" cy="580.0" r="8" fill="oklch(34% 0.085 250)"/>
-<circle cx="427.2" cy="580.0" r="13" fill="none" stroke="oklch(34% 0.085 250 / .25)" stroke-width="3"/>
-<text x="410.2" y="576.0" font-size="11" text-anchor="end">04</text>
-<text x="410.2" y="590.0" font-family="Inter Tight, sans-serif" font-weight="500" font-size="13" text-anchor="end">analogical</text>
-<text x="410.2" y="605.0" font-size="9.5" fill="oklch(56% 0.012 60)" text-anchor="end">d&#160;0.667</text>
+<circle cx="595.8" cy="347.2" r="6" fill="#1b2540"/>
+<text x="580.8" y="344.2" font-weight="500" text-anchor="end">03 first-principles</text>
+<text x="580.8" y="359.2" font-family="JetBrains Mono, monospace" font-size="10.5" fill="#6b7184" text-anchor="end">d 0.641</text>
 </g>
 <g>
-<circle cx="296.2" cy="463.8" r="8" fill="oklch(34% 0.085 250)"/>
-<circle cx="296.2" cy="463.8" r="13" fill="none" stroke="oklch(34% 0.085 250 / .25)" stroke-width="3"/>
-<text x="279.2" y="459.8" font-size="11" text-anchor="end">05</text>
-<text x="279.2" y="473.8" font-family="Inter Tight, sans-serif" font-weight="500" font-size="13" text-anchor="end">systemic</text>
-<text x="279.2" y="488.8" font-size="9.5" fill="oklch(56% 0.012 60)" text-anchor="end">d&#160;0.660</text>
+<circle cx="536.7" cy="519.0" r="6" fill="#1b2540"/>
+<text x="521.7" y="516.0" font-weight="500" text-anchor="end">04 analogical</text>
+<text x="521.7" y="531.0" font-family="JetBrains Mono, monospace" font-size="10.5" fill="#6b7184" text-anchor="end">d 0.667</text>
 </g>
 <g>
-<circle cx="651.6" cy="155.8" r="8" fill="oklch(34% 0.085 250)"/>
-<circle cx="651.6" cy="155.8" r="13" fill="none" stroke="oklch(34% 0.085 250 / .25)" stroke-width="3"/>
-<text x="668.6" y="151.8" font-size="11" text-anchor="start">06</text>
-<text x="668.6" y="165.8" font-family="Inter Tight, sans-serif" font-weight="500" font-size="13" text-anchor="start">ethical</text>
-<text x="668.6" y="180.8" font-size="9.5" fill="oklch(56% 0.012 60)" text-anchor="start">d&#160;0.675</text>
+<circle cx="422.8" cy="418.0" r="6" fill="#1b2540"/>
+<text x="407.8" y="415.0" font-weight="500" text-anchor="end">05 systemic</text>
+<text x="407.8" y="430.0" font-family="JetBrains Mono, monospace" font-size="10.5" fill="#6b7184" text-anchor="end">d 0.660</text>
 </g>
 <g>
-<circle cx="274.9" cy="305.4" r="8" fill="oklch(34% 0.085 250)"/>
-<circle cx="274.9" cy="305.4" r="13" fill="none" stroke="oklch(34% 0.085 250 / .35)" stroke-width="3"/>
-<text x="257.9" y="301.4" font-size="11" text-anchor="end">07</text>
-<text x="257.9" y="315.4" font-family="Inter Tight, sans-serif" font-weight="500" font-size="13" text-anchor="end">soft-contrarian</text>
-<text x="257.9" y="330.4" font-size="9.5" fill="oklch(56% 0.012 60)" text-anchor="end">d&#160;0.686 · farthest</text>
+<circle cx="731.8" cy="150.1" r="6" fill="#1b2540"/>
+<text x="746.8" y="147.1" font-weight="500" text-anchor="start">06 ethical</text>
+<text x="746.8" y="162.1" font-family="JetBrains Mono, monospace" font-size="10.5" fill="#6b7184" text-anchor="start">d 0.675</text>
 </g>
 <g>
-<circle cx="711.5" cy="447.5" r="8" fill="oklch(34% 0.085 250)"/>
-<circle cx="711.5" cy="447.5" r="13" fill="none" stroke="oklch(34% 0.085 250 / .25)" stroke-width="3"/>
-<text x="728.5" y="443.5" font-size="11" text-anchor="start">08</text>
-<text x="728.5" y="457.5" font-family="Inter Tight, sans-serif" font-weight="500" font-size="13" text-anchor="start">radical-optimist</text>
-<text x="728.5" y="472.5" font-size="9.5" fill="oklch(56% 0.012 60)" text-anchor="start">d&#160;0.659</text>
+<circle cx="404.3" cy="280.3" r="6" fill="#1b2540"/>
+<text x="389.3" y="277.3" font-weight="500" text-anchor="end">07 soft-contrarian</text>
+<text x="389.3" y="292.3" font-family="JetBrains Mono, monospace" font-size="10.5" fill="#6b7184" text-anchor="end">d 0.686 · farthest</text>
 </g>
 <g>
-<circle cx="496.8" cy="154.1" r="8" fill="oklch(34% 0.085 250)"/>
-<circle cx="496.8" cy="154.1" r="13" fill="none" stroke="oklch(34% 0.085 250 / .25)" stroke-width="3"/>
-<text x="479.8" y="150.1" font-size="11" text-anchor="end">09</text>
-<text x="479.8" y="164.1" font-family="Inter Tight, sans-serif" font-weight="500" font-size="13" text-anchor="end">pre-mortem</text>
-<text x="479.8" y="179.1" font-size="9.5" fill="oklch(56% 0.012 60)" text-anchor="end">d&#160;0.641</text>
+<circle cx="783.9" cy="403.8" r="6" fill="#1b2540"/>
+<text x="798.9" y="400.8" font-weight="500" text-anchor="start">08 radical-optimist</text>
+<text x="798.9" y="415.8" font-family="JetBrains Mono, monospace" font-size="10.5" fill="#6b7184" text-anchor="start">d 0.659</text>
+</g>
+<g>
+<circle cx="597.2" cy="148.7" r="6" fill="#1b2540"/>
+<text x="582.2" y="145.7" font-weight="500" text-anchor="end">09 pre-mortem</text>
+<text x="582.2" y="160.7" font-family="JetBrains Mono, monospace" font-size="10.5" fill="#6b7184" text-anchor="end">d 0.641</text>
 </g>
 </g>
 <g>
-<circle cx="335.9" cy="151.5" r="42" fill="url(#halo)"/>
-<circle cx="335.9" cy="151.5" r="11" fill="oklch(56% 0.165 32)"/>
-<circle cx="335.9" cy="151.5" r="17" fill="none" stroke="oklch(56% 0.165 32 / .35)" stroke-width="3"/>
-<text x="335.9" y="201.5" text-anchor="middle" font-family="Inter Tight, sans-serif" font-weight="600" font-size="13" fill="oklch(56% 0.165 32)" letter-spacing="2">10 · TENTH-MAN</text>
-<text x="335.9" y="216.5" text-anchor="middle" font-size="10" fill="oklch(56% 0.165 32)">d&#160;1.074 · steel-man dissent</text>
+<circle cx="457.3" cy="146.4" r="48" fill="#d0f100" opacity="0.18"/>
+<circle cx="457.3" cy="146.4" r="28" fill="#d0f100" opacity="0.32"/>
+<circle cx="457.3" cy="146.4" r="12" fill="#d0f100"/>
+<circle cx="457.3" cy="146.4" r="12" fill="none" stroke="#1b2540" stroke-width="1.5"/>
+<text x="457.3" y="210.4" text-anchor="middle" font-family="DM Sans, sans-serif" font-weight="500" font-size="13" fill="#1b2540" letter-spacing="2">10 · TENTH-MAN</text>
+<text x="457.3" y="226.4" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" fill="#1b2540">steel-man dissent</text>
 </g>
-<g font-family="JetBrains Mono, monospace" font-size="9.5" fill="oklch(56% 0.012 60)" letter-spacing="2">
-<text x="100" y="345">MDS-1</text>
-<text x="892" y="345" text-anchor="end">→</text>
-<text x="500" y="55" text-anchor="middle">MDS-2</text>
+<g font-family="JetBrains Mono, monospace" font-size="10" fill="#7c8293" letter-spacing="1">
+<text x="80" y="615">MDS-1 →</text>
+<text x="600" y="34" text-anchor="middle">↑ MDS-2</text>
 </g>
 </svg>
-    </div>
-    <div class="map-foot">
-      <div class="legend">
-        <span><i class="t"></i>Tenth-man</span>
-        <span><i class="n"></i>The nine advisors</span>
       </div>
-      <div>Classical MDS · preserves pairwise distances</div>
-    </div>
-  </section>
 
-  
-  <div class="sec">
-    <span class="glyph">∑</span>
-    <h2>The <em>consensus</em> of the nine</h2>
-    <span class="rule"></span>
-    <span class="aside">what the nine <b>agree on</b></span>
-  </div>
-
-  <article class="consensus">
-    <header class="consensus-top">
-      <div>
-        <div class="lbl">Σ · 9 ADVISORS · DIVIDED</div>
-        <h3>Quit on the back of a contract — not on the back of confidence</h3>
+      <div class="map-foot">
+        <div class="cell">
+          <div class="lbl">Tenth · d</div>
+          <div class="val">1.074<span class="badge">tenth</span></div>
+          <div class="sub">forced to dissent</div>
+        </div>
+        <div class="cell">
+          <div class="lbl">Closest</div>
+          <div class="val">0.632</div>
+          <div class="sub">empirical</div>
+        </div>
+        <div class="cell">
+          <div class="lbl">Most divergent (of the 9)</div>
+          <div class="val">0.686</div>
+          <div class="sub">soft-contrarian</div>
+        </div>
+        <div class="cell">
+          <div class="lbl">Internal spread</div>
+          <div class="val">0.017</div>
+          <div class="sub">σ across the 9 frames</div>
+        </div>
       </div>
-      <div class="d"><b>0.686</b>max distance · vs centroid</div>
-    </header>
-    <div class="consensus-body">
-      <h3>(1) Where the nine converge</h3>
+    </section>
+
+    
+    <article class="consensus-card">
+      <header class="consensus-top">
+        <div>
+          <div class="consensus-tag"><span class="d"></span>Σ · 9 advisors · DIVIDED</div>
+          <h3>Quit on the back of a contract — not on the back of confidence</h3>
+        </div>
+        <div class="consensus-d">
+          <b>0.686</b>
+          max · vs centroid
+        </div>
+      </header>
+      <div class="consensus-body">
+        <h3>(1) Where the nine converge</h3>
 <p>The financial setup is workable but unforgiving — 9 months of runway is enough for a wedge but not for a category, and a toddler in the household compresses your willingness to extend that runway under stress. The healthtech background materially de-risks the idea: niche workflow tools for clinical research coordinators are exactly the kind of unsexy, sticky software that compounds when sold to people the founder already understands. Domain-insider founders in regulated B2B verticals fail at much lower rates than outsiders, and that asymmetry is the strongest signal in the dataset.</p>
 <h3>(2) Internal tension</h3>
 <p>Tension persists on <strong>whether <em>now</em> is the right moment</strong>. The systemic and pre-mortem frames want one more thing nailed before the quit — a paying design partner, or a side-project prototype that three coordinators are already using. The optimist and first-principles frames argue the cost of waiting another six months is higher than it looks: your context window on the buyer degrades from the inside the longer you stay at the unicorn. Both sides are pricing the same risk; they disagree on which clock runs faster.</p>
-<h3>(3) Net inclination</h3>
-<p><strong>Net inclination:</strong> lean <em>out</em> of the job, but not blindly. Secure one paying design partner before the quit, then go full-time on the back of that contract. Don&#x27;t quit and figure it out — quit and execute on a contract you already signed. The sequencing matters more than the timing.</p>
+<h3>(3) Net lean</h3>
+<p><strong>Net lean:</strong> lean <em>out</em> of the job, but not blindly. Secure one paying design partner before the quit, then go full-time on the back of that contract. Don&#x27;t quit and figure it out — quit and execute on a contract you already signed. The sequencing matters more than the timing.</p>
+      </div>
+    </article>
+
+
+    <article class="tenth-card">
+      <header class="tenth-top">
+        <div>
+          <div class="tenth-tag"><span class="d"></span>Frame 10 · Tenth-man</div>
+          <h3>Why the nine <em>might be wrong</em></h3>
+        </div>
+        <div class="tenth-d-stat">
+          <b>1.074</b>
+          distance · centroid
+        </div>
+      </header>
+
+      <div class="tenth-body">
+        <h4><span class="ord">§1</span>Premises I accept</h4>
+<p>I accept the financial math, the household constraints, the domain-insider thesis, the buyer-empathy decay argument, and the consensus that a paying design partner before the quit is the cleanest path. The nine analyses are competent and internally consistent.</p>
+<h4><span class="ord">§2</span>Where the consensus fails</h4>
+<p>The nine frames are answering a <em>career-optimization</em> question. <strong>The actual question is identity.</strong></p>
+<p>&gt; The hidden question isn&#x27;t &quot;is this the right time to start a company.&quot; It&#x27;s &quot;do I want to be a founder, or a Senior PM who briefly tried.&quot; The financial framing is a way to defer the identity question by making it feel quantitative.</p>
+<p>The consensus says: <em>secure a paid design partner, then quit</em>. Sounds prudent. It is also the perfect mechanism for never quitting. Six months from now, with one paid pilot at $4k/month, the same nine frames will produce the same advice — <em>one more design partner first, then quit</em>. The criterion is unfalsifiable in practice because each milestone hit raises the bar for the next.</p>
+<h4><span class="ord">§3</span>The question behind the question</h4>
+<p>What if the founders who succeed in regulated B2B verticals aren&#x27;t the ones who optimized the quit-timing? What if they&#x27;re the ones who <strong>forced themselves into the identity first and let the financials catch up?</strong> Quitting is the dispositive act — it converts a curious PM into a founder in the eyes of every buyer they meet for the next 18 months. A moonlighting PM with a side project has 30% the credibility of a full-time founder with the same product. Buyers pattern-match on commitment and they pay accordingly. The nine frames price the financial cost of quitting too early. They do not price the credibility cost of quitting too late.</p>
+        <h4><span class="ord">§ 4</span>Consensus failure modes</h4><div class="modes"><div class="mode"><div class="ord">Mode · 01</div><h5>Validation infinite-loop</h5><p>Each milestone hit raises the bar for the next. &quot;One paid design partner&quot; becomes &quot;one with retention&quot;, then &quot;with expansion revenue&quot;. The criterion never lets you quit.</p></div><div class="mode"><div class="ord">Mode · 02</div><h5>Buyer-empathy decay</h5><p>Every month inside the unicorn dulls your context window on the clinical-research operator. By the time you &quot;feel ready&quot;, you are no longer the domain insider you were when the idea was hot.</p></div><div class="mode"><div class="ord">Mode · 03</div><h5>Identity hedging</h5><p>Moonlighting signals you bet on yourself with one foot still planted. Buyers pattern-match on commitment. A full-time founder with no contract closes design partners faster than a part-time PM with two pilots.</p></div></div>
+      </div>
+
+      <footer class="tenth-foot">
+        <span>Generated under constraint · <b>steel-man mandatory</b></span>
+        <span>embed <b>openai/text-embedding-3-small</b> · ~USD 0.65</span>
+      </footer>
+    </article>
+  </section>
+
+  <section class="section">
+    <div class="sec-head">
+      <div class="l">
+        <div class="sec-eyebrow"><span class="n">02</span>Cognitive frames · 9 voices</div>
+        <h2>The nine, ranked by <em>distance to centroid</em></h2>
+        <p class="sub">Each frame brings a different lens: empirical, systemic, historical, analogical. The closer to the centroid, the more it represents the consensus. The farther, the more it reasons alone.</p>
+      </div>
     </div>
-  </article>
 
-
-  <div class="sec">
-    <span class="glyph">¶</span>
-    <h2>The nine advisors</h2>
-    <span class="rule"></span>
-    <span class="aside">ordered by <b>distance to centroid</b> · click to expand</span>
-  </div>
-
-  <section class="frames" id="frames">
-    
+    <section class="frames">
+      <div class="frames-head">
+        <span>Idx</span>
+        <span>Frame</span>
+        <span>Status</span>
+        <span>Distance</span>
+        <span style="text-align:right;">d</span>
+        <span></span>
+      </div>
+      
     <article class="frame open" data-frame="empirical">
       <div class="frame-row">
-        <span class="f-idx">01</span>
+        <span class="f-idx">#01</span>
         <span class="f-name">empirical</span>
-        <span class="f-tag"><b>OK</b></span>
-        <span class="f-bar"><i style="width:92%; background:var(--accent);"></i></span>
-        <span class="f-d">d&#160;<b>0.632</b></span>
+        <span class="f-tag"><span class="d"></span>OK · <b>closest</b></span>
+        <span class="f-bar"><i style="width:92%"></i></span>
+        <span class="f-d">d <b>0.632</b></span>
         <span class="f-caret">›</span>
       </div>
       <div class="f-body">
@@ -1020,11 +903,11 @@
 
     <article class="frame" data-frame="pre-mortem">
       <div class="frame-row">
-        <span class="f-idx">09</span>
+        <span class="f-idx">#09</span>
         <span class="f-name">pre-mortem</span>
-        <span class="f-tag"><b>OK</b></span>
-        <span class="f-bar"><i style="width:93%; background:var(--nine);"></i></span>
-        <span class="f-d">d&#160;<b>0.641</b></span>
+        <span class="f-tag"><span class="d"></span>OK</span>
+        <span class="f-bar"><i style="width:93%"></i></span>
+        <span class="f-d">d <b>0.641</b></span>
         <span class="f-caret">›</span>
       </div>
       <div class="f-body">
@@ -1040,11 +923,11 @@
 
     <article class="frame" data-frame="first-principles">
       <div class="frame-row">
-        <span class="f-idx">03</span>
+        <span class="f-idx">#03</span>
         <span class="f-name">first-principles</span>
-        <span class="f-tag"><b>OK</b></span>
-        <span class="f-bar"><i style="width:93%; background:var(--nine);"></i></span>
-        <span class="f-d">d&#160;<b>0.641</b></span>
+        <span class="f-tag"><span class="d"></span>OK</span>
+        <span class="f-bar"><i style="width:93%"></i></span>
+        <span class="f-d">d <b>0.641</b></span>
         <span class="f-caret">›</span>
       </div>
       <div class="f-body">
@@ -1058,11 +941,11 @@
 
     <article class="frame" data-frame="historical">
       <div class="frame-row">
-        <span class="f-idx">02</span>
+        <span class="f-idx">#02</span>
         <span class="f-name">historical</span>
-        <span class="f-tag"><b>OK</b></span>
-        <span class="f-bar"><i style="width:95%; background:var(--nine);"></i></span>
-        <span class="f-d">d&#160;<b>0.649</b></span>
+        <span class="f-tag"><span class="d"></span>OK</span>
+        <span class="f-bar"><i style="width:95%"></i></span>
+        <span class="f-d">d <b>0.649</b></span>
         <span class="f-caret">›</span>
       </div>
       <div class="f-body">
@@ -1076,11 +959,11 @@
 
     <article class="frame" data-frame="radical-optimist">
       <div class="frame-row">
-        <span class="f-idx">08</span>
+        <span class="f-idx">#08</span>
         <span class="f-name">radical-optimist</span>
-        <span class="f-tag"><b>OK</b></span>
-        <span class="f-bar"><i style="width:96%; background:var(--nine);"></i></span>
-        <span class="f-d">d&#160;<b>0.659</b></span>
+        <span class="f-tag"><span class="d"></span>OK</span>
+        <span class="f-bar"><i style="width:96%"></i></span>
+        <span class="f-d">d <b>0.659</b></span>
         <span class="f-caret">›</span>
       </div>
       <div class="f-body">
@@ -1095,11 +978,11 @@
 
     <article class="frame" data-frame="systemic">
       <div class="frame-row">
-        <span class="f-idx">05</span>
+        <span class="f-idx">#05</span>
         <span class="f-name">systemic</span>
-        <span class="f-tag"><b>OK</b></span>
-        <span class="f-bar"><i style="width:96%; background:var(--nine);"></i></span>
-        <span class="f-d">d&#160;<b>0.660</b></span>
+        <span class="f-tag"><span class="d"></span>OK</span>
+        <span class="f-bar"><i style="width:96%"></i></span>
+        <span class="f-d">d <b>0.660</b></span>
         <span class="f-caret">›</span>
       </div>
       <div class="f-body">
@@ -1113,11 +996,11 @@
 
     <article class="frame" data-frame="analogical">
       <div class="frame-row">
-        <span class="f-idx">04</span>
+        <span class="f-idx">#04</span>
         <span class="f-name">analogical</span>
-        <span class="f-tag"><b>OK</b></span>
-        <span class="f-bar"><i style="width:97%; background:var(--nine);"></i></span>
-        <span class="f-d">d&#160;<b>0.667</b></span>
+        <span class="f-tag"><span class="d"></span>OK</span>
+        <span class="f-bar"><i style="width:97%"></i></span>
+        <span class="f-d">d <b>0.667</b></span>
         <span class="f-caret">›</span>
       </div>
       <div class="f-body">
@@ -1131,11 +1014,11 @@
 
     <article class="frame" data-frame="ethical">
       <div class="frame-row">
-        <span class="f-idx">06</span>
+        <span class="f-idx">#06</span>
         <span class="f-name">ethical</span>
-        <span class="f-tag"><b>OK</b></span>
-        <span class="f-bar"><i style="width:98%; background:var(--nine);"></i></span>
-        <span class="f-d">d&#160;<b>0.675</b></span>
+        <span class="f-tag"><span class="d"></span>OK</span>
+        <span class="f-bar"><i style="width:98%"></i></span>
+        <span class="f-d">d <b>0.675</b></span>
         <span class="f-caret">›</span>
       </div>
       <div class="f-body">
@@ -1149,11 +1032,11 @@
 
     <article class="frame" data-frame="soft-contrarian">
       <div class="frame-row">
-        <span class="f-idx">07</span>
+        <span class="f-idx">#07</span>
         <span class="f-name">soft-contrarian</span>
-        <span class="f-tag"><b>OK</b></span>
-        <span class="f-bar"><i style="width:100%; background:var(--nine);"></i></span>
-        <span class="f-d">d&#160;<b>0.686</b></span>
+        <span class="f-tag"><span class="d"></span>OK · <b>farthest</b></span>
+        <span class="f-bar"><i style="width:100%"></i></span>
+        <span class="f-d">d <b>0.686</b></span>
         <span class="f-caret">›</span>
       </div>
       <div class="f-body">
@@ -1165,101 +1048,27 @@
       </div>
     </article>
     
+    </section>
   </section>
-
-  <div class="sec">
-    <span class="glyph">¶</span>
-    <h2>The tenth-man — <em>steel-man dissent</em></h2>
-    <span class="rule"></span>
-    <span class="aside">d&nbsp;<b>1.074</b> · obligated to dissent</span>
-  </div>
-
-  <article class="tenth">
-    <header class="tenth-top">
-      <div>
-        <div class="tenth-eyebrow"><i></i>Frame 10 · Tenth-man</div>
-        <h2>Why the nine might be wrong</h2>
-      </div>
-      <div class="d"><b>1.074</b>distance from consensus</div>
-    </header>
-
-    <div class="tenth-body">
-      <h3><span class="ord">§1</span>Premises I accept</h3>
-<p>I accept the financial math, the household constraints, the domain-insider thesis, the buyer-empathy decay argument, and the consensus that a paying design partner before the quit is the cleanest path. The nine analyses are competent and internally consistent.</p>
-<h3><span class="ord">§2</span>Where the consensus fails</h3>
-<p>The nine frames are answering a <em>career-optimization</em> question. <strong>The actual question is identity.</strong></p>
-<p>&gt; The hidden question isn&#x27;t &quot;is this the right time to start a company.&quot; It&#x27;s &quot;do I want to be a founder, or a Senior PM who briefly tried.&quot; The financial framing is a way to defer the identity question by making it feel quantitative.</p>
-<p>The consensus says: <em>secure a paid design partner, then quit</em>. Sounds prudent. It is also the perfect mechanism for never quitting. Six months from now, with one paid pilot at $4k/month, the same nine frames will produce the same advice — <em>one more design partner first, then quit</em>. The criterion is unfalsifiable in practice because each milestone hit raises the bar for the next.</p>
-<h3><span class="ord">§3</span>The question behind the question</h3>
-<p>What if the founders who succeed in regulated B2B verticals aren&#x27;t the ones who optimized the quit-timing? What if they&#x27;re the ones who <strong>forced themselves into the identity first and let the financials catch up?</strong> Quitting is the dispositive act — it converts a curious PM into a founder in the eyes of every buyer they meet for the next 18 months. A moonlighting PM with a side project has 30% the credibility of a full-time founder with the same product. Buyers pattern-match on commitment and they pay accordingly. The nine frames price the financial cost of quitting too early. They do not price the credibility cost of quitting too late.</p>
-      <div class="modes"><div class="mode"><div class="ord">Failure mode · 1</div><h4>Validation infinite-loop</h4><p>Each milestone hit raises the bar for the next. &quot;One paid design partner&quot; becomes &quot;one with retention&quot;, then &quot;with expansion revenue&quot;. The criterion never lets you quit.</p></div><div class="mode"><div class="ord">Failure mode · 2</div><h4>Buyer-empathy decay</h4><p>Every month inside the unicorn dulls your context window on the clinical-research operator. By the time you &quot;feel ready&quot;, you are no longer the domain insider you were when the idea was hot.</p></div><div class="mode"><div class="ord">Failure mode · 3</div><h4>Identity hedging</h4><p>Moonlighting signals you bet on yourself with one foot still planted. Buyers pattern-match on commitment. A full-time founder with no contract closes design partners faster than a part-time PM with two pilots.</p></div></div>
-    </div>
-
-    <footer class="tenth-foot">
-      <span>Generated under constraint · mandatory <b>steel-man</b></span>
-      <span>embed <b>openai/text-embedding-3-small</b></span>
-    </footer>
-  </article>
 
   <footer class="colophon">
     <div>
-      <b>Henge</b><br/>
-      classical MDS · cosine distance<br/>
-      embed: openai/text-embedding-3-small
+      <b>TenthAI v0.4</b><br>
+      classical MDS · cosine<br>
+      embed · openai/text-embedding-3-small
     </div>
     <div class="center">
-      &laquo;Nine voices aligned aren't signal — just coherent noise.&raquo;
+      «Advisors divided — there was no strong consensus to begin with.»
     </div>
     <div class="right">
-      <b>Estimated cost</b> ~CLP 550<br/>
-      2026·04·30 · 23:37 CLT<br/>
-      report&nbsp;#2337
+      <b>~USD 0.65</b><br>
+      2026·05·01 10:33 CLT<br>
+      report&nbsp;<b>#1033</b>
     </div>
   </footer>
 
-</main>
-
-<aside class="guide" id="guide" aria-label="How to read this report">
-  <div class="guide-panel" role="dialog" aria-labelledby="guide-title">
-    <div class="guide-panel-body">
-      <p class="kicker">Reading guide</p>
-      <h3 id="guide-title">How to approach <em>this report</em></h3>
-      <ol>
-        <li><b>Start with consensus, not the tenth.</b> What the 9 advisors agree on — that's the anchor of the decision.</li>
-        <li><b>The 9 advisors aren't votes.</b> They're distinct lenses on the same problem. Read the differences between them, not the majority.</li>
-        <li><b>The tenth is audit, not recommendation.</b> Its role is to attack the consensus to test if it holds. Sounding convincing is its job, not a signal it's right.</li>
-        <li><b>Isolate the tenth's attacks, not its verdict.</b> Keep the questions it opens and evaluate each against your reality — discard its conclusion if it doesn't hold.</li>
-        <li><b>Read the metrics.</b> High fragility + high tenth-man distance = weak consensus, the dissent matters more. Low fragility = robust consensus, the dissent is rhetorical.</li>
-        <li><b>Apply the asymmetric test.</b> If the tenth names a risk you recognize as real in your life, add it even if you don't switch sides. If you don't recognize it, discard.</li>
-        <li><b>You decide.</b> No advisor knows your full context. The report exposes tensions; the choice is yours.</li>
-      </ol>
-    </div>
-    <div class="guide-panel-foot">
-      <p class="foot">Consensus protects against the obvious error. The tenth protects against the shared one. You need both lenses — and neither replaces your judgment.</p>
-      <button type="button" class="guide-close" onclick="document.getElementById('guide').classList.remove('open')">Close</button>
-    </div>
   </div>
-  <button type="button" class="guide-toggle" onclick="document.getElementById('guide').classList.toggle('open')" aria-expanded="false">
-    <span class="marker"></span>
-    How do I read this?
-  </button>
-</aside>
-
-<script>
-  (function(){
-    var g = document.getElementById('guide');
-    var btn = g.querySelector('.guide-toggle');
-    btn.addEventListener('click', function(){
-      btn.setAttribute('aria-expanded', g.classList.contains('open') ? 'true' : 'false');
-    });
-    document.addEventListener('keydown', function(e){
-      if(e.key === 'Escape' && g.classList.contains('open')){
-        g.classList.remove('open');
-        btn.setAttribute('aria-expanded', 'false');
-      }
-    });
-  })();
-</script>
+</main>
 
 <script>
   document.querySelectorAll('.frame').forEach(f => {

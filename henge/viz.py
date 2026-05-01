@@ -415,7 +415,7 @@ def _build_frame_card_with_flag(frame, response, status, distance, max_dist, idx
     """
 
 
-def render(question, results, coords_2d, distances, provider, model, cost_estimate_clp, consensus=None):
+def render(question, results, coords_2d, distances, provider, model, cost_estimate_usd, consensus=None):
     """Render the TenthAI/Antimetal-style disagreement report. Returns full HTML.
 
     Persistence and browser-open are handled by the caller (server.py orchestrates
@@ -636,26 +636,6 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
     gap: 40px;
     align-items: end;
   }}
-  .announce{{
-    display: inline-flex; align-items: center; gap: 10px;
-    background: rgba(255,255,255,0.10);
-    backdrop-filter: blur(8px);
-    color: #fafeff;
-    border: 1px solid rgba(224,246,255,0.22);
-    border-radius: 9999px;
-    padding: 5px 14px 5px 5px;
-    font-size: 13px; letter-spacing: -0.015em;
-    margin-bottom: 22px;
-  }}
-  .announce .new{{
-    background: var(--chartreuse);
-    color: var(--midnight-navy);
-    font-family: var(--mono); font-size: 10.5px; font-weight: 500;
-    padding: 3px 9px; border-radius: 9999px;
-    text-transform: uppercase; letter-spacing: 0.02em;
-  }}
-  .announce .arrow{{ opacity: .8; }}
-
   h1.hero-h{{
     margin: 0 0 14px;
     font-family: var(--serif);
@@ -1197,11 +1177,6 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
     <div class="hero-bg" aria-hidden="true"></div>
     <div class="hero-inner">
       <div>
-        <div class="announce">
-          <span class="new">New</span>
-          <span>Steel-man dissent · Frame 10 online</span>
-          <span class="arrow">→</span>
-        </div>
         <h1 class="hero-h">Nine advisors aligned.<br><em>The tenth must dissent.</em></h1>
         <p class="hero-dek">Your question runs through nine cognitive frames. We measure the consensus and force a tenth to disagree with rigor.</p>
       </div>
@@ -1303,7 +1278,7 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
 
       <footer class="tenth-foot">
         <span>Generated under constraint · <b>steel-man mandatory</b></span>
-        <span>embed <b>{html_mod.escape(provider)}/{html_mod.escape(model)}</b> · ~CLP {cost_estimate_clp:.0f}</span>
+        <span>embed <b>{html_mod.escape(provider)}/{html_mod.escape(model)}</b> · ~USD {cost_estimate_usd:.2f}</span>
       </footer>
     </article>
   </section>
@@ -1340,7 +1315,7 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
       «{html_mod.escape(fragility_text)}»
     </div>
     <div class="right">
-      <b>~CLP {cost_estimate_clp:.0f}</b><br>
+      <b>~USD {cost_estimate_usd:.2f}</b><br>
       {timestamp}<br>
       report&nbsp;<b>#{report_id}</b>
     </div>

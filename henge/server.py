@@ -30,7 +30,7 @@ mcp = FastMCP("henge")
 
 
 def _validate_keys_at_startup():
-    """Ping Anthropic + embed provider with a minimal call. Cost: ~CLP 0.1.
+    """Ping Anthropic + embed provider with a minimal call. Cost: ~USD 0.0001.
 
     Auth failures here = clear error and exit. Auth failures during invocation
     waste 60s and produce opaque stack traces.
@@ -125,7 +125,7 @@ async def decide(question: str, context: str | None = None, skip_scoping: bool =
 
     Returns:
         Phase 1: {status: "needs_context", questions: [...], note, next_call_hint}
-        Phase 2: {viz_path, frames, tenth_man, summary, cost_clp}
+        Phase 2: {viz_path, frames, tenth_man, summary, cost_usd}
     """
     if not question or not question.strip():
         return {"error": "empty_question", "reason": "Provide a non-empty question."}
@@ -161,7 +161,7 @@ async def decide(question: str, context: str | None = None, skip_scoping: bool =
 
     proj = project_mds(embed_result["embeddings"])
 
-    cost_clp = 580.0  # rough avg; range CLP 430-730 with 1500/3500 token cap + Haiku consensus + scoping
+    cost_usd = 0.65  # rough avg; range USD 0.50-0.80 with 1500/3500 token cap + Haiku consensus + scoping
 
     html = render(
         question=question,
@@ -171,7 +171,7 @@ async def decide(question: str, context: str | None = None, skip_scoping: bool =
         distances=proj["distance_to_centroid_of_9"],
         provider=embed_result["provider"],
         model=embed_result["model"],
-        cost_estimate_clp=cost_clp,
+        cost_estimate_usd=cost_usd,
     )
 
     # Persist the run: report.html + report.json + regenerate index.html
@@ -222,7 +222,7 @@ async def decide(question: str, context: str | None = None, skip_scoping: bool =
             "provider": embed_result["provider"],
             "model": embed_result["model"],
         },
-        "cost_clp": cost_clp,
+        "cost_usd": cost_usd,
     }
 
     html_path, json_path = write_record(report_dir, html, payload)
@@ -284,7 +284,7 @@ async def decide(question: str, context: str | None = None, skip_scoping: bool =
             "embed_provider": embed_result["provider"],
             "embed_model": embed_result["model"],
         },
-        "cost_clp": cost_clp,
+        "cost_usd": cost_usd,
     }
 
 

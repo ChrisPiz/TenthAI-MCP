@@ -3,7 +3,7 @@
 Without scoping, frames speculate or stay generic. With scoping, the user provides
 the missing context (income, location, constraints) so frames apply to facts.
 
-Uses Haiku for speed/cost: 1 call ≈ CLP 10, returns in ~3-5s.
+Uses Haiku for speed/cost: 1 call ≈ USD 0.01, returns in ~3-5s.
 """
 import json
 

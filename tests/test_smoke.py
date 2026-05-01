@@ -39,7 +39,7 @@ def test_html_renders(synthetic_embeddings_10):
         distances=proj["distance_to_centroid_of_9"],
         provider="openai",
         model="text-embedding-3-small",
-        cost_estimate_clp=350,
+        cost_estimate_usd=0.40,
     )
 
     assert isinstance(html, str) and len(html) > 1000

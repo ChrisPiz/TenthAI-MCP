@@ -1,9 +1,8 @@
 """Demo render — produces a screenshot-ready English HTML report without spending tokens.
 
 Mocks the 10 advisor responses + consensus + tenth-man with hand-crafted English
-content, runs MDS on synthetic embeddings, calls viz.render, then post-processes
-the chrome (section labels, headlines, footer) to English so the whole report is
-in one language for screenshots.
+content, runs MDS on synthetic embeddings, then calls viz.render. The new TenthAI
+v3 template is already English-native, so no chrome post-processing is needed.
 
 Usage:
     python examples/demo_render.py            # writes docs/demo.html and opens it
@@ -32,17 +31,17 @@ QUESTION = (
 
 CONSENSUS = """# Quit on the back of a contract — not on the back of confidence
 
-## (1) Donde convergen los nueve
+## (1) Where the nine converge
 
 The financial setup is workable but unforgiving — 9 months of runway is enough for a wedge but not for a category, and a toddler in the household compresses your willingness to extend that runway under stress. The healthtech background materially de-risks the idea: niche workflow tools for clinical research coordinators are exactly the kind of unsexy, sticky software that compounds when sold to people the founder already understands. Domain-insider founders in regulated B2B verticals fail at much lower rates than outsiders, and that asymmetry is the strongest signal in the dataset.
 
-## (2) Tensión interna
+## (2) Internal tension
 
 Tension persists on **whether *now* is the right moment**. The systemic and pre-mortem frames want one more thing nailed before the quit — a paying design partner, or a side-project prototype that three coordinators are already using. The optimist and first-principles frames argue the cost of waiting another six months is higher than it looks: your context window on the buyer degrades from the inside the longer you stay at the unicorn. Both sides are pricing the same risk; they disagree on which clock runs faster.
 
-## (3) Net inclination
+## (3) Net lean
 
-**Net inclination:** lean *out* of the job, but not blindly. Secure one paying design partner before the quit, then go full-time on the back of that contract. Don't quit and figure it out — quit and execute on a contract you already signed. The sequencing matters more than the timing."""
+**Net lean:** lean *out* of the job, but not blindly. Secure one paying design partner before the quit, then go full-time on the back of that contract. Don't quit and figure it out — quit and execute on a contract you already signed. The sequencing matters more than the timing."""
 
 
 FRAMES = {
@@ -163,125 +162,6 @@ Moonlighting signals you bet on yourself with one foot still planted. Buyers pat
 [/FAILURE_MODES]"""
 
 
-# Chrome translations Spanish → English. Keys are exact substrings to replace.
-# Order matters: replace longer strings before shorter to avoid partial matches.
-CHROME = [
-    # Headlines + section titles
-    ("Nueve consejeros alineados.<br/><em>El décimo debe disentir.</em>",
-     "Nine advisors aligned.<br/><em>The tenth must dissent.</em>"),
-    ("Geografía del desacuerdo", "Geography of disagreement"),
-    ("El <em>consenso</em> de los nueve", "The <em>consensus</em> of the nine"),
-    ("Los nueve consejeros", "The nine advisors"),
-    ("El décimo hombre — <em>disenso steel-man</em>", "The tenth-man — <em>steel-man dissent</em>"),
-    # Stat strip
-    ("Distancia décimo hombre", "Tenth-man distance"),
-    ("vs centroide de los 9", "vs centroid of the 9"),
-    ("Consejero más en contra", "Most divergent advisor"),
-    ("Veredicto", "Verdict"),
-    # 3-state verdicts produced by viz.consensus_verdict()
-    ("Consejeros alineados — el disenso suena pero el consenso aguanta.",
-     "Advisors aligned — the dissent is audible but the consensus holds."),
-    ("Consenso fuerte pero frágil — el disidente lo rompe coherentemente.",
-     "Tight consensus but fragile — the dissenter coherently breaks it."),
-    ("Consejeros divididos — no había consenso fuerte para empezar.",
-     "Advisors already divided — no strong consensus to break."),
-    # Legacy 2-state verdict strings (kept for old reports)
-    ("Disidente vive en otro mundo — consenso frágil que vale la pena romper.",
-     "Dissenter lives in another world — fragile consensus worth breaking."),
-    ("Consejeros divididos — no había consenso fuerte que romper.",
-     "Advisors already divided — no strong consensus to break."),
-    # Map card
-    ("10 voces · MDS sobre <b>cosine distance</b> · centroide de los 9",
-     "10 voices · MDS over <b>cosine distance</b> · centroid of the 9"),
-    # Longer pattern first so "Mapa MDS" replacement doesn't shadow it
-    ("Mapa MDS clásico · preserva distancias por pares",
-     "Classical MDS · preserves pairwise distances"),
-    ("Mapa MDS", "MDS Map"),
-    ("Décimo hombre", "Tenth-man"),
-    # Map help popover
-    (">Cómo leer este mapa<", ">How to read this map<"),
-    (">Cada punto es un consejero.<", ">Each point is one advisor.<"),
-    ("zona de consenso<br>(promedio de los 9 consejeros)",
-     "consensus zone<br>(average of the 9 advisors)"),
-    ("El <strong>centroide</strong> al centro es la zona de consenso — donde el grupo coincide.",
-     "The <strong>centroid</strong> at the center is the consensus zone — where the group converges."),
-    ("Más <strong>cerca</strong> del centro = más alineado con el resto.<br/>Más <strong>lejos</strong> = piensa distinto.",
-     "<strong>Closer</strong> to the center = more aligned with the group.<br/><strong>Farther</strong> = thinks differently."),
-    ("El punto <strong style=\"color: var(--accent)\">rojo (10 · tenth-man)</strong> es el disidente obligado.",
-     "The <strong style=\"color: var(--accent)\">red (10 · tenth-man)</strong> point is the mandatory dissenter."),
-    ("Los anillos concéntricos marcan distancias iguales al centroide.",
-     "Concentric rings mark equal distances from the centroid."),
-    ("Cómo leer este mapa", "How to read this map"),
-    # SVG labels
-    ("CENTROIDE", "CENTROID"),
-    (" · más cercano", " · closest"),
-    (" · más lejano", " · farthest"),
-    ("disenso steel-man", "steel-man dissent"),
-    # Section asides + frame list
-    ("qué creen <b>en común</b> los nueve", "what the nine <b>agree on</b>"),
-    # Consensus essay header
-    ("Σ · 9 consejeros · ALIGNED", "Σ · 9 ADVISORS · ALIGNED"),
-    ("Σ · 9 consejeros · FRAGILE CONSENSUS", "Σ · 9 ADVISORS · FRAGILE CONSENSUS"),
-    ("Σ · 9 consejeros · DIVIDED", "Σ · 9 ADVISORS · DIVIDED"),
-    ("max distancia · vs centroide", "max distance · vs centroid"),
-    # Consensus body section labels
-    ("(1) Donde convergen los nueve", "(1) Where the nine converge"),
-    ("(2) Tensión interna", "(2) Internal tension"),
-    ("(3) Inclinación neta", "(3) Net inclination"),
-    ("orden por <b>distancia al centroide</b> · click para expandir",
-     "ordered by <b>distance to centroid</b> · click to expand"),
-    ("d&nbsp;<b>{tenth_distance:.3f}</b> · obligación de discrepar", ""),  # not used as literal
-    ("obligación de discrepar", "obligated to dissent"),
-    # Tenth feature header
-    ("Frame 10 · Tenth-man", "Frame 10 · Tenth-man"),  # already English
-    ("Por qué los nueve podrían estar equivocados", "Why the nine might be wrong"),
-    ("distancia al consenso", "distance from consensus"),
-    # Failure modes grid
-    ("Modo de fallo · 1", "Failure mode · 1"),
-    ("Modo de fallo · 2", "Failure mode · 2"),
-    ("Modo de fallo · 3", "Failure mode · 3"),
-    ("Generado bajo restricción · <b>steel-man</b> obligatorio",
-     "Generated under constraint · mandatory <b>steel-man</b>"),
-    # Colophon
-    ("Costo estimado", "Estimated cost"),
-    ("«Nueve voces alineadas no son señal — son sólo ruido coherente.»",
-     "&laquo;Nine voices aligned aren't signal — just coherent noise.&raquo;"),
-    # Reading guide aside
-    ("Guía de lectura", "Reading guide"),
-    ("Cómo abordar <em>este reporte</em>", "How to approach <em>this report</em>"),
-    ("¿Cómo leer esto?", "How do I read this?"),
-    ("Cómo leer este reporte", "How to read this report"),
-    ("Cerrar", "Close"),
-    # Guide rules
-    ("<b>Empieza por el consenso, no por el décimo.</b> Es lo que los 9 consejeros creen en común — el ancla de la decisión.",
-     "<b>Start with consensus, not the tenth.</b> What the 9 advisors agree on — that's the anchor of the decision."),
-    ("<b>Los 9 consejeros no son votos.</b> Son lentes distintos sobre el mismo problema. Lee las diferencias entre ellos, no la mayoría.",
-     "<b>The 9 advisors aren't votes.</b> They're distinct lenses on the same problem. Read the differences between them, not the majority."),
-    ("<b>El décimo es auditoría, no recomendación.</b> Su rol es atacar el consenso para probar si aguanta. Sonar convincente es su trabajo, no señal de que tenga razón.",
-     "<b>The tenth is audit, not recommendation.</b> Its role is to attack the consensus to test if it holds. Sounding convincing is its job, not a signal it's right."),
-    ("<b>Aísla los ataques del décimo, no su veredicto.</b> Quédate con las preguntas que abre y evalúa cada una contra tu realidad — descarta su conclusión si no resiste.",
-     "<b>Isolate the tenth's attacks, not its verdict.</b> Keep the questions it opens and evaluate each against your reality — discard its conclusion if it doesn't hold."),
-    ("<b>Mira las métricas.</b> Fragilidad alta + distancia 10º alta = consenso débil, el disenso pesa más. Fragilidad baja = consenso robusto, el disenso es desafío retórico.",
-     "<b>Read the metrics.</b> High fragility + high tenth-man distance = weak consensus, the dissent matters more. Low fragility = robust consensus, the dissent is rhetorical."),
-    ("<b>Aplica el test asimétrico.</b> Si el décimo describe un riesgo que reconoces como real en tu vida, súmalo aunque no cambies de bando. Si no lo reconoces, descártalo.",
-     "<b>Apply the asymmetric test.</b> If the tenth names a risk you recognize as real in your life, add it even if you don't switch sides. If you don't recognize it, discard."),
-    ("<b>Tú decides.</b> Ningún consejero conoce tu contexto completo. El reporte expone tensiones; la elección es tuya.",
-     "<b>You decide.</b> No advisor knows your full context. The report exposes tensions; the choice is yours."),
-    ("El consenso protege contra el error obvio. El décimo protege contra el error compartido. Necesitas ambos lentes — y ninguno reemplaza tu juicio.",
-     "Consensus protects against the obvious error. The tenth protects against the shared one. You need both lenses — and neither replaces your judgment."),
-    # Misc small bits
-    ("Métricas globales", "Global metrics"),
-    ("Mapa de desacuerdo", "Disagreement map"),
-]
-
-
-def _english_chrome(html: str) -> str:
-    for src, dst in CHROME:
-        if src and dst:
-            html = html.replace(src, dst)
-    return html
-
-
 def _make_demo_embeddings(rng: np.random.Generator) -> list:
     """9 frames cluster moderately + tenth-man pushed firmly out.
 
@@ -322,9 +202,8 @@ def main() -> None:
         distances=proj["distance_to_centroid_of_9"],
         provider="openai",
         model="text-embedding-3-small",
-        cost_estimate_clp=550,
+        cost_estimate_usd=0.65,
     )
-    html = _english_chrome(html)
 
     out_dir = Path(__file__).resolve().parent.parent / "docs"
     out_dir.mkdir(exist_ok=True)
