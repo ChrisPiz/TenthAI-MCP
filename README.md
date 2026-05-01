@@ -1,4 +1,4 @@
-# Henge · Dissent for AI Agents
+# Henge · 9 advisors. 1 mandatory dissenter.
 
 ![Henge](docs/header-v2.jpg)
 
@@ -6,7 +6,7 @@ Ten pillars.
 Nine align.
 One must disagree.
 
-Henge is a structured-dissent engine exposed as an MCP server. It helps AI agents — and the humans behind them — detect consensus, measure it, and challenge it only when it actually matters.
+Henge is an MCP server that measures AI consensus and forces a steel-man counter-argument before you act. Built for humans making serious decisions with AI in the loop — also drivable by autonomous agents.
 
 **[→ See a live demo report](https://chrispiz.github.io/Henge-MCP/demo.html)**
 
@@ -58,38 +58,7 @@ Henge does not simulate debate. It analyzes the structure of thought, then quant
 
 ## Quickstart (30s)
 
-```bash
-# 1) clone + install
-git clone https://github.com/ChrisPiz/Henge-MCP.git
-cd Henge-MCP
-pip install -e .
-
-# 2) keys
-cp .env.example .env
-# edit .env:
-#   ANTHROPIC_API_KEY  (required — runs the 9 frames + tenth-man)
-#   OPENAI_API_KEY     (default embedding provider)
-#   VOYAGE_API_KEY     (optional — set EMBED_PROVIDER=voyage for higher quality)
-
-# 3) run as MCP server
-python -m henge.server
-```
-
----
-
-## Install matrix
-
-| Client          | Install                                          |
-| --------------- | ------------------------------------------------ |
-| Claude Code     | One-shot — paste a prompt and it self-installs   |
-| Claude Desktop  | Manual config edit                               |
-| Cursor          | Manual config edit                               |
-
-All three reach the same MCP server and call the same `decide` tool. Reports persist at `~/.henge/reports/` and the browseable `index.html` ledger auto-regenerates on every run.
-
-### Claude Code · one-shot prompt (recommended)
-
-Paste this prompt into Claude Code and let it do the install for you:
+If you have **Claude Code** installed, paste this prompt and it self-installs:
 
 ````
 Install Henge from https://github.com/ChrisPiz/Henge-MCP into ~/Henge.
@@ -110,11 +79,26 @@ Steps:
 After step 6, tell me to restart Claude Code and try `/decide should I take the new job?`
 ````
 
-After Claude Code finishes, restart it once so the new MCP server is picked up. Then try:
+Restart Claude Code once when it's done, then try:
 
 ```
 /decide should I take the new job?
 ```
+
+For Claude Desktop, Cursor, or a manual setup, see the [Install matrix](#install-matrix) below.
+
+---
+
+## Install matrix
+
+| Client          | Install                                          |
+| --------------- | ------------------------------------------------ |
+| Claude Code     | One-shot — see [Quickstart](#quickstart-30s)     |
+| Claude Desktop  | Manual config edit                               |
+| Cursor          | Manual config edit                               |
+| Anything else   | Manual `pip install -e .` + run as MCP server    |
+
+All paths reach the same MCP server and call the same `decide` tool. Reports persist at `~/.henge/reports/` and the browseable `index.html` ledger auto-regenerates on every run.
 
 ### Claude Desktop · manual
 
@@ -139,6 +123,22 @@ Edit `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS):
 ### Cursor · manual
 
 Add the same `mcpServers.henge` block to Cursor's MCP config (`Settings → MCP → Edit`).
+
+### Manual install (any environment)
+
+```bash
+git clone https://github.com/ChrisPiz/Henge-MCP.git
+cd Henge-MCP
+pip install -e .
+
+cp .env.example .env
+# edit .env:
+#   ANTHROPIC_API_KEY  (required — runs the 9 frames + tenth-man)
+#   OPENAI_API_KEY     (default embedding provider)
+#   VOYAGE_API_KEY     (optional — set EMBED_PROVIDER=voyage for higher quality)
+
+python -m henge.server   # runs as an MCP stdio server
+```
 
 ---
 
