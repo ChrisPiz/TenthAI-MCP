@@ -5,6 +5,8 @@ Layout (under HENGE_REPORTS_DIR or ~/.henge/reports):
     20260430-143559_should-i-leave-pm-job/
         report.html       # full editorial visualization
         report.json       # raw data (question, context, 10 responses, distances, summary)
+        assets/
+            header-painting.png  # hero background, copied from package on each run
     index.html            # auto-regenerated browseable ledger of all reports
 
 The JSON is the canonical record. The HTML is a rendered view of it. The index
@@ -15,10 +17,12 @@ import html as html_mod
 import json
 import os
 import re
+import shutil
 from datetime import datetime
 from pathlib import Path
 
 REPORTS_DIR = Path(os.environ.get("HENGE_REPORTS_DIR", "~/.henge/reports")).expanduser()
+PACKAGE_ASSETS_DIR = Path(__file__).parent / "assets"
 
 
 def slugify(question: str, max_len: int = 60) -> str:
@@ -45,11 +49,23 @@ def make_report_dir(report_id: str) -> Path:
 
 
 def write_record(report_dir: Path, html: str, payload: dict) -> tuple[Path, Path]:
-    """Writes ``report.html`` + ``report.json`` into report_dir. Returns both paths."""
+    """Writes ``report.html`` + ``report.json`` into report_dir. Returns both paths.
+
+    Also copies the static hero painting from the package into ``report_dir/assets/``
+    so the relative ``assets/header-painting.png`` reference in the rendered HTML
+    resolves regardless of where the report is opened from.
+    """
     html_path = report_dir / "report.html"
     json_path = report_dir / "report.json"
     html_path.write_text(html, encoding="utf-8")
     json_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    assets_dir = report_dir / "assets"
+    assets_dir.mkdir(exist_ok=True)
+    painting_src = PACKAGE_ASSETS_DIR / "header-painting.png"
+    if painting_src.exists():
+        shutil.copyfile(painting_src, assets_dir / "header-painting.png")
+
     return html_path, json_path
 
 

@@ -1,15 +1,20 @@
-"""HTML viz: editorial-modernist disagreement report.
+"""HTML viz: TenthAI / Antimetal-style disagreement report.
 
-Design language:
-- Fraunces (serif display) + Inter Tight (UI) + JetBrains Mono (data)
-- Warm paper background (oklch), carbon ink, single terracotta accent for tenth-man
-- Sober ink-blue for the consensus nine
-- Generous whitespace, fine rules, data as first-class citizen
+Design language (v3):
+- Compact masthead: small logo + report meta
+- Hero: oil-painting bg behind navy gradient veil, headline + 4 stat cards (right)
+- Sober ghost-canvas page surface; pure white elevated cards w/ blue-tinted
+  shadow rings (no borders)
+- Single chartreuse (#d0f100) accent — used only on the tenth-man and primary
+  affordances; nine-advisor consensus sits in midnight-navy
+- Type pairing: Fraunces (serif display + numerics) + DM Sans (UI) +
+  JetBrains Mono (data, labels, meta)
 
-Layout: masthead → headline → question → stats strip → MDS map → consensus →
-9 frames list (sorted by distance, closest open by default) → tenth-man feature →
-colophon. Order honors the user's reading flow: see what the 9 agree on first,
-then individual conclusions, then the dissent as punchline at the end.
+Layout: masthead → hero (painting + 4 stats) → 01 Reporte (question + map +
+optional consensus + tenth-card) → 02 Marcos (frames table) → colophon.
+The 9 frames are sorted by distance to centroide ascending; the closest one is
+expanded by default. The tenth-man sits in its own chartreuse-accented card
+with a 3-up failure-modes grid when the [FAILURE_MODES] block is present.
 """
 import html as html_mod
 import math
@@ -150,14 +155,15 @@ def _split_failure_modes(text: str):
 
 
 def _style_section_markers(html: str) -> str:
-    """Wrap ``§N`` prefix in tenth-body h3 headings with a terracotta accent span.
+    """Wrap ``§N`` prefix in tenth-body h3 headings with an accent span.
 
     Pattern in the rendered HTML: ``<h3>§1 Hechos que acepto</h3>``. We wrap
-    the §N portion in a dedicated span the CSS picks up.
+    the §N portion in a dedicated span the CSS picks up. We also rewrite to
+    h4 to match the v3 template's smaller ord/title eyebrow treatment.
     """
     return re.sub(
         r"<h3>(§\s*\d+)\s+(.+?)</h3>",
-        r'<h3><span class="ord">\1</span>\2</h3>',
+        r'<h4><span class="ord">\1</span>\2</h4>',
         html,
     )
 
@@ -179,148 +185,178 @@ def _extract_conclusion(text: str, max_chars: int = 360) -> str:
     return last
 
 
+def _stddev(values):
+    """Population standard deviation. Returns 0.0 for empty / single-element input."""
+    if not values or len(values) < 2:
+        return 0.0
+    mean = sum(values) / len(values)
+    return math.sqrt(sum((v - mean) ** 2 for v in values) / len(values))
+
+
+# ───────── Map SVG (TenthAI v3 layout) ─────────
+# viewBox 1200x638, centroid at (600, 319), three concentric distance rings,
+# nine consensus nodes in midnight-navy, tenth-man with chartreuse halo.
+
+_MAP_VB_W = 1200
+_MAP_VB_H = 638
+_MAP_CX = 600
+_MAP_CY = 319
+_MAP_MAX_R = 200  # outermost ring; consensus nodes scale to fit inside.
+
+
 def _map_to_svg(coords_2d):
-    """Map 10 MDS coords into SVG viewBox 1000×700, centered at (500, 350).
+    """Map 10 MDS coords into the v3 SVG viewBox.
 
-    Scale so the max extent fits within radius ~240 (matches design's outer ring).
-    Returns list of (x_svg, y_svg) tuples, length 10.
+    Scales so the largest extent lands at ``_MAP_MAX_R`` from centroid. Returns
+    a list of (x, y) pairs in SVG user units, length 10.
     """
-    cx, cy = 500, 350
-    max_radius = 230
-
     xs = [c[0] for c in coords_2d]
     ys = [c[1] for c in coords_2d]
     max_extent = max(
-        max(abs(x) for x in xs) if xs else 0.001,
-        max(abs(y) for y in ys) if ys else 0.001,
+        max((abs(x) for x in xs), default=0.001),
+        max((abs(y) for y in ys), default=0.001),
         0.001,
     )
-    scale = max_radius / max_extent
+    scale = _MAP_MAX_R / max_extent
+    return [(_MAP_CX + x * scale, _MAP_CY + y * scale) for x, y in zip(xs, ys)]
 
-    return [(cx + x * scale, cy + y * scale) for x, y in zip(xs, ys)]
 
+def _build_map_svg(coords_2d, frames, distances, max_frame_dist, min_frame_dist):
+    """Generate the v3 disagreement-map SVG string.
 
-def _build_map_svg(coords_2d, frames, distances, statuses, max_frame_dist, min_frame_dist):
-    """Generate the full MDS map SVG with rings, crosshair, centroid, frames, tenth-man."""
+    Visual structure:
+      - axis crosshair + 3 distance rings (solid 60, dashed 120, dashed 200)
+      - centroid marker (rotated square outline) with a 'CENTROID' label
+      - 9 thin distance lines from centroid to each consensus node
+      - 1 chartreuse dashed line + d-label pill from centroid to tenth-man
+      - 9 navy nodes with frame index, name, distance and closest/farthest flag
+      - tenth-man halo (3 stacked circles) with two-line label
+    """
     points = _map_to_svg(coords_2d)
-    cx, cy = 500, 350
+    cx, cy = _MAP_CX, _MAP_CY
 
     parts = [
-        '<svg class="map" viewBox="0 0 1000 700" preserveAspectRatio="xMidYMid meet" aria-hidden="true">',
-        '<defs>',
-        '<radialGradient id="halo" cx="50%" cy="50%" r="50%">',
-        '<stop offset="0%" stop-color="oklch(56% 0.165 32 / .22)"/>',
-        '<stop offset="60%" stop-color="oklch(56% 0.165 32 / .04)"/>',
-        '<stop offset="100%" stop-color="oklch(56% 0.165 32 / 0)"/>',
-        '</radialGradient>',
-        '</defs>',
-        # Concentric rings (4 levels)
-        '<g stroke="oklch(86% 0.012 70)" stroke-width="0.6" fill="none" opacity=".7">',
+        f'<svg viewBox="0 0 {_MAP_VB_W} {_MAP_VB_H}" preserveAspectRatio="xMidYMid meet" aria-hidden="true">',
+        # Axis crosshair
+        '<g stroke="rgba(0,39,80,0.06)" stroke-width="0.5">',
+        f'<line x1="{cx}" y1="40" x2="{cx}" y2="598"/>',
+        f'<line x1="80" y1="{cy}" x2="{_MAP_VB_W - 80}" y2="{cy}"/>',
+        '</g>',
+        # Distance rings
+        '<g stroke="rgba(0,39,80,0.10)" stroke-width="0.7" fill="none">',
         f'<circle cx="{cx}" cy="{cy}" r="60"/>',
-        f'<circle cx="{cx}" cy="{cy}" r="120"/>',
-        f'<circle cx="{cx}" cy="{cy}" r="180" stroke-dasharray="2 4"/>',
-        f'<circle cx="{cx}" cy="{cy}" r="240" stroke-dasharray="2 4"/>',
+        f'<circle cx="{cx}" cy="{cy}" r="120" stroke-dasharray="3 5"/>',
+        f'<circle cx="{cx}" cy="{cy}" r="200" stroke-dasharray="3 5"/>',
         '</g>',
-        # Crosshair
-        '<g stroke="oklch(82% 0.012 70)" stroke-width="0.6">',
-        '<line x1="100" y1="350" x2="900" y2="350"/>',
-        '<line x1="500" y1="60" x2="500" y2="640"/>',
-        '</g>',
-        # Centroid label + diamond marker
-        '<g font-family="JetBrains Mono, monospace" font-size="10" fill="oklch(56% 0.012 60)" letter-spacing="1">',
-        '<text x="510" y="346">CENTROIDE</text>',
-        f'<rect x="{cx - 4}" y="{cy - 4}" width="8" height="8" fill="none" stroke="oklch(56% 0.012 60)" stroke-width="1" transform="rotate(45 {cx} {cy})"/>',
+        # Centroid marker + label
+        '<g>',
+        f'<rect x="{cx - 8}" y="{cy - 8}" width="16" height="16" fill="none" '
+        f'stroke="#1b2540" stroke-width="1" transform="rotate(45 {cx} {cy})"/>',
+        f'<text x="{cx + 18}" y="{cy - 3}" font-family="JetBrains Mono, monospace" '
+        f'font-size="11" fill="#6b7184" letter-spacing="1">CENTROID</text>',
         '</g>',
     ]
 
-    # Distance lines (9 frames in blue, tenth in accent dashed)
-    parts.append('<g stroke="oklch(34% 0.085 250 / .35)" stroke-width="0.7">')
+    # Distance lines for the 9 consensus advisors
+    parts.append('<g stroke="rgba(27,37,64,0.20)" stroke-width="0.7">')
     for i in range(9):
         x, y = points[i]
         parts.append(f'<line x1="{cx}" y1="{cy}" x2="{x:.1f}" y2="{y:.1f}"/>')
     parts.append('</g>')
+
+    # Tenth-man dashed accent line
     tx, ty = points[9]
     parts.append(
         f'<line x1="{cx}" y1="{cy}" x2="{tx:.1f}" y2="{ty:.1f}" '
-        f'stroke="oklch(56% 0.165 32 / .55)" stroke-width="1.1" stroke-dasharray="3 3"/>'
+        f'stroke="#d0f100" stroke-width="1.5" stroke-dasharray="4 4"/>'
     )
 
-    # Nine frame nodes
-    parts.append('<g class="nodes" font-family="JetBrains Mono, monospace" font-size="11" fill="oklch(20% 0.012 60)">')
+    # Tenth-man distance pill, drawn at the midpoint of the dashed line
+    mid_x = (cx + tx) / 2
+    mid_y = (cy + ty) / 2
+    pill_w = 60
+    pill_h = 22
+    parts.append(
+        f'<rect x="{mid_x - pill_w / 2:.1f}" y="{mid_y - pill_h / 2:.1f}" '
+        f'width="{pill_w}" height="{pill_h}" rx="11" fill="#1b2540"/>'
+    )
+    parts.append(
+        f'<text x="{mid_x:.1f}" y="{mid_y + 4:.1f}" text-anchor="middle" '
+        f'font-family="JetBrains Mono, monospace" font-size="11" font-weight="500" '
+        f'fill="#d0f100">d {distances[9]:.3f}</text>'
+    )
+
+    # Nine consensus nodes
+    parts.append('<g font-family="DM Sans, sans-serif" font-size="13" fill="#1b2540">')
     for i in range(9):
         x, y = points[i]
         frame = frames[i]
-        idx = FRAME_INDEX.get(frame, f"{i+1:02d}")
+        idx = FRAME_INDEX.get(frame, f"{i + 1:02d}")
         dist = distances[i]
-        # Label position: anchor right when point is in right half, left otherwise
-        if x >= cx:
-            anchor = "start"
-            lx = x + 17
-        else:
-            anchor = "end"
-            lx = x - 17
-        # Highlight closest + farthest with thicker ring
         is_closest = abs(dist - min_frame_dist) < 1e-6
         is_farthest = abs(dist - max_frame_dist) < 1e-6
-        ring_opacity = ".35" if (is_closest or is_farthest) else ".25"
-        ring_radius = 15 if is_closest else 13
-        marker_radius = 9 if is_closest else 8
-        # Tag suffix for closest/farthest
+        # Anchor labels away from the centroid horizontally
+        if x >= cx:
+            anchor = "start"
+            lx = x + 15
+        else:
+            anchor = "end"
+            lx = x - 15
+        marker_r = 7 if is_closest else 6
         suffix = ""
         if is_closest:
             suffix = " · más cercano"
         elif is_farthest:
             suffix = " · más lejano"
         parts.append('<g>')
-        parts.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="{marker_radius}" fill="oklch(34% 0.085 250)"/>')
+        parts.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="{marker_r}" fill="#1b2540"/>')
+        if is_closest:
+            parts.append(
+                f'<circle cx="{x:.1f}" cy="{y:.1f}" r="14" fill="none" '
+                f'stroke="#1b2540" stroke-width="1" stroke-dasharray="2 2"/>'
+            )
         parts.append(
-            f'<circle cx="{x:.1f}" cy="{y:.1f}" r="{ring_radius}" fill="none" '
-            f'stroke="oklch(34% 0.085 250 / {ring_opacity})" stroke-width="3"/>'
+            f'<text x="{lx:.1f}" y="{y - 3:.1f}" font-weight="500" '
+            f'text-anchor="{anchor}">{idx} {html_mod.escape(frame)}</text>'
         )
         parts.append(
-            f'<text x="{lx:.1f}" y="{y - 4:.1f}" font-size="11" text-anchor="{anchor}">{idx}</text>'
-        )
-        parts.append(
-            f'<text x="{lx:.1f}" y="{y + 10:.1f}" font-family="Inter Tight, sans-serif" '
-            f'font-weight="500" font-size="13" text-anchor="{anchor}">{html_mod.escape(frame)}</text>'
-        )
-        parts.append(
-            f'<text x="{lx:.1f}" y="{y + 25:.1f}" font-size="9.5" fill="oklch(56% 0.012 60)" '
-            f'text-anchor="{anchor}">d&#160;{dist:.3f}{suffix}</text>'
+            f'<text x="{lx:.1f}" y="{y + 12:.1f}" font-family="JetBrains Mono, monospace" '
+            f'font-size="10.5" fill="#6b7184" text-anchor="{anchor}">'
+            f'd {dist:.3f}{suffix}</text>'
         )
         parts.append('</g>')
     parts.append('</g>')
 
-    # Tenth-man with halo
-    tx, ty = points[9]
-    tenth_dist = distances[9]
+    # Tenth-man node + chartreuse halo + label (placed away from the marker)
     parts.append('<g>')
-    parts.append(f'<circle cx="{tx:.1f}" cy="{ty:.1f}" r="42" fill="url(#halo)"/>')
-    parts.append(f'<circle cx="{tx:.1f}" cy="{ty:.1f}" r="11" fill="oklch(56% 0.165 32)"/>')
+    parts.append(f'<circle cx="{tx:.1f}" cy="{ty:.1f}" r="48" fill="#d0f100" opacity="0.18"/>')
+    parts.append(f'<circle cx="{tx:.1f}" cy="{ty:.1f}" r="28" fill="#d0f100" opacity="0.32"/>')
+    parts.append(f'<circle cx="{tx:.1f}" cy="{ty:.1f}" r="12" fill="#d0f100"/>')
     parts.append(
-        f'<circle cx="{tx:.1f}" cy="{ty:.1f}" r="17" fill="none" '
-        f'stroke="oklch(56% 0.165 32 / .35)" stroke-width="3"/>'
+        f'<circle cx="{tx:.1f}" cy="{ty:.1f}" r="12" fill="none" '
+        f'stroke="#1b2540" stroke-width="1.5"/>'
     )
-    label_y_offset = -37 if ty > cy - 50 else 50
+    # Push label above the marker if there's room, otherwise below
+    label_offset = -52 if ty > cy - 60 else 64
     parts.append(
-        f'<text x="{tx:.1f}" y="{ty + label_y_offset:.1f}" text-anchor="middle" '
-        f'font-family="Inter Tight, sans-serif" font-weight="600" font-size="13" '
-        f'fill="oklch(56% 0.165 32)" letter-spacing="2">10 · TENTH-MAN</text>'
+        f'<text x="{tx:.1f}" y="{ty + label_offset:.1f}" text-anchor="middle" '
+        f'font-family="DM Sans, sans-serif" font-weight="500" font-size="13" '
+        f'fill="#1b2540" letter-spacing="2">10 · TENTH-MAN</text>'
     )
     parts.append(
-        f'<text x="{tx:.1f}" y="{ty + label_y_offset + 15:.1f}" text-anchor="middle" '
-        f'font-size="10" fill="oklch(56% 0.165 32)">d&#160;{tenth_dist:.3f} · disenso steel-man</text>'
+        f'<text x="{tx:.1f}" y="{ty + label_offset + 16:.1f}" text-anchor="middle" '
+        f'font-family="JetBrains Mono, monospace" font-size="11" fill="#1b2540">'
+        f'steel-man dissent</text>'
     )
     parts.append('</g>')
 
     # Axis labels
     parts.append(
-        '<g font-family="JetBrains Mono, monospace" font-size="9.5" '
-        'fill="oklch(56% 0.012 60)" letter-spacing="2">'
+        '<g font-family="JetBrains Mono, monospace" font-size="10" '
+        'fill="#7c8293" letter-spacing="1">'
     )
-    parts.append('<text x="100" y="345">MDS-1</text>')
-    parts.append('<text x="892" y="345" text-anchor="end">→</text>')
-    parts.append('<text x="500" y="55" text-anchor="middle">MDS-2</text>')
+    parts.append(f'<text x="80" y="{_MAP_VB_H - 23}">MDS-1 →</text>')
+    parts.append(f'<text x="{cx}" y="34" text-anchor="middle">↑ MDS-2</text>')
     parts.append('</g>')
 
     parts.append('</svg>')
@@ -328,20 +364,48 @@ def _build_map_svg(coords_2d, frames, distances, statuses, max_frame_dist, min_f
 
 
 def _build_frame_card(frame, response, status, distance, max_dist, idx_str, is_open=False):
-    """Build a frame-list article. Open by default for the closest frame."""
+    """Build a frame-list article in the v3 table layout.
+
+    Open by default for the closest frame to the centroid.
+    """
     body = _md_to_html(response)
     bar_pct = min(100, (distance / max_dist) * 100) if max_dist > 0 else 0
-    status_tag = "OK" if status == "ok" else "FAILED"
+    status_label = "OK" if status == "ok" else "FAILED"
     open_class = " open" if is_open else ""
-    bar_color_var = "var(--accent)" if is_open else "var(--nine)"
+    suffix_html = ""
     return f"""
     <article class="frame{open_class}" data-frame="{html_mod.escape(frame)}">
       <div class="frame-row">
-        <span class="f-idx">{idx_str}</span>
+        <span class="f-idx">#{idx_str}</span>
         <span class="f-name">{html_mod.escape(frame)}</span>
-        <span class="f-tag"><b>{status_tag}</b></span>
-        <span class="f-bar"><i style="width:{bar_pct:.0f}%; background:{bar_color_var};"></i></span>
-        <span class="f-d">d&#160;<b>{distance:.3f}</b></span>
+        <span class="f-tag"><span class="d"></span>{status_label}{suffix_html}</span>
+        <span class="f-bar"><i style="width:{bar_pct:.0f}%"></i></span>
+        <span class="f-d">d <b>{distance:.3f}</b></span>
+        <span class="f-caret">›</span>
+      </div>
+      <div class="f-body">
+        {body}
+      </div>
+    </article>
+    """
+
+
+def _build_frame_card_with_flag(frame, response, status, distance, max_dist, idx_str,
+                                is_open=False, flag=None):
+    """Same as _build_frame_card but injects a closest/farthest tag suffix."""
+    body = _md_to_html(response)
+    bar_pct = min(100, (distance / max_dist) * 100) if max_dist > 0 else 0
+    status_label = "OK" if status == "ok" else "FAILED"
+    open_class = " open" if is_open else ""
+    flag_html = f' · <b>{html_mod.escape(flag)}</b>' if flag else ""
+    return f"""
+    <article class="frame{open_class}" data-frame="{html_mod.escape(frame)}">
+      <div class="frame-row">
+        <span class="f-idx">#{idx_str}</span>
+        <span class="f-name">{html_mod.escape(frame)}</span>
+        <span class="f-tag"><span class="d"></span>{status_label}{flag_html}</span>
+        <span class="f-bar"><i style="width:{bar_pct:.0f}%"></i></span>
+        <span class="f-d">d <b>{distance:.3f}</b></span>
         <span class="f-caret">›</span>
       </div>
       <div class="f-body">
@@ -352,15 +416,15 @@ def _build_frame_card(frame, response, status, distance, max_dist, idx_str, is_o
 
 
 def render(question, results, coords_2d, distances, provider, model, cost_estimate_clp, consensus=None):
-    """Render the editorial disagreement report. Returns the full HTML as a string.
+    """Render the TenthAI/Antimetal-style disagreement report. Returns full HTML.
 
     Persistence and browser-open are handled by the caller (server.py orchestrates
     storage.write_record + webbrowser.open). Keeping render() pure makes it easy
-    to test, embed, and post-process (the demo pipes through an English-chrome
-    rewrite before writing to disk).
+    to test, embed, and post-process.
 
-    Layout order: masthead → headline → question → stats → map → consensus →
-    9 frames (sorted by distance, closest open) → tenth-man feature → colophon.
+    Layout order: masthead → hero (painting + 4 stats) → 01 Reporte (question +
+    map card + optional consensus card + tenth-man card) → 02 Marcos (frames
+    table) → colophon.
     """
     frames = [r[0] for r in results]
     responses = [r[1] for r in results]
@@ -373,15 +437,30 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
     most_divergent_idx = frame_distances.index(max_frame_distance)
     closest_frame_idx = frame_distances.index(min_frame_distance)
     most_divergent_name = frames[most_divergent_idx]
+    closest_name = frames[closest_frame_idx]
+    spread_sigma = _stddev(frame_distances)
 
-    fragility = consensus_verdict(tenth_distance, max_frame_distance)["verdict"]
+    verdict = consensus_verdict(tenth_distance, max_frame_distance)
+    fragility_text = verdict["verdict"]
+    verdict_short = verdict["label_short"]
+    verdict_state = verdict["state"]
+    # Hero verdict cell — short editorial label
+    hero_verdict_label = {
+        "aligned-stable": "Alineado",
+        "aligned-fragile": "Frágil",
+        "divided": "Disperso",
+    }.get(verdict_state, "—")
+    hero_verdict_sub = {
+        "aligned-stable": "consenso aguanta",
+        "aligned-fragile": "consenso frágil",
+        "divided": "sin consenso fuerte",
+    }.get(verdict_state, "")
 
-    # Map SVG (uses real MDS coords)
+    # Map SVG (real MDS coords scaled into the v3 viewBox)
     map_svg = _build_map_svg(
         coords_2d=coords_2d,
         frames=frames,
         distances=distances,
-        statuses=statuses,
         max_frame_dist=max_frame_distance,
         min_frame_dist=min_frame_distance,
     )
@@ -389,18 +468,22 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
     # Frames sorted by distance ASC; closest is default open
     frame_order = sorted(range(9), key=lambda i: frame_distances[i])
     frame_cards_html = "\n".join(
-        _build_frame_card(
+        _build_frame_card_with_flag(
             frame=frames[i],
             response=responses[i],
             status=statuses[i],
             distance=frame_distances[i],
             max_dist=max_frame_distance,
-            idx_str=FRAME_INDEX.get(frames[i], f"{i+1:02d}"),
+            idx_str=FRAME_INDEX.get(frames[i], f"{i + 1:02d}"),
             is_open=(i == closest_frame_idx),
+            flag=("más cercano" if i == closest_frame_idx
+                  else "más lejano" if i == most_divergent_idx
+                  else None),
         )
         for i in frame_order
     )
 
+    # Tenth-man body + optional 3-up failure modes grid
     tenth_main, tenth_modes = _split_failure_modes(responses[9])
     tenth_response_html = _style_section_markers(_md_to_html(tenth_main))
     if tenth_modes:
@@ -408,48 +491,44 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
         for i, (title, body) in enumerate(tenth_modes, start=1):
             mode_cards.append(
                 f'<div class="mode">'
-                f'<div class="ord">Modo de fallo · {i}</div>'
-                f'<h4>{html_mod.escape(title)}</h4>'
+                f'<div class="ord">Modo · {i:02d}</div>'
+                f'<h5>{html_mod.escape(title)}</h5>'
                 f'<p>{html_mod.escape(body)}</p>'
                 f'</div>'
             )
-        tenth_modes_html = '<div class="modes">' + "".join(mode_cards) + '</div>'
+        tenth_modes_html = (
+            '<h4><span class="ord">§ 4</span>Modos de fallo del consenso</h4>'
+            '<div class="modes">' + "".join(mode_cards) + '</div>'
+        )
     else:
         tenth_modes_html = ""
 
-    # Consensus block (optional). Editorial 2-column essay treatment:
-    # extracted h1 title + verdict-aware metric in the header card.
+    # Consensus block (optional). v3-styled card placed before the tenth-man.
     consensus_block_html = ""
     if consensus:
         consensus_title, consensus_body_md = _split_consensus_title(consensus)
         if not consensus_title:
             consensus_title = "Lo que los nueve coinciden"
         consensus_html = _md_to_html(consensus_body_md)
-        verdict = consensus_verdict(tenth_distance, max_frame_distance)
-        verdict_label_upper = verdict["label_short"].upper()
         consensus_block_html = f"""
-  <div class="sec">
-    <span class="glyph">∑</span>
-    <h2>El <em>consenso</em> de los nueve</h2>
-    <span class="rule"></span>
-    <span class="aside">qué creen <b>en común</b> los nueve</span>
-  </div>
-
-  <article class="consensus">
-    <header class="consensus-top">
-      <div>
-        <div class="lbl">Σ · 9 consejeros · {html_mod.escape(verdict_label_upper)}</div>
-        <h3>{html_mod.escape(consensus_title)}</h3>
+    <article class="consensus-card">
+      <header class="consensus-top">
+        <div>
+          <div class="consensus-tag"><span class="d"></span>Σ · 9 consejeros · {html_mod.escape(verdict_short.upper())}</div>
+          <h3>{html_mod.escape(consensus_title)}</h3>
+        </div>
+        <div class="consensus-d">
+          <b>{max_frame_distance:.3f}</b>
+          max · vs centroide
+        </div>
+      </header>
+      <div class="consensus-body">
+        {consensus_html}
       </div>
-      <div class="d"><b>{max_frame_distance:.3f}</b>max distancia · vs centroide</div>
-    </header>
-    <div class="consensus-body">
-      {consensus_html}
-    </div>
-  </article>
+    </article>
 """
 
-    timestamp = datetime.now().strftime("%Y·%m·%d · %H:%M CLT")
+    timestamp = datetime.now().strftime("%Y·%m·%d %H:%M CLT")
     timestamp_short = datetime.now().strftime("%Y·%m·%d")
     report_id = datetime.now().strftime("%H%M")
     question_safe = html_mod.escape(question)
@@ -459,955 +538,816 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Henge · {question_safe[:60]}</title>
+<title>TenthAI · Disagreement Map</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..700,0..100;1,9..144,300..700,0..100&family=Inter+Tight:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,450;9..40,500;9..40,600&family=Fraunces:opsz,wght@9..144,400;9..144,500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root{{
-    --bg:        oklch(96.5% 0.012 78);
-    --paper:     oklch(98.5% 0.008 78);
-    --paper-2:   oklch(94.5% 0.014 78);
-    --ink:       oklch(20% 0.012 60);
-    --ink-2:     oklch(38% 0.012 60);
-    --ink-3:     oklch(56% 0.012 60);
-    --ink-4:     oklch(72% 0.010 70);
-    --rule:      oklch(86% 0.012 70);
-    --rule-2:    oklch(91% 0.012 70);
+    --midnight-navy: #1b2540;
+    --deep-cosmos: #001033;
+    --chartreuse: #d0f100;
+    --ice-veil: #e0f6ff;
+    --ghost-canvas: #f8f9fc;
+    --pure: #ffffff;
+    --slate-ink: #6b7184;
+    --ash: #7c8293;
+    --storm: #596075;
+    --fog: #b1b5c0;
 
-    --accent:      oklch(56% 0.165 32);
-    --accent-2:    oklch(48% 0.150 30);
-    --accent-soft: oklch(92% 0.045 32);
+    --shadow-xl: rgba(0,39,80,0.03) 0 56px 72px -16px, rgba(0,39,80,0.03) 0 32px 32px -16px, rgba(0,39,80,0.04) 0 6px 12px -3px, rgba(0,39,80,0.04) 0 0 0 1px;
+    --shadow-md: rgba(0,39,80,0.08) 0 6px 16px -3px, rgba(0,39,80,0.04) 0 0 0 1px;
+    --shadow-subtle: rgba(255,255,255,0.72) 0 1px 1px 0 inset, rgba(4,33,80,0.02) 0 8px 16px 0, rgba(4,33,80,0.03) 0 4px 12px 0, rgba(4,33,80,0.06) 0 1px 2px 0, rgba(4,33,80,0.04) 0 0 0 1px;
 
-    --nine:        oklch(34% 0.085 250);
-    --nine-2:      oklch(42% 0.080 250);
-    --nine-soft:   oklch(93% 0.025 250);
-
-    --serif: 'Fraunces', 'Iowan Old Style', Georgia, serif;
-    --sans:  'Inter Tight', system-ui, sans-serif;
+    --sans:  'DM Sans', ui-sans-serif, system-ui, sans-serif;
+    --serif: 'Fraunces', Georgia, serif;
     --mono:  'JetBrains Mono', ui-monospace, monospace;
   }}
   *{{ box-sizing: border-box; }}
   html, body{{ margin:0; padding:0; }}
   body{{
+    background: var(--ghost-canvas);
+    color: var(--midnight-navy);
     font-family: var(--sans);
-    background: var(--bg);
-    color: var(--ink);
+    font-size: 16px;
+    line-height: 1.5;
+    letter-spacing: -0.16px;
     -webkit-font-smoothing: antialiased;
-    text-rendering: optimizeLegibility;
-    line-height: 1.55;
-    font-feature-settings: "ss01","cv11";
   }}
-  ::selection{{ background: var(--accent-soft); color: var(--ink); }}
+  ::selection{{ background: var(--chartreuse); color: var(--midnight-navy); }}
 
-  .page{{ max-width: 1180px; margin: 0 auto; padding: 56px 56px 96px; }}
-
-  .mast{{
-    display:flex; align-items:center; gap:14px;
-    font-family: var(--mono);
-    font-size: 11px;
-    letter-spacing: .14em;
-    text-transform: uppercase;
-    color: var(--ink-3);
+  /* Compact masthead */
+  .masthead{{
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 18px 32px 14px;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid rgba(0,39,80,0.08);
   }}
-  .mast .rule{{ width: 28px; height:1px; background: var(--ink-3); }}
-  .mast .dot{{ width:7px; height:7px; border-radius:999px; background: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft);}}
-  .mast b{{ color: var(--ink); font-weight: 500; letter-spacing: .14em;}}
-  .mast .sep{{ color: var(--ink-4); }}
-
-  .head{{
-    margin: 28px 0 0;
+  .logo{{
+    display:flex; align-items:center; gap: 10px;
     font-family: var(--serif);
-    font-weight: 380;
-    font-size: clamp(40px, 5.4vw, 72px);
-    line-height: 1.02;
-    letter-spacing: -0.025em;
-    color: var(--ink);
-    font-variation-settings: "SOFT" 30, "opsz" 144;
-    text-wrap: balance;
-    max-width: 16ch;
+    font-weight: 500; font-size: 18px; letter-spacing: -0.01em;
+    color: var(--midnight-navy);
   }}
-  .head em{{
-    font-style: italic;
-    color: var(--accent);
-    font-weight: 360;
-    font-variation-settings: "SOFT" 60, "opsz" 144;
+  .logo .mk{{
+    width: 22px; height: 22px; border-radius: 6px;
+    background: var(--midnight-navy);
+    display: inline-flex; align-items: center; justify-content: center;
+    color: var(--chartreuse);
+    font-family: var(--mono); font-size: 11px; font-weight: 500;
   }}
+  .mast-meta{{
+    font-family: var(--mono); font-size: 12px;
+    color: var(--slate-ink); letter-spacing: 0.02em;
+  }}
+  .mast-meta b{{ color: var(--midnight-navy); font-weight: 500; }}
+  .mast-meta .sep{{ color: var(--fog); margin: 0 8px; }}
 
-  .question{{
-    margin: 28px 0 0;
-    padding: 4px 0 4px 18px;
-    border-left: 2px solid var(--ink-4);
-    font-family: var(--serif);
-    font-style: italic;
-    font-weight: 360;
-    font-size: 20px;
-    line-height: 1.4;
-    color: var(--ink-2);
-    max-width: 64ch;
-    font-variation-settings: "opsz" 60;
-    text-wrap: pretty;
-  }}
-
-  .strip{{
-    display:grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0;
-    margin: 40px 0 56px;
-    border-top: 1px solid var(--ink);
-    border-bottom: 1px solid var(--rule);
-  }}
-  .stat{{
-    padding: 18px 24px 18px 0;
-    border-right: 1px solid var(--rule);
-    display:flex; flex-direction:column; gap:8px;
-  }}
-  .stat:nth-child(2){{ padding-left: 24px; }}
-  .stat:nth-child(3){{ padding-left: 24px; border-right: none;}}
-  .stat .lbl{{
-    font-family: var(--mono);
-    font-size: 10.5px;
-    letter-spacing: .14em;
-    text-transform: uppercase;
-    color: var(--ink-3);
-  }}
-  .stat .val{{
-    font-family: var(--serif);
-    font-weight: 400;
-    font-size: 26px;
-    letter-spacing: -0.018em;
-    color: var(--ink);
-    line-height: 1.1;
-  }}
-  .stat .val .num{{
-    font-family: var(--mono);
-    font-weight: 500;
-    font-size: 13px;
-    color: var(--ink-3);
-    margin-left: 8px;
-    letter-spacing: 0;
-  }}
-  .stat.accent .val{{ color: var(--accent); }}
-  .stat .verdict{{
-    font-family: var(--serif);
-    font-style: italic;
-    font-weight: 380;
-    font-size: 16px;
-    line-height: 1.4;
-    color: var(--ink-2);
-  }}
-
-  .map-card{{
-    background: var(--paper);
-    border: 1px solid var(--rule);
-    border-radius: 2px;
+  /* Hero */
+  .hero{{
+    max-width: 1200px;
+    margin: 24px auto 0;
+    border-radius: 20px;
     overflow: hidden;
     position: relative;
+    box-shadow: var(--shadow-xl);
+    color: #fafeff;
+    isolation: isolate;
   }}
-  .map-head{{
-    display:flex; justify-content: space-between; align-items: baseline;
-    padding: 18px 24px;
-    border-bottom: 1px solid var(--rule-2);
+  .hero-bg{{
+    position: absolute; inset: 0;
+    background-image: url('assets/header-painting.png');
+    background-size: cover;
+    background-position: center 40%;
+    z-index: -2;
   }}
-  .map-head h3{{
-    margin:0;
-    font-family: var(--serif);
-    font-style: italic;
-    font-weight: 400;
-    font-size: 17px;
-    letter-spacing: -0.005em;
-  }}
-  .map-head .meta{{
-    font-family: var(--mono);
-    font-size: 10.5px;
-    letter-spacing: .12em;
-    text-transform: uppercase;
-    color: var(--ink-3);
-  }}
-  .map-head .meta b{{ color: var(--ink-2); font-weight:500;}}
-  .map-svg-wrap{{
-    position: relative;
-    aspect-ratio: 16 / 11;
+  .hero::after{{
+    content:"";
+    position:absolute; inset:0; z-index:-1;
     background:
-      radial-gradient(circle at 50% 56%, oklch(99% 0.005 78) 0%, var(--paper) 70%);
+      linear-gradient(180deg, rgba(0,16,51,0.18) 0%, rgba(0,16,51,0.55) 60%, rgba(0,16,51,0.82) 100%),
+      linear-gradient(90deg, rgba(0,16,51,0.55) 0%, rgba(0,16,51,0.10) 50%);
   }}
-  svg.map{{ position:absolute; inset:0; width:100%; height:100%;}}
-
-  .map-help{{
-    position: absolute;
-    top: 14px;
-    right: 14px;
-    z-index: 10;
-  }}
-  .map-help summary{{
-    list-style: none;
-    cursor: pointer;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    background: var(--paper);
-    border: 1px solid var(--rule);
-    color: var(--ink-3);
-    font-family: var(--serif);
-    font-style: italic;
-    font-size: 16px;
-    font-weight: 500;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    user-select: none;
-    transition: all .15s ease;
-    box-shadow: 0 1px 2px rgba(0,0,0,.04);
-  }}
-  .map-help summary::-webkit-details-marker{{ display: none; }}
-  .map-help summary:hover{{
-    background: var(--ink);
-    color: var(--paper);
-    border-color: var(--ink);
-  }}
-  .map-help[open] summary{{
-    background: var(--ink);
-    color: var(--paper);
-    border-color: var(--ink);
-  }}
-  .map-help-popover{{
-    position: absolute;
-    top: 36px;
-    right: 0;
-    width: 320px;
-    background: var(--paper);
-    border: 1px solid var(--rule);
-    border-radius: 4px;
-    padding: 18px 20px;
-    box-shadow: 0 4px 16px -4px rgba(0,0,0,.12), 0 1px 3px rgba(0,0,0,.04);
-  }}
-  .map-help-popover p{{
-    margin: 0 0 10px;
-    font-family: var(--serif);
-    font-weight: 380;
-    font-size: 13.5px;
-    line-height: 1.55;
-    color: var(--ink-2);
-    font-variation-settings: "opsz" 24;
-  }}
-  .map-help-popover p:last-child{{ margin-bottom: 0; }}
-  .map-help-popover strong{{ font-weight: 600; color: var(--ink); }}
-  .map-help-popover .map-help-title{{
-    font-family: var(--mono);
-    font-size: 10.5px;
-    text-transform: uppercase;
-    letter-spacing: .14em;
-    color: var(--ink-3);
-    font-weight: 500;
-    margin-bottom: 12px;
-  }}
-  .map-foot{{
-    display:flex; justify-content: space-between; align-items: center;
-    padding: 14px 24px;
-    border-top: 1px solid var(--rule-2);
-    font-family: var(--mono);
-    font-size: 10.5px;
-    letter-spacing: .12em;
-    text-transform: uppercase;
-    color: var(--ink-3);
-  }}
-  .map-foot .legend{{ display:flex; gap:18px; align-items:center;}}
-  .map-foot .legend i{{ display:inline-block; width:8px; height:8px; border-radius:999px; margin-right:8px; vertical-align:middle; transform: translateY(-1px);}}
-  .map-foot .legend i.t{{ background: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft);}}
-  .map-foot .legend i.n{{ background: var(--nine); box-shadow: 0 0 0 3px var(--nine-soft);}}
-
-  .sec{{
-    display:flex; align-items: baseline; gap: 14px;
-    margin: 64px 0 22px;
-  }}
-  .sec .glyph{{
-    font-family: var(--serif);
-    font-style: italic;
-    font-weight: 400;
-    font-size: 22px;
-    color: var(--ink-3);
-  }}
-  .sec h2{{
-    margin:0;
-    font-family: var(--serif);
-    font-weight: 420;
-    font-size: 28px;
-    letter-spacing: -0.02em;
-    color: var(--ink);
-  }}
-  .sec h2 em{{ font-style: italic; color: var(--accent); font-weight: 380;}}
-  .sec .rule{{ flex: 1; height: 1px; background: var(--rule); transform: translateY(-4px);}}
-  .sec .aside{{
-    font-family: var(--mono);
-    font-size: 10.5px;
-    letter-spacing: .12em;
-    text-transform: uppercase;
-    color: var(--ink-3);
-  }}
-  .sec .aside b{{ color: var(--ink-2); font-weight:500;}}
-
-  .consensus{{
-    background: var(--paper);
-    border: 1px solid var(--rule);
-    border-radius: 2px;
-    overflow: hidden;
-  }}
-  .consensus-top{{
+  .hero-inner{{
+    padding: 56px 40px 28px;
     display: grid;
-    grid-template-columns: 1fr auto;
-    align-items: center;
-    gap: 24px;
-    padding: 22px 32px;
-    border-bottom: 1px solid var(--rule);
-    background: linear-gradient(180deg, var(--nine-soft), var(--paper) 100%);
+    grid-template-columns: 1.4fr 1fr;
+    gap: 40px;
+    align-items: end;
   }}
-  .consensus-top .lbl{{
-    font-family: var(--mono);
-    font-size: 10.5px;
-    letter-spacing: .14em;
-    text-transform: uppercase;
-    color: var(--nine);
-    font-weight: 500;
+  .announce{{
+    display: inline-flex; align-items: center; gap: 10px;
+    background: rgba(255,255,255,0.10);
+    backdrop-filter: blur(8px);
+    color: #fafeff;
+    border: 1px solid rgba(224,246,255,0.22);
+    border-radius: 9999px;
+    padding: 5px 14px 5px 5px;
+    font-size: 13px; letter-spacing: -0.015em;
+    margin-bottom: 22px;
   }}
-  .consensus-top h3{{
-    margin: 4px 0 0;
-    font-family: var(--serif);
-    font-weight: 420;
-    font-size: 24px;
-    letter-spacing: -0.018em;
-    color: var(--ink);
-    text-wrap: balance;
+  .announce .new{{
+    background: var(--chartreuse);
+    color: var(--midnight-navy);
+    font-family: var(--mono); font-size: 10.5px; font-weight: 500;
+    padding: 3px 9px; border-radius: 9999px;
+    text-transform: uppercase; letter-spacing: 0.02em;
   }}
-  .consensus-top .d{{
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--ink-3);
-    text-align: right;
-    letter-spacing: .04em;
-  }}
-  .consensus-top .d b{{
-    display: block;
+  .announce .arrow{{ opacity: .8; }}
+
+  h1.hero-h{{
+    margin: 0 0 14px;
     font-family: var(--serif);
     font-weight: 400;
-    font-size: 26px;
-    color: var(--nine);
-    line-height: 1;
-    margin-bottom: 4px;
-    letter-spacing: -0.01em;
+    font-size: clamp(30px, 3.6vw, 44px);
+    line-height: 1.05;
+    letter-spacing: -0.4px;
+    text-wrap: balance;
+    max-width: 20ch;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.18);
+  }}
+  .hero-h em{{ font-style: italic; color: var(--chartreuse); }}
+  .hero-dek{{
+    margin: 0;
+    max-width: 52ch;
+    font-size: 15.5px; line-height: 1.5;
+    color: rgba(224,246,255,0.92);
+    letter-spacing: -0.09px;
+  }}
+
+  .hero-stats{{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }}
+  .hero-stat{{
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(224,246,255,0.18);
+    border-radius: 14px;
+    padding: 14px 16px;
+  }}
+  .hero-stat .lbl{{
+    font-family: var(--mono); font-size: 10.5px;
+    color: rgba(224,246,255,0.78);
+    text-transform: uppercase; letter-spacing: 0.04em;
+    margin-bottom: 6px;
+  }}
+  .hero-stat .val{{
+    font-family: var(--serif); font-weight: 400;
+    font-size: 22px; line-height: 1; letter-spacing: -0.22px;
+    color: #fafeff;
     font-variant-numeric: tabular-nums;
   }}
-  .consensus-body{{
-    padding: 28px 32px 36px;
-    column-count: 2;
-    column-gap: 40px;
-    column-rule: 1px solid var(--rule-2);
-    font-family: var(--serif);
-    font-weight: 380;
-    font-size: 15px;
-    line-height: 1.62;
-    color: var(--ink);
-    font-variation-settings: "opsz" 24;
+  .hero-stat .val.acc{{ color: var(--chartreuse); }}
+  .hero-stat .sub{{
+    margin-top: 4px;
+    font-size: 12px; color: rgba(224,246,255,0.70);
   }}
-  .consensus-body h3{{
-    margin: 0 0 10px;
-    font-family: var(--sans);
-    font-weight: 600;
-    font-size: 11px;
-    letter-spacing: .14em;
-    text-transform: uppercase;
-    color: var(--ink-3);
-    break-after: avoid;
-  }}
-  .consensus-body h3:not(:first-child){{ margin-top: 22px; }}
-  .consensus-body p{{ margin: 0 0 12px; break-inside: avoid-column; }}
-  .consensus-body p:last-child{{ margin-bottom: 0; }}
-  .consensus-body strong{{ font-weight: 600; color: var(--ink); }}
-  .consensus-body em{{ font-style: italic; color: var(--ink); }}
 
-  .tenth{{
-    background: var(--paper);
-    border: 1px solid var(--accent-soft);
-    border-radius: 4px;
+  /* Sections */
+  .page{{ background: var(--ghost-canvas); }}
+  .section{{
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 80px 32px 0;
+  }}
+  .sec-head{{
+    display: flex; align-items: end; justify-content: space-between; gap: 24px;
+    margin-bottom: 28px;
+  }}
+  .sec-head .l{{ max-width: 64ch; }}
+  .sec-eyebrow{{
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--mono); font-size: 12px;
+    color: var(--slate-ink);
+    text-transform: uppercase; letter-spacing: 0.04em;
+    margin-bottom: 12px;
+  }}
+  .sec-eyebrow .n{{
+    background: var(--midnight-navy); color: var(--pure);
+    padding: 2px 7px; border-radius: 9999px;
+    font-size: 10.5px; letter-spacing: 0.06em;
+  }}
+  .sec-head h2{{
+    margin: 0;
+    font-family: var(--serif); font-weight: 400;
+    font-size: 40px; letter-spacing: -0.4px;
+    line-height: 1.05; color: var(--midnight-navy);
+    text-wrap: balance;
+  }}
+  .sec-head h2 em{{ font-style: italic; color: var(--midnight-navy); }}
+  .sec-head .sub{{
+    margin: 12px 0 0;
+    font-size: 16px; color: var(--storm); letter-spacing: -0.16px;
+  }}
+
+  /* Map card */
+  .map-card{{
+    background: var(--pure);
+    border-radius: 20px;
+    box-shadow: var(--shadow-xl);
     overflow: hidden;
+  }}
+  .map-top{{
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid rgba(0,39,80,0.06);
+  }}
+  .map-top .l{{ display:flex; align-items:center; gap: 14px; }}
+  .map-top .pill{{
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--ghost-canvas);
+    border-radius: 9999px;
+    padding: 5px 12px;
+    font-family: var(--mono); font-size: 11px;
+    color: var(--midnight-navy);
+    box-shadow: rgba(0,39,80,0.04) 0 0 0 1px;
+  }}
+  .map-top .pill .d{{ width: 6px; height: 6px; border-radius: 9999px; background: var(--chartreuse); }}
+  .map-top .meta{{
+    font-family: var(--mono); font-size: 12px; color: var(--slate-ink);
+  }}
+  .legend-row{{ display:flex; gap: 16px; align-items: center; font-size: 13px; color: var(--slate-ink); }}
+  .legend-row .ld{{
+    display: inline-block; width: 9px; height: 9px;
+    border-radius: 9999px; margin-right: 7px; transform: translateY(-1px);
+  }}
+  .legend-row .ld.t{{ background: var(--chartreuse); box-shadow: 0 0 0 3px rgba(208,241,0,0.18); }}
+  .legend-row .ld.n{{ background: var(--midnight-navy); }}
+
+  .map-svg{{
+    aspect-ratio: 16 / 8.5;
+    background: var(--pure);
     position: relative;
   }}
-  .tenth::before{{
-    content:"";
-    position:absolute; left:0; top:0; bottom:0; width: 3px;
-    background: var(--accent);
+  .map-svg svg{{ width: 100%; height: 100%; display: block; }}
+
+  .map-foot{{
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 0;
+    border-top: 1px solid rgba(0,39,80,0.06);
+  }}
+  .map-foot .cell{{
+    padding: 16px 20px;
+    border-right: 1px solid rgba(0,39,80,0.06);
+  }}
+  .map-foot .cell:last-child{{ border-right: 0; }}
+  .map-foot .cell .lbl{{
+    font-family: var(--mono); font-size: 11px;
+    color: var(--slate-ink); text-transform: uppercase;
+    letter-spacing: 0.04em; margin-bottom: 6px;
+  }}
+  .map-foot .cell .val{{
+    font-family: var(--serif); font-weight: 400;
+    font-size: 22px; letter-spacing: -0.22px;
+    color: var(--midnight-navy);
+    font-variant-numeric: tabular-nums;
+  }}
+  .map-foot .cell .val .badge{{
+    display: inline-block;
+    background: var(--chartreuse); color: var(--midnight-navy);
+    font-family: var(--mono); font-size: 11px; font-weight: 500;
+    padding: 2px 8px; border-radius: 9999px;
+    margin-left: 8px; letter-spacing: 0.04em; text-transform: uppercase;
+    transform: translateY(-2px);
+  }}
+  .map-foot .cell .sub{{
+    margin-top: 4px;
+    font-size: 13px; color: var(--slate-ink);
+  }}
+
+  /* Consensus card (navy-themed) */
+  .consensus-card{{
+    background: var(--pure);
+    border-radius: 20px;
+    box-shadow: var(--shadow-xl);
+    overflow: hidden;
+    margin-top: 24px;
+    position: relative;
+  }}
+  .consensus-card::before{{
+    content: "";
+    position: absolute; left: 0; top: 0; bottom: 0;
+    width: 4px; background: var(--midnight-navy);
+  }}
+  .consensus-top{{
+    display: grid; grid-template-columns: 1fr auto;
+    align-items: start; gap: 24px;
+    padding: 24px 28px;
+    border-bottom: 1px solid rgba(0,39,80,0.06);
+  }}
+  .consensus-tag{{
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--midnight-navy); color: var(--pure);
+    border-radius: 9999px; padding: 4px 10px;
+    font-family: var(--mono); font-size: 11px;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    margin-bottom: 12px;
+  }}
+  .consensus-tag .d{{ width: 5px; height: 5px; border-radius: 9999px; background: var(--chartreuse); }}
+  .consensus-top h3{{
+    margin: 0;
+    font-family: var(--serif); font-weight: 400;
+    font-size: 28px; letter-spacing: -0.4px; line-height: 1.08;
+    color: var(--midnight-navy);
+    text-wrap: balance;
+    max-width: 28ch;
+  }}
+  .consensus-d{{
+    text-align: right;
+    background: var(--ghost-canvas);
+    border-radius: 16px;
+    padding: 14px 18px;
+    box-shadow: rgba(0,39,80,0.04) 0 0 0 1px;
+    font-family: var(--mono); font-size: 11px;
+    color: var(--slate-ink);
+    text-transform: uppercase; letter-spacing: 0.04em;
+  }}
+  .consensus-d b{{
+    display: block;
+    font-family: var(--serif); font-weight: 400;
+    font-size: 28px; letter-spacing: -0.4px; line-height: 1;
+    color: var(--midnight-navy);
+    margin-bottom: 4px;
+    text-transform: none;
+  }}
+  .consensus-body{{
+    padding: 28px 32px;
+    column-count: 2;
+    column-gap: 40px;
+    column-rule: 1px solid rgba(0,39,80,0.06);
+    font-size: 16px;
+    line-height: 1.55;
+    color: var(--midnight-navy);
+    letter-spacing: -0.16px;
+  }}
+  .consensus-body p{{ margin: 0 0 12px; break-inside: avoid-column; }}
+  .consensus-body p:last-child{{ margin-bottom: 0; }}
+  .consensus-body h2,
+  .consensus-body h3,
+  .consensus-body h4{{
+    margin: 0 0 10px;
+    font-family: var(--mono); font-weight: 500;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--slate-ink);
+    break-after: avoid;
+  }}
+  .consensus-body h2:not(:first-child),
+  .consensus-body h3:not(:first-child),
+  .consensus-body h4:not(:first-child){{ margin-top: 22px; }}
+  .consensus-body strong{{ font-weight: 600; color: var(--midnight-navy); }}
+  .consensus-body em{{ font-style: italic; color: var(--midnight-navy); }}
+  .consensus-body .pull{{
+    margin: 16px 0;
+    background: var(--ghost-canvas);
+    border-radius: 16px;
+    padding: 14px 18px;
+    box-shadow: rgba(0,39,80,0.04) 0 0 0 1px;
+    font-family: var(--serif); font-weight: 400;
+    font-size: 18px; line-height: 1.35; letter-spacing: -0.18px;
+    color: var(--midnight-navy);
+    break-inside: avoid-column;
+  }}
+
+  /* Tenth-man feature card */
+  .tenth-card{{
+    background: var(--pure);
+    border-radius: 20px;
+    box-shadow: var(--shadow-xl);
+    overflow: hidden;
+    margin-top: 24px;
+    position: relative;
+  }}
+  .tenth-card::before{{
+    content: "";
+    position: absolute; left: 0; top: 0; bottom: 0;
+    width: 4px; background: var(--chartreuse);
   }}
   .tenth-top{{
-    display:grid;
-    grid-template-columns: 1fr auto;
-    align-items: center;
-    gap: 24px;
-    padding: 24px 28px 22px 32px;
-    border-bottom: 1px solid var(--rule-2);
+    display: grid; grid-template-columns: 1fr auto;
+    align-items: start; gap: 24px;
+    padding: 24px 28px;
+    border-bottom: 1px solid rgba(0,39,80,0.06);
   }}
-  .tenth-eyebrow{{
-    display:flex; align-items:center; gap:10px;
-    font-family: var(--mono); font-size: 10.5px;
-    letter-spacing: .14em; text-transform: uppercase;
-    color: var(--accent);
+  .tenth-tag{{
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--midnight-navy); color: var(--chartreuse);
+    border-radius: 9999px; padding: 4px 10px;
+    font-family: var(--mono); font-size: 11px;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    margin-bottom: 12px;
   }}
-  .tenth-eyebrow i{{ width:6px; height:6px; border-radius:999px; background: var(--accent);}}
-  .tenth-top h2{{
-    margin: 8px 0 0;
-    font-family: var(--serif);
-    font-weight: 420;
-    font-style: italic;
-    font-size: 28px;
-    letter-spacing: -0.012em;
-    color: var(--ink);
+  .tenth-tag .d{{ width: 5px; height: 5px; border-radius: 9999px; background: var(--chartreuse); }}
+  .tenth-top h3{{
+    margin: 0;
+    font-family: var(--serif); font-weight: 400;
+    font-size: 32px; letter-spacing: -0.4px; line-height: 1.05;
+    color: var(--midnight-navy);
+    text-wrap: balance;
+    max-width: 24ch;
   }}
-  .tenth-top .d{{
-    font-family: var(--mono);
-    font-size: 11px;
-    letter-spacing: .04em;
-    color: var(--ink-3);
+  .tenth-top h3 em{{ font-style: italic; }}
+
+  .tenth-d-stat{{
     text-align: right;
+    background: var(--ghost-canvas);
+    border-radius: 16px;
+    padding: 14px 18px;
+    box-shadow: rgba(0,39,80,0.04) 0 0 0 1px;
+    font-family: var(--mono); font-size: 11px;
+    color: var(--slate-ink);
+    text-transform: uppercase; letter-spacing: 0.04em;
   }}
-  .tenth-top .d b{{
-    display:block;
-    font-family: var(--serif); font-style: italic;
-    font-weight: 400; font-size: 32px;
-    color: var(--accent);
-    letter-spacing: -0.015em;
-    line-height: 1;
+  .tenth-d-stat b{{
+    display: block;
+    font-family: var(--serif); font-weight: 400;
+    font-size: 32px; letter-spacing: -0.4px; line-height: 1;
+    color: var(--midnight-navy);
     margin-bottom: 4px;
+    text-transform: none;
   }}
+
   .tenth-body{{
-    padding: 26px 32px;
-    font-family: var(--serif);
-    font-weight: 380;
-    font-size: 16.5px;
-    line-height: 1.62;
-    color: var(--ink);
-    font-variation-settings: "opsz" 30;
+    padding: 24px 28px;
     max-width: 78ch;
   }}
-  .tenth-body h3{{
-    margin: 22px 0 10px;
-    font-family: var(--sans);
-    font-weight: 600;
-    font-size: 11px;
-    letter-spacing: .14em;
-    text-transform: uppercase;
-    color: var(--ink-3);
-  }}
-  .tenth-body h3:first-child{{ margin-top: 0; }}
-  .tenth-body h3 .ord{{ color: var(--accent); margin-right: 10px; letter-spacing: .08em; }}
   .tenth-body h4{{
-    margin: 18px 0 8px;
-    font-family: var(--sans);
-    font-weight: 600;
-    font-size: 11px;
-    letter-spacing: .14em;
-    text-transform: uppercase;
-    color: var(--ink-3);
+    margin: 24px 0 8px;
+    font-family: var(--mono); font-weight: 500;
+    font-size: 11px; text-transform: uppercase;
+    letter-spacing: 0.04em; color: var(--slate-ink);
   }}
-  .tenth-body p{{ margin: 0 0 12px; }}
-  .tenth-body strong{{ font-weight: 600; color: var(--ink); }}
-  .tenth-body em{{ font-style: italic; color: var(--ink); }}
+  .tenth-body h4:first-child{{ margin-top: 0; }}
+  .tenth-body h4 .ord{{ color: var(--midnight-navy); margin-right: 8px; }}
+  .tenth-body p{{
+    margin: 0 0 12px;
+    font-size: 16px; line-height: 1.5;
+    color: var(--midnight-navy);
+    letter-spacing: -0.16px;
+  }}
+  .tenth-body strong{{ font-weight: 600; }}
+  .tenth-body em{{ font-style: italic; color: var(--midnight-navy); }}
   .tenth-body .pull{{
-    margin: 18px 0;
-    padding: 4px 0 4px 18px;
-    border-left: 2px solid var(--accent);
-    font-family: var(--serif); font-style: italic;
-    font-size: 19px; line-height: 1.4;
-    letter-spacing: -0.005em;
-    color: var(--ink);
+    margin: 16px 0;
+    background: var(--ghost-canvas);
+    border-radius: 16px;
+    padding: 18px 20px;
+    box-shadow: rgba(0,39,80,0.04) 0 0 0 1px;
+    font-family: var(--serif); font-weight: 400;
+    font-size: 22px; line-height: 1.29; letter-spacing: -0.22px;
+    color: var(--midnight-navy);
   }}
-  .tenth-body .modes{{
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0;
-    border-top: 1px solid var(--rule-2);
-    margin-top: 28px;
-    padding-top: 8px;
-  }}
-  .tenth-body .mode{{
-    padding: 18px 22px 4px 0;
-    border-right: 1px dashed var(--rule);
-  }}
-  .tenth-body .mode:nth-child(2){{ padding: 18px 22px 4px 22px; }}
-  .tenth-body .mode:last-child{{ padding: 18px 0 4px 22px; border-right: none; }}
-  .tenth-body .mode .ord{{
-    font-family: var(--mono);
-    font-size: 10.5px;
-    letter-spacing: .14em;
-    text-transform: uppercase;
-    color: var(--accent);
-  }}
-  .tenth-body .mode h4{{
-    margin: 6px 0 8px;
+  .tenth-body .pull::before{{
+    content:"\\201C";
     font-family: var(--serif);
-    font-weight: 460;
-    font-size: 16px;
-    letter-spacing: -0.005em;
-    text-transform: none;
-    color: var(--ink);
+    font-size: 36px; line-height: 0;
+    margin-right: 6px;
+    color: var(--chartreuse);
+    vertical-align: -8px;
   }}
-  .tenth-body .mode p{{
-    margin: 0;
-    font-family: var(--sans);
-    font-size: 13px;
-    line-height: 1.55;
-    color: var(--ink-2);
-  }}
-  .tenth-foot{{
-    display:flex; justify-content: space-between; gap: 18px;
-    padding: 14px 32px;
-    border-top: 1px solid var(--rule-2);
-    background: oklch(99% 0.005 78);
-    font-family: var(--mono);
-    font-size: 11px;
-    letter-spacing: .04em;
-    color: var(--ink-3);
-  }}
-  .tenth-foot b{{ color: var(--ink-2); font-weight: 500; }}
 
+  .modes{{
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 12px; margin-top: 12px;
+  }}
+  .mode{{
+    background: var(--ghost-canvas);
+    border-radius: 16px;
+    padding: 18px;
+    box-shadow: rgba(0,39,80,0.04) 0 0 0 1px;
+  }}
+  .mode .ord{{
+    font-family: var(--mono); font-size: 11px;
+    color: var(--slate-ink);
+    text-transform: uppercase; letter-spacing: 0.04em;
+  }}
+  .mode h5{{
+    margin: 8px 0 6px;
+    font-family: var(--sans); font-weight: 480;
+    font-size: 17px; letter-spacing: -0.09px;
+    color: var(--midnight-navy);
+  }}
+  .mode p{{
+    margin: 0;
+    font-size: 14px; line-height: 1.5;
+    color: var(--storm); letter-spacing: -0.16px;
+  }}
+
+  .tenth-foot{{
+    padding: 14px 28px;
+    border-top: 1px solid rgba(0,39,80,0.06);
+    background: var(--ghost-canvas);
+    display: flex; justify-content: space-between;
+    font-family: var(--mono); font-size: 12px;
+    color: var(--slate-ink);
+  }}
+  .tenth-foot b{{ color: var(--midnight-navy); }}
+
+  /* Frames table */
   .frames{{
-    border-top: 1px solid var(--ink);
+    margin-top: 4px;
+    background: var(--pure);
+    border-radius: 20px;
+    box-shadow: var(--shadow-xl);
+    overflow: hidden;
+  }}
+  .frames-head{{
+    display: grid;
+    grid-template-columns: 60px 220px 1fr 160px 100px 24px;
+    gap: 16px;
+    padding: 14px 24px;
+    border-bottom: 1px solid rgba(0,39,80,0.06);
+    background: var(--ghost-canvas);
+    font-family: var(--mono); font-size: 11px;
+    color: var(--slate-ink);
+    text-transform: uppercase; letter-spacing: 0.04em;
   }}
   .frame{{
-    border-bottom: 1px solid var(--rule);
-    padding: 20px 4px;
+    border-bottom: 1px solid rgba(0,39,80,0.06);
     cursor: pointer;
     transition: background .15s ease;
   }}
-  .frame:hover{{ background: var(--paper); }}
+  .frame:last-child{{ border-bottom: 0; }}
+  .frame:hover{{ background: var(--ghost-canvas); }}
+  .frame.open{{ background: var(--ghost-canvas); }}
   .frame-row{{
     display: grid;
-    grid-template-columns: 36px 200px 1fr 160px 80px 18px;
-    align-items: center;
+    grid-template-columns: 60px 220px 1fr 160px 100px 24px;
     gap: 16px;
+    align-items: center;
+    padding: 16px 24px;
   }}
   .f-idx{{
-    font-family: var(--mono);
-    font-size: 11px;
-    letter-spacing: .04em;
-    color: var(--ink-3);
+    font-family: var(--mono); font-size: 12px; color: var(--slate-ink);
   }}
   .f-name{{
-    font-family: var(--serif);
-    font-weight: 440;
-    font-size: 20px;
-    letter-spacing: -0.012em;
-    color: var(--ink);
+    font-family: var(--sans); font-weight: 480;
+    font-size: 17px; letter-spacing: -0.09px;
+    color: var(--midnight-navy);
   }}
   .f-tag{{
-    font-family: var(--mono);
-    font-size: 10.5px;
-    letter-spacing: .14em;
-    text-transform: uppercase;
-    color: var(--ink-3);
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--pure);
+    border-radius: 9999px;
+    padding: 4px 10px;
+    font-family: var(--mono); font-size: 11px;
+    color: var(--storm);
+    box-shadow: rgba(0,39,80,0.04) 0 0 0 1px;
+    width: max-content;
   }}
-  .f-tag b{{ color: var(--ink-2); font-weight: 500;}}
+  .f-tag .d{{ width: 5px; height: 5px; border-radius: 9999px; background: var(--chartreuse); }}
+  .f-tag b{{ color: var(--midnight-navy); font-weight: 500; }}
   .f-bar{{
-    height: 2px; background: var(--rule); position:relative; border-radius:2px;
-    margin-right: 10px;
+    height: 6px; background: rgba(27,37,64,0.08);
+    border-radius: 9999px;
+    position: relative; overflow: hidden;
   }}
   .f-bar > i{{
-    position:absolute; left:0; top:0; bottom:0; border-radius: 2px;
-    background: var(--nine);
+    display: block; height: 100%;
+    background: var(--midnight-navy);
+    border-radius: 9999px;
   }}
   .f-d{{
-    font-family: var(--mono);
-    font-size: 12px;
-    color: var(--ink-2);
+    font-family: var(--mono); font-size: 13px;
+    color: var(--midnight-navy);
     text-align: right;
     font-variant-numeric: tabular-nums;
   }}
-  .f-d small{{ color: var(--ink-3); }}
+  .f-d b{{ font-weight: 500; }}
   .f-caret{{
+    color: var(--slate-ink);
     font-family: var(--mono);
-    color: var(--ink-3);
-    transition: transform .2s ease;
-    font-size: 12px;
+    transition: transform .15s ease;
+    text-align: center;
   }}
   .frame.open .f-caret{{ transform: rotate(90deg); }}
-  .frame.open .f-name{{ color: var(--accent); }}
 
   .f-body{{
     display: none;
-    padding: 18px 0 6px 36px;
-    max-width: 78ch;
-    font-family: var(--serif);
-    font-weight: 380;
-    font-size: 15.5px;
-    line-height: 1.62;
-    color: var(--ink-2);
-    font-variation-settings: "opsz" 24;
+    padding: 4px 24px 22px 304px;
+    max-width: 100%;
   }}
-  .frame.open .f-body{{ display:block; }}
-  .f-body h3, .f-body h4{{
-    margin: 18px 0 8px;
-    font-family: var(--sans);
-    font-weight: 600;
-    font-size: 11px;
-    letter-spacing: .14em;
-    text-transform: uppercase;
-    color: var(--ink-3);
+  .frame.open .f-body{{ display: block; }}
+  .f-body p{{
+    margin: 0 0 10px;
+    font-size: 15px; line-height: 1.55;
+    color: var(--storm); letter-spacing: -0.16px;
   }}
-  .f-body h3:first-child, .f-body h4:first-child{{ margin-top: 0; }}
-  .f-body p{{ margin: 0 0 12px; }}
-  .f-body strong{{ font-weight: 600; color: var(--ink); }}
-  .f-body em{{ font-style: italic; color: var(--ink); }}
+  .f-body strong{{ color: var(--midnight-navy); font-weight: 500; }}
+  .f-body em{{ color: var(--midnight-navy); font-style: italic; }}
+  .f-body .pull{{
+    margin: 12px 0;
+    padding: 4px 0 4px 14px;
+    border-left: 2px solid var(--midnight-navy);
+    font-family: var(--serif); font-style: italic;
+    font-size: 16px; line-height: 1.4; letter-spacing: -0.09px;
+    color: var(--midnight-navy);
+  }}
 
-  .colophon{{
-    margin-top: 64px;
-    padding-top: 22px;
-    border-top: 1px solid var(--rule);
-    display:grid;
+  /* Colophon */
+  footer.colophon{{
+    max-width: 1200px;
+    margin: 80px auto 0;
+    padding: 32px;
+    border-top: 1px solid rgba(0,39,80,0.08);
+    display: grid;
     grid-template-columns: 1fr 1fr 1fr;
     gap: 24px;
-    font-family: var(--mono);
-    font-size: 11px;
-    letter-spacing: .04em;
-    color: var(--ink-3);
+    font-family: var(--mono); font-size: 12px;
+    color: var(--slate-ink);
   }}
-  .colophon b{{ color: var(--ink-2); font-weight: 500; }}
-  .colophon .center{{
-    text-align:center;
-    font-family: var(--serif);
-    font-style: italic;
-    letter-spacing: 0;
-    font-size: 13px;
-    color: var(--ink-2);
-  }}
-  .colophon .right{{ text-align: right; }}
-
-  .guide{{
-    position: fixed;
-    right: 24px;
-    bottom: 24px;
-    z-index: 50;
-    font-family: var(--sans);
-  }}
-  .guide-toggle{{
-    appearance: none;
-    -webkit-appearance: none;
-    border: 1px solid var(--ink);
-    background: var(--ink);
-    color: var(--paper);
-    font-family: var(--mono);
-    font-size: 11px;
-    letter-spacing: .14em;
-    text-transform: uppercase;
-    padding: 12px 16px;
-    border-radius: 999px;
-    cursor: pointer;
-    box-shadow: 0 6px 24px -8px oklch(20% 0.012 60 / .45);
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
-    outline: none;
-  }}
-  .guide-toggle:hover{{
-    transform: translateY(-1px);
-    box-shadow: 0 10px 28px -8px oklch(20% 0.012 60 / .55);
-  }}
-  .guide-toggle:focus-visible{{
-    box-shadow: 0 0 0 3px var(--accent-soft), 0 6px 24px -8px oklch(20% 0.012 60 / .45);
-  }}
-  .guide-toggle .marker{{
-    width:7px; height:7px; border-radius:999px;
-    background: var(--accent);
-    box-shadow: 0 0 0 3px oklch(56% 0.165 32 / .25);
-  }}
-  .guide-panel{{
-    display:none;
-    width: min(380px, calc(100vw - 48px));
-    max-height: min(72vh, 640px);
-    background: var(--paper);
-    border: 1px solid var(--rule);
-    border-radius: 14px;
-    box-shadow: 0 24px 60px -16px oklch(20% 0.012 60 / .35);
-    margin-bottom: 12px;
-    overflow: hidden;
-    flex-direction: column;
-  }}
-  .guide.open .guide-panel{{ display: flex; }}
-  .guide-panel-body{{
-    overflow-y: auto;
-    padding: 26px 24px 4px 26px;
-    scrollbar-width: thin;
-    scrollbar-color: var(--rule) transparent;
-  }}
-  .guide-panel-body::-webkit-scrollbar{{ width: 8px; }}
-  .guide-panel-body::-webkit-scrollbar-track{{ background: transparent; }}
-  .guide-panel-body::-webkit-scrollbar-thumb{{
-    background: var(--rule);
-    border-radius: 999px;
-    border: 2px solid var(--paper);
-  }}
-  .guide-panel-body::-webkit-scrollbar-thumb:hover{{ background: var(--ink-4); }}
-  .guide-panel-foot{{
-    flex-shrink: 0;
-    padding: 14px 26px 18px;
-    border-top: 1px solid var(--rule);
-    background: var(--paper);
-  }}
-  .guide-panel h3{{
-    margin: 0 0 4px;
-    font-family: var(--serif);
-    font-weight: 400;
-    font-size: 22px;
-    line-height: 1.15;
-    letter-spacing: -0.015em;
-    color: var(--ink);
-    font-variation-settings: "SOFT" 30, "opsz" 60;
-  }}
-  .guide-panel h3 em{{ font-style: italic; color: var(--accent); }}
-  .guide-panel .kicker{{
-    font-family: var(--mono);
-    font-size: 10px;
-    letter-spacing: .16em;
-    text-transform: uppercase;
-    color: var(--ink-3);
-    margin: 0 0 14px;
-  }}
-  .guide-panel ol{{
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    counter-reset: g;
-  }}
-  .guide-panel ol li{{
-    counter-increment: g;
-    position: relative;
-    padding: 12px 0 12px 30px;
-    border-top: 1px solid var(--rule-2);
-    font-size: 13.5px;
-    line-height: 1.5;
-    color: var(--ink-2);
-  }}
-  .guide-panel ol li:first-child{{ border-top: none; }}
-  .guide-panel ol li::before{{
-    content: counter(g, decimal-leading-zero);
-    position: absolute;
-    left: 0; top: 12px;
-    font-family: var(--mono);
-    font-size: 10.5px;
-    color: var(--ink-3);
-    letter-spacing: .08em;
-  }}
-  .guide-panel ol li b{{ color: var(--ink); font-weight: 600; }}
-  .guide-panel .foot{{
-    margin: 0 0 12px;
-    font-family: var(--serif);
-    font-style: italic;
-    font-size: 13px;
-    line-height: 1.45;
-    color: var(--ink-2);
-    font-variation-settings: "opsz" 60;
-  }}
-  .guide-close{{
-    appearance: none;
-    -webkit-appearance: none;
-    background: none;
-    border: 0;
-    cursor: pointer;
-    color: var(--ink-3);
-    font-family: var(--mono);
-    font-size: 11px;
-    letter-spacing: .14em;
-    text-transform: uppercase;
-    padding: 0;
-    outline: none;
-  }}
-  .guide-close:hover{{ color: var(--ink); }}
-  .guide-close:focus-visible{{ color: var(--accent); }}
+  footer.colophon b{{ color: var(--midnight-navy); font-weight: 500; }}
+  footer.colophon .center{{ text-align: center; font-style: italic; font-family: var(--serif); }}
+  footer.colophon .right{{ text-align: right; }}
 
   @media (max-width: 920px){{
-    .page{{ padding: 32px 22px 64px; }}
-    .strip{{ grid-template-columns: 1fr 1fr; }}
-    .strip .stat:nth-child(3){{ grid-column: 1 / -1; padding: 16px 0 0; border-right:none; padding-left: 0; border-top: 1px solid var(--rule); margin-top: 8px;}}
-    .frame-row{{ grid-template-columns: 26px 1fr 80px 16px; }}
-    .frame-row .f-tag, .frame-row .f-bar{{ display:none; }}
-    .guide{{ right: 16px; bottom: 16px; }}
-    .guide-panel-body{{ padding: 22px 18px 4px 20px; }}
-    .guide-panel-foot{{ padding: 12px 20px 16px; }}
-    .consensus-body{{ column-count: 1; }}
+    .hero-inner{{ grid-template-columns: 1fr; padding: 40px 24px 24px; }}
+    .hero-stats{{ grid-template-columns: 1fr 1fr; }}
+    .map-foot{{ grid-template-columns: 1fr 1fr; }}
+    .map-foot .cell{{ border-bottom: 1px solid rgba(0,39,80,0.06); }}
+    .modes{{ grid-template-columns: 1fr; }}
+    .frames-head{{ display: none; }}
+    .frame-row{{ grid-template-columns: 40px 1fr 80px 16px; }}
+    .frame-row .f-tag, .frame-row .f-bar{{ display: none; }}
+    .f-body{{ padding: 4px 24px 22px 24px; }}
+    .tenth-top{{ grid-template-columns: 1fr; }}
+    .tenth-d-stat{{ text-align: left; }}
     .consensus-top{{ grid-template-columns: 1fr; }}
-    .consensus-top .d{{ text-align: left; margin-top: 8px; }}
-    .tenth-body .modes{{ grid-template-columns: 1fr; }}
-    .tenth-body .mode,
-    .tenth-body .mode:nth-child(2),
-    .tenth-body .mode:last-child{{
-      padding: 16px 0;
-      border-right: none;
-      border-bottom: 1px dashed var(--rule);
-    }}
-    .tenth-body .mode:last-child{{ border-bottom: none; }}
+    .consensus-d{{ text-align: left; }}
+    .consensus-body{{ column-count: 1; }}
   }}
 </style>
 </head>
 <body>
-<main class="page" data-screen-label="Henge Report">
+<main data-screen-label="TenthAI Report">
 
-  <header>
-    <div class="mast">
-      <span class="rule"></span>
-      <span class="dot"></span>
-      <b>Henge</b>
-      <span class="sep">·</span>
-      <span>Disagreement Map</span>
-      <span class="sep">·</span>
-      <span>Report&nbsp;<b style="font-weight:500;">#{report_id}</b></span>
-      <span class="sep">·</span>
-      <span>{timestamp_short}</span>
+  <header class="masthead">
+    <div class="logo"><span class="mk">10</span> TenthAI</div>
+    <div class="mast-meta">
+      <b>Reporte #{report_id}</b><span class="sep">·</span>{timestamp}<span class="sep">·</span>v0.4
     </div>
-
-    <h1 class="head">Nueve consejeros alineados.<br/><em>El décimo debe disentir.</em></h1>
-
-    <p class="question">{question_safe}</p>
   </header>
 
-  <section class="strip" aria-label="Métricas globales">
-    <div class="stat accent">
-      <div class="lbl">Distancia décimo hombre</div>
-      <div class="val">{tenth_distance:.3f} <span class="num">vs centroide de los 9</span></div>
-    </div>
-    <div class="stat">
-      <div class="lbl">Consejero más en contra</div>
-      <div class="val">{html_mod.escape(most_divergent_name)} <span class="num">d {max_frame_distance:.3f}</span></div>
-    </div>
-    <div class="stat">
-      <div class="lbl">Veredicto</div>
-      <div class="verdict">{fragility}</div>
-    </div>
-  </section>
-
-  <section class="map-card" aria-label="Mapa MDS">
-    <div class="map-head">
-      <h3>Geografía del desacuerdo</h3>
-      <div class="meta">10 voces · MDS sobre <b>cosine distance</b> · centroide de los 9</div>
-    </div>
-    <div class="map-svg-wrap">
-      <details class="map-help">
-        <summary aria-label="Cómo leer este mapa">?</summary>
-        <div class="map-help-popover">
-          <p class="map-help-title">Cómo leer este mapa</p>
-          <p>Cada punto es un consejero.</p>
-          <p>El <strong>centroide</strong> al centro es la zona de consenso — donde el grupo coincide.</p>
-          <p>Más <strong>cerca</strong> del centro = más alineado con el resto.<br/>Más <strong>lejos</strong> = piensa distinto.</p>
-          <p>El punto <strong style="color: var(--accent)">rojo (10 · tenth-man)</strong> es el disidente obligado.</p>
-          <p>Los anillos concéntricos marcan distancias iguales al centroide.</p>
-        </div>
-      </details>
-      {map_svg}
-    </div>
-    <div class="map-foot">
-      <div class="legend">
-        <span><i class="t"></i>Décimo hombre</span>
-        <span><i class="n"></i>Los nueve consejeros</span>
-      </div>
-      <div>Mapa MDS clásico · preserva distancias por pares</div>
-    </div>
-  </section>
-
-  {consensus_block_html}
-
-  <div class="sec">
-    <span class="glyph">¶</span>
-    <h2>Los nueve consejeros</h2>
-    <span class="rule"></span>
-    <span class="aside">orden por <b>distancia al centroide</b> · click para expandir</span>
-  </div>
-
-  <section class="frames" id="frames">
-    {frame_cards_html}
-  </section>
-
-  <div class="sec">
-    <span class="glyph">¶</span>
-    <h2>El décimo hombre — <em>disenso steel-man</em></h2>
-    <span class="rule"></span>
-    <span class="aside">d&nbsp;<b>{tenth_distance:.3f}</b> · obligación de discrepar</span>
-  </div>
-
-  <article class="tenth">
-    <header class="tenth-top">
+  <section class="hero">
+    <div class="hero-bg" aria-hidden="true"></div>
+    <div class="hero-inner">
       <div>
-        <div class="tenth-eyebrow"><i></i>Frame 10 · Tenth-man</div>
-        <h2>Por qué los nueve podrían estar equivocados</h2>
+        <div class="announce">
+          <span class="new">New</span>
+          <span>Steel-man dissent · Frame 10 online</span>
+          <span class="arrow">→</span>
+        </div>
+        <h1 class="hero-h">Nueve consejeros alineados.<br><em>El décimo debe disentir.</em></h1>
+        <p class="hero-dek">Tu pregunta corre por nueve marcos cognitivos. Medimos el consenso y obligamos a un décimo a discrepar con rigor.</p>
       </div>
-      <div class="d"><b>{tenth_distance:.3f}</b>distancia al consenso</div>
-    </header>
 
-    <div class="tenth-body">
-      {tenth_response_html}
-      {tenth_modes_html}
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <div class="lbl">Tenth · d</div>
+          <div class="val acc">{tenth_distance:.3f}</div>
+          <div class="sub">vs centroide</div>
+        </div>
+        <div class="hero-stat">
+          <div class="lbl">Más cercano</div>
+          <div class="val">{min_frame_distance:.3f}</div>
+          <div class="sub">{html_mod.escape(closest_name)}</div>
+        </div>
+        <div class="hero-stat">
+          <div class="lbl">Más divergente</div>
+          <div class="val">{max_frame_distance:.3f}</div>
+          <div class="sub">{html_mod.escape(most_divergent_name)}</div>
+        </div>
+        <div class="hero-stat">
+          <div class="lbl">Veredicto</div>
+          <div class="val">{html_mod.escape(hero_verdict_label)}</div>
+          <div class="sub">{html_mod.escape(hero_verdict_sub)}</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="page">
+
+  <section class="section">
+    <div class="sec-head">
+      <div class="l">
+        <div class="sec-eyebrow"><span class="n">01</span>Reporte · #{report_id}</div>
+        <h2>La pregunta que <em>los nueve respondieron</em></h2>
+        <p class="sub">{question_safe}</p>
+      </div>
     </div>
 
-    <footer class="tenth-foot">
-      <span>Generado bajo restricción · <b>steel-man</b> obligatorio</span>
-      <span>embed <b>{html_mod.escape(provider)}/{html_mod.escape(model)}</b></span>
-    </footer>
-  </article>
+    <section class="map-card">
+      <div class="map-top">
+        <div class="l">
+          <span class="pill"><span class="d"></span>fig.01 · disagreement map</span>
+          <span class="meta">10 voces · MDS · cosine</span>
+        </div>
+        <div class="legend-row">
+          <span><i class="ld t"></i>Décimo hombre</span>
+          <span><i class="ld n"></i>Marcos consensus</span>
+        </div>
+      </div>
+
+      <div class="map-svg">
+        {map_svg}
+      </div>
+
+      <div class="map-foot">
+        <div class="cell">
+          <div class="lbl">Décimo · d</div>
+          <div class="val">{tenth_distance:.3f}<span class="badge">tenth</span></div>
+          <div class="sub">obligado a discrepar</div>
+        </div>
+        <div class="cell">
+          <div class="lbl">Más cercano</div>
+          <div class="val">{min_frame_distance:.3f}</div>
+          <div class="sub">{html_mod.escape(closest_name)}</div>
+        </div>
+        <div class="cell">
+          <div class="lbl">Más divergente (de los 9)</div>
+          <div class="val">{max_frame_distance:.3f}</div>
+          <div class="sub">{html_mod.escape(most_divergent_name)}</div>
+        </div>
+        <div class="cell">
+          <div class="lbl">Spread interno</div>
+          <div class="val">{spread_sigma:.3f}</div>
+          <div class="sub">σ entre los 9 marcos</div>
+        </div>
+      </div>
+    </section>
+
+    {consensus_block_html}
+
+    <article class="tenth-card">
+      <header class="tenth-top">
+        <div>
+          <div class="tenth-tag"><span class="d"></span>Frame 10 · Tenth-man</div>
+          <h3>Por qué los nueve <em>podrían estar equivocados</em></h3>
+        </div>
+        <div class="tenth-d-stat">
+          <b>{tenth_distance:.3f}</b>
+          distance · centroide
+        </div>
+      </header>
+
+      <div class="tenth-body">
+        {tenth_response_html}
+        {tenth_modes_html}
+      </div>
+
+      <footer class="tenth-foot">
+        <span>Generado bajo restricción · <b>steel-man obligatorio</b></span>
+        <span>embed <b>{html_mod.escape(provider)}/{html_mod.escape(model)}</b> · ~CLP {cost_estimate_clp:.0f}</span>
+      </footer>
+    </article>
+  </section>
+
+  <section class="section">
+    <div class="sec-head">
+      <div class="l">
+        <div class="sec-eyebrow"><span class="n">02</span>Marcos cognitivos · 9 voces</div>
+        <h2>Los nueve, ordenados por <em>distancia al centroide</em></h2>
+        <p class="sub">Cada marco aporta una lente: empírica, sistémica, histórica, analógica. Cuanto más cerca del centroide, más representa el consenso. Cuanto más lejos, más solo razona.</p>
+      </div>
+    </div>
+
+    <section class="frames">
+      <div class="frames-head">
+        <span>Idx</span>
+        <span>Frame</span>
+        <span>Status</span>
+        <span>Distancia</span>
+        <span style="text-align:right;">d</span>
+        <span></span>
+      </div>
+      {frame_cards_html}
+    </section>
+  </section>
 
   <footer class="colophon">
     <div>
-      <b>Henge</b><br/>
-      classical MDS · cosine distance<br/>
-      embed: {html_mod.escape(provider)}/{html_mod.escape(model)}
+      <b>TenthAI v0.4</b><br>
+      classical MDS · cosine<br>
+      embed · {html_mod.escape(provider)}/{html_mod.escape(model)}
     </div>
     <div class="center">
-      «Nueve voces alineadas no son señal — son sólo ruido coherente.»
+      «{html_mod.escape(fragility_text)}»
     </div>
     <div class="right">
-      <b>Costo estimado</b> ~CLP {cost_estimate_clp:.0f}<br/>
-      {timestamp}<br/>
-      report&nbsp;#{report_id}
+      <b>~CLP {cost_estimate_clp:.0f}</b><br>
+      {timestamp}<br>
+      report&nbsp;<b>#{report_id}</b>
     </div>
   </footer>
 
-</main>
-
-<aside class="guide" id="guide" aria-label="Cómo leer este reporte">
-  <div class="guide-panel" role="dialog" aria-labelledby="guide-title">
-    <div class="guide-panel-body">
-      <p class="kicker">Guía de lectura</p>
-      <h3 id="guide-title">Cómo abordar <em>este reporte</em></h3>
-      <ol>
-        <li><b>Empieza por el consenso, no por el décimo.</b> Es lo que los 9 consejeros creen en común — el ancla de la decisión.</li>
-        <li><b>Los 9 consejeros no son votos.</b> Son lentes distintos sobre el mismo problema. Lee las diferencias entre ellos, no la mayoría.</li>
-        <li><b>El décimo es auditoría, no recomendación.</b> Su rol es atacar el consenso para probar si aguanta. Sonar convincente es su trabajo, no señal de que tenga razón.</li>
-        <li><b>Aísla los ataques del décimo, no su veredicto.</b> Quédate con las preguntas que abre y evalúa cada una contra tu realidad — descarta su conclusión si no resiste.</li>
-        <li><b>Mira las métricas.</b> Fragilidad alta + distancia 10º alta = consenso débil, el disenso pesa más. Fragilidad baja = consenso robusto, el disenso es desafío retórico.</li>
-        <li><b>Aplica el test asimétrico.</b> Si el décimo describe un riesgo que reconoces como real en tu vida, súmalo aunque no cambies de bando. Si no lo reconoces, descártalo.</li>
-        <li><b>Tú decides.</b> Ningún consejero conoce tu contexto completo. El reporte expone tensiones; la elección es tuya.</li>
-      </ol>
-    </div>
-    <div class="guide-panel-foot">
-      <p class="foot">El consenso protege contra el error obvio. El décimo protege contra el error compartido. Necesitas ambos lentes — y ninguno reemplaza tu juicio.</p>
-      <button type="button" class="guide-close" onclick="document.getElementById('guide').classList.remove('open')">Cerrar</button>
-    </div>
   </div>
-  <button type="button" class="guide-toggle" onclick="document.getElementById('guide').classList.toggle('open')" aria-expanded="false">
-    <span class="marker"></span>
-    ¿Cómo leer esto?
-  </button>
-</aside>
-
-<script>
-  (function(){{
-    var g = document.getElementById('guide');
-    var btn = g.querySelector('.guide-toggle');
-    btn.addEventListener('click', function(){{
-      btn.setAttribute('aria-expanded', g.classList.contains('open') ? 'true' : 'false');
-    }});
-    document.addEventListener('keydown', function(e){{
-      if(e.key === 'Escape' && g.classList.contains('open')){{
-        g.classList.remove('open');
-        btn.setAttribute('aria-expanded', 'false');
-      }}
-    }});
-  }})();
-</script>
+</main>
 
 <script>
   document.querySelectorAll('.frame').forEach(f => {{
