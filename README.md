@@ -342,6 +342,23 @@ Typical cost per full run: **~USD 0.65** (range USD 0.50–0.80 depending on tok
 
 ---
 
+## Embeddings · why a second provider?
+
+> "If I'm using Claude, the idea is to use only Claude — right?"
+
+Right in spirit, but Henge needs to compute distance between the 10 advisor responses to draw the disagreement map, and that requires **embeddings** (text → vector). Anthropic does not currently offer an embeddings API, so a second provider is unavoidable for the math layer that turns 10 paragraphs of reasoning into the consensus structure you see on the report.
+
+Two options today:
+
+| Provider | Default? | Cost | Notes |
+| --- | --- | --- | --- |
+| **OpenAI** `text-embedding-3-small` | default | ~USD 0.0005/run | Cheapest. Most devs already have a key. |
+| **Voyage AI** | opt-in | Free tier · 200M tokens/month (~50k runs) | Anthropic's recommended embedding partner. Better quality for Spanish. Set `EMBED_PROVIDER=voyage` + `VOYAGE_API_KEY=...` in `.env`. |
+
+If you want to stay inside the Anthropic ecosystem with a free key, use Voyage — same effect as OpenAI, no separate billing. A local-embeddings option (no API key, sentence-transformers on-device) is on the [Roadmap](#roadmap).
+
+---
+
 ## Architecture
 
 ```
@@ -389,6 +406,7 @@ It is a **decision-quality** tool. The output is a measurable structure of agree
 - PDF / shareable web report
 - streaming results
 - multi-model support (Gemini, GPT, local)
+- local embeddings (sentence-transformers, no API key required)
 
 ---
 
