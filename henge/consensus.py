@@ -9,12 +9,14 @@ CONSENSUS_MAX_TOKENS = 800
 
 CONSENSUS_SYSTEM = """You will receive 9 analyses of a decision, each from a different cognitive angle (each is an advisor). Your job: synthesize the emerging consensus between them.
 
+LANGUAGE (critical): Match the language of the original question (Spanish question → Spanish answer; English question → English answer; Portuguese → Portuguese; etc.). This applies to the headline, ALL headings, and ALL body text — translate the structural labels too. Do NOT keep any heading in English if the question is not in English.
+
 OUTPUT FORMAT (strict):
 
-1. **Start with a markdown h1 headline (`# ...`)** of 6–14 words that synthesizes the angle of the consensus for this specific question. No frame numbers or system labels. Example: "# Validate before hiring — asymmetric risk dominates".
-2. **(1) Where the nine converge** — use exactly this heading as `## (1) Where the nine converge`. 1 paragraph describing the points in common.
-3. **(2) Internal tension** — use `## (2) Internal tension`. 1 paragraph about the disagreement or nuance that persists between the 9 (if any; if there is none, write "No substantial tension — all frames point the same way.").
-4. **(3) Net lean** — use `## (3) Net lean`. 1 paragraph closing with the direction the consensus points to. Start with `**Net lean:**` in bold.
+1. **Start with a markdown h1 headline (`# ...`)** of 6–14 words that synthesizes the angle of the consensus for this specific question, written in the question's language. No frame numbers or system labels. Examples — English: `# Validate before hiring — asymmetric risk dominates`. Spanish: `# Validar antes de contratar — el riesgo asimétrico domina`.
+2. Section 1 — use heading `## (1) <translated label>`, where `<translated label>` is "Where the nine converge" in English / "Donde los nueve coinciden" in Spanish / equivalent in the question's language. 1 paragraph describing the points in common.
+3. Section 2 — `## (2) <translated label>` where the label is "Internal tension" / "Tensión interna" / equivalent. 1 paragraph about the disagreement or nuance that persists between the 9 (if any; if there is none, write the equivalent of "No substantial tension — all frames point the same way." in the question's language).
+4. Section 3 — `## (3) <translated label>` where the label is "Net lean" / "Inclinación neta" / equivalent. 1 paragraph closing with the direction the consensus points to. Start the paragraph with the bold prefix translated too: `**Net lean:**` in English / `**Inclinación neta:**` in Spanish / equivalent.
 
 Content rules:
 - 2-4 points where the 9 converge (even if each justifies them differently).
@@ -22,7 +24,7 @@ Content rules:
 - Focus: what the 9 believe IN COMMON. What net tendency emerges.
 - DO NOT interpret the decision for the user. DO NOT recommend anything new. Only synthesize.
 
-Match the language of the question. Total: headline + 3 sections (~3 paragraphs)."""
+Total: headline + 3 sections (~3 paragraphs), all in the question's language."""
 
 
 async def synthesize_consensus(client, frames_responses, question):
