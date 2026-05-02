@@ -15,18 +15,18 @@ from henge.viz import compute_cfi
 
 
 @pytest.mark.asyncio
-async def test_partial_failure_8of9(mock_anthropic_client):
+async def test_partial_failure_8of9(mock_anthropic_client, mock_providers):
     """1 frame falla → sistema continúa con 8 frames + tenth-man, marca el faltante."""
     call_count = [0]
-    original_create = mock_anthropic_client.messages.create
+    base_side_effect = mock_providers.side_effect  # underlying frame router
 
-    async def maybe_fail(**kwargs):
+    async def maybe_fail(model_id, req):
         call_count[0] += 1
         if call_count[0] == 3:
-            raise RuntimeError("Simulated 1-of-9 API failure")
-        return await original_create(**kwargs)
+            raise RuntimeError("Simulated 1-of-9 frame failure")
+        return await base_side_effect(model_id, req)
 
-    mock_anthropic_client.messages.create = AsyncMock(side_effect=maybe_fail)
+    mock_providers.side_effect = maybe_fail
 
     results = await run_agents(mock_anthropic_client, "Pregunta de prueba")
 
@@ -40,22 +40,18 @@ async def test_partial_failure_8of9(mock_anthropic_client):
 
 
 @pytest.mark.asyncio
-async def test_partial_failure_abort_lt_8(mock_anthropic_client):
+async def test_partial_failure_abort_lt_8(mock_anthropic_client, mock_providers):
     """2+ frames fallan → RuntimeError con mensaje claro indicando cuántos sobrevivieron."""
     call_count = [0]
+    base_side_effect = mock_providers.side_effect
 
-    async def fail_two(**kwargs):
+    async def fail_two(model_id, req):
         call_count[0] += 1
         if call_count[0] in (2, 4):
-            raise RuntimeError("Simulated 2-of-9 API failure")
-        result = MagicMock()
-        text_part = MagicMock()
-        text_part.text = "ok response"
-        result.content = [text_part]
-        result.usage = MagicMock(input_tokens=10, output_tokens=20)
-        return result
+            raise RuntimeError("Simulated 2-of-9 frame failure")
+        return await base_side_effect(model_id, req)
 
-    mock_anthropic_client.messages.create = AsyncMock(side_effect=fail_two)
+    mock_providers.side_effect = fail_two
 
     with pytest.raises(RuntimeError, match=r"7/9"):
         await run_agents(mock_anthropic_client, "Pregunta de prueba")
@@ -85,42 +81,54 @@ def test_centroid_excludes_tenth(synthetic_embeddings_10):
 
 
 @pytest.mark.asyncio
-async def test_temperature_is_zero(mock_anthropic_client):
-    """Cada llamada Anthropic debe pasar ``temperature=0`` para reproducibilidad,
-    excepto modelos en ``MODELS_WITHOUT_TEMPERATURE`` (Opus 4.7) que la
-    rechazan por requerir extended thinking.
+async def test_temperature_is_zero(mock_anthropic_client, mock_providers):
+    """Cada frame pasa ``temperature=0`` por reproducibilidad. Tenth-man (Opus)
+    omite el kwarg porque Opus 4.7 con extended thinking lo rechaza.
 
     Sin esto, mismo input produce verdict distinto entre corridas y la
-    palabra "measurement" del README es marketing. v0.5 lo fija como
+    palabra "measurement" del README es marketing. v0.5/v0.6 lo fija como
     decisión pre-registrada (ver WHITEPAPER.md §4).
     """
     from henge.agents import MODELS_WITHOUT_TEMPERATURE
 
-    seen_calls = []
+    frame_temps = []  # captured req.temperature for each frame call
+    base_side_effect = mock_providers.side_effect
+
+    async def capture_frame(model_id, req):
+        frame_temps.append((model_id, req.temperature))
+        return await base_side_effect(model_id, req)
+
+    mock_providers.side_effect = capture_frame
+
+    tenth_man_calls = []  # captured kwargs for the tenth-man (Anthropic client) call
     original_create = mock_anthropic_client.messages.create
 
-    async def capture(**kwargs):
-        seen_calls.append((kwargs.get("model"), kwargs.get("temperature")))
+    async def capture_tenth(**kwargs):
+        tenth_man_calls.append((kwargs.get("model"), kwargs.get("temperature")))
         return await original_create(**kwargs)
 
-    mock_anthropic_client.messages.create = AsyncMock(side_effect=capture)
+    mock_anthropic_client.messages.create = AsyncMock(side_effect=capture_tenth)
 
     await run_agents(mock_anthropic_client, "Pregunta de prueba")
 
     assert TEMPERATURE == 0, "Module-level TEMPERATURE constant must be 0"
 
-    # 9 frames + 1 tenth-man = 10 calls minimum
-    assert len(seen_calls) == 10
+    # 9 frames captured at the registry layer
+    assert len(frame_temps) == 9
+    for model_id, temp in frame_temps:
+        assert temp == 0, f"Frame {model_id} must use temperature=0; got {temp!r}"
 
-    for model, temp in seen_calls:
-        if model in MODELS_WITHOUT_TEMPERATURE:
-            assert temp is None, (
-                f"{model} rejects temperature; we must omit the kwarg, got {temp!r}"
-            )
-        else:
-            assert temp == 0, (
-                f"{model} must use temperature=0 for reproducibility; got {temp!r}"
-            )
+    # 1 tenth-man captured at the Anthropic client layer
+    assert len(tenth_man_calls) == 1
+    tenth_model, tenth_temp = tenth_man_calls[0]
+    if tenth_model in MODELS_WITHOUT_TEMPERATURE:
+        assert tenth_temp is None, (
+            f"{tenth_model} rejects temperature; we must omit the kwarg, got {tenth_temp!r}"
+        )
+    else:
+        assert tenth_temp == 0, (
+            f"{tenth_model} must use temperature=0 for reproducibility; got {tenth_temp!r}"
+        )
 
 
 def test_project_mds_excludes_failed_frames():
