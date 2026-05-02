@@ -10,6 +10,9 @@ OpenAI normalisation notes:
 - ``max_completion_tokens`` replaces ``max_tokens`` for newer models.
 - Token usage exposed as ``prompt_tokens``/``completion_tokens``.
 - ``finish_reason`` lives on each choice.
+- ``temperature`` is omitted when ``req.temperature == 0.0`` (the
+  ``CompletionRequest`` default) because newer models such as ``gpt-5`` only
+  support the API default (1) and reject an explicit 0.0.
 """
 from __future__ import annotations
 
@@ -44,15 +47,21 @@ class OpenAIProvider(ProviderBase):
             raise ValueError(f"OpenAIProvider does not support {model_id}")
         raw = _RAW_MODEL[model_id]
 
-        completion = await self._client.chat.completions.create(
+        kwargs: dict = dict(
             model=raw,
             messages=[
                 {"role": "system", "content": req.system},
                 {"role": "user", "content": req.user},
             ],
             max_completion_tokens=req.max_tokens,
-            temperature=req.temperature,
         )
+        # Only forward temperature when explicitly non-default; gpt-5 and
+        # similar frontier models reject temperature=0.0 (they support only
+        # the API default of 1).
+        if req.temperature != 0.0:
+            kwargs["temperature"] = req.temperature
+
+        completion = await self._client.chat.completions.create(**kwargs)
 
         choice = completion.choices[0]
         usage = getattr(completion, "usage", None)
