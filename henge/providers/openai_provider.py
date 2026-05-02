@@ -63,6 +63,12 @@ class OpenAIProvider(ProviderBase):
         if req.temperature != 0.0:
             kwargs["temperature"] = req.temperature
 
+        # gpt-5 reasoning_effort caps internal chain-of-thought tokens.
+        # "low" is enough for structured-output frame tasks; the default
+        # ("medium") burns 2000+ reasoning tokens before any visible output.
+        if req.reasoning_effort is not None:
+            kwargs["reasoning_effort"] = req.reasoning_effort
+
         completion = await self._client.chat.completions.create(**kwargs)
 
         choice = completion.choices[0]

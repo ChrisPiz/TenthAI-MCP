@@ -17,6 +17,9 @@ class CompletionRequest:
     user: str
     max_tokens: int
     temperature: float = 0.0
+    # OpenAI gpt-5 reasoning effort: "minimal" / "low" / "medium" / "high".
+    # None = SDK default (medium). Ignored by providers that don't support it.
+    reasoning_effort: str | None = None
 
 
 @dataclass

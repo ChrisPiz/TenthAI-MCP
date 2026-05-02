@@ -154,11 +154,15 @@ async def run_agent(frame, question, context=None, temperature=TEMPERATURE):
     model_id = model_for(frame)
     system = PROMPTS[frame]
     user = question if not context else f"{question}\n\nAdditional context:\n{context}"
+    # "low" reasoning effort: gpt-5 frames otherwise burn the entire
+    # max_tokens budget on internal chain-of-thought, returning empty
+    # content. Anthropic providers ignore this kwarg.
     req = CompletionRequest(
         system=system,
         user=user,
         max_tokens=FRAME_MAX_TOKENS,
         temperature=temperature,
+        reasoning_effort="low",
     )
     resp = await complete(model_id, req)
     usage = {
