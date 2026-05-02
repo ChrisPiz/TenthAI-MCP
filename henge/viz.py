@@ -112,6 +112,7 @@ TRANSLATIONS = {
         "masthead_report": "Report",
         "masthead_index_btn": "Past reports",
         "masthead_index_aria": "View past reports",
+        "theme_toggle_aria": "Toggle theme",
         "hero_h_a": "Nine advisors aligned.",
         "hero_h_b": "The tenth must dissent.",
         "hero_dek": "Your question runs through nine cognitive frames. We measure the consensus and force a tenth to disagree with rigor.",
@@ -167,10 +168,17 @@ TRANSLATIONS = {
         "frames_head_idx": "Idx",
         "frames_head_frame": "Frame",
         "frames_head_status": "Status",
+        "frames_head_lean": "Lean",
         "frames_head_distance": "Distance",
         "frames_head_d": "d",
         "flag_closest": "closest",
         "flag_farthest": "farthest",
+        "hero_quote_nine_mark": "&#x03A3; &middot; The Nine",
+        "hero_quote_tenth_mark_ord": "10",
+        "hero_quote_tenth_mark_label": "The Tenth",
+        "hero_quote_consensus_cite": "consensus",
+        "hero_quote_tenth_cite": "forced dissent",
+        "hero_verdict_consensus": "consensus",
         "svg_centroid": "CENTROID",
         "svg_steelman": "steel-man dissent",
         "guide_kicker": "Reading guide",
@@ -195,6 +203,7 @@ TRANSLATIONS = {
         "masthead_report": "Reporte",
         "masthead_index_btn": "Reportes anteriores",
         "masthead_index_aria": "Ver reportes anteriores",
+        "theme_toggle_aria": "Cambiar tema",
         "hero_h_a": "Nueve consejeros alineados.",
         "hero_h_b": "El décimo debe disentir.",
         "hero_dek": "Tu pregunta corre por nueve marcos cognitivos. Medimos el consenso y obligamos a un décimo a discrepar con rigor.",
@@ -250,10 +259,17 @@ TRANSLATIONS = {
         "frames_head_idx": "Idx",
         "frames_head_frame": "Marco",
         "frames_head_status": "Estado",
+        "frames_head_lean": "Veredicto",
         "frames_head_distance": "Distancia",
         "frames_head_d": "d",
         "flag_closest": "más cercano",
         "flag_farthest": "más lejano",
+        "hero_quote_nine_mark": "&#x03A3; &middot; Los Nueve",
+        "hero_quote_tenth_mark_ord": "10",
+        "hero_quote_tenth_mark_label": "El D&eacute;cimo",
+        "hero_quote_consensus_cite": "consenso",
+        "hero_quote_tenth_cite": "disenso obligado",
+        "hero_verdict_consensus": "consenso",
         "svg_centroid": "CENTROIDE",
         "svg_steelman": "disenso steel-man",
         "guide_kicker": "Guía de lectura",
@@ -489,6 +505,58 @@ def _extract_conclusion(text: str, max_chars: int = 360) -> str:
     return last
 
 
+_LEAN_MARKERS = re.compile(
+    r"\*\*\s*(?:Conclusion|Conclusi[oó]n|Net lean|Lean|Bottom line|Veredicto|Net)\s*[:\.]?\s*\*\*\s*[:\.]?\s*",
+    re.IGNORECASE,
+)
+
+
+def _extract_lean(text: str, max_chars: int = 90) -> str:
+    """One-liner verdict for the frames-table Lean column.
+
+    Heuristic: prefer the sentence after a ``**Conclusion:**`` / ``**Net lean:**``
+    marker (the prompts close with these). Fall back to the first sentence of
+    the last paragraph. Strip markdown emphasis, collapse whitespace, truncate at
+    a sentence boundary close to ``max_chars`` so the row stays one line.
+    """
+    if not text:
+        return ""
+    paragraphs = [p.strip() for p in re.split(r"\n\s*\n", text.strip()) if p.strip()]
+    if not paragraphs:
+        return ""
+
+    candidate = ""
+    for para in reversed(paragraphs):
+        m = _LEAN_MARKERS.search(para)
+        if m:
+            candidate = para[m.end():].strip()
+            break
+    if not candidate:
+        candidate = paragraphs[-1]
+
+    # Take the first sentence
+    sentence_end = re.search(r"[.!?](?:\s|$)", candidate)
+    if sentence_end:
+        candidate = candidate[: sentence_end.end()].strip()
+
+    # Strip markdown emphasis ** / __ / * / _
+    candidate = re.sub(r"\*\*(.+?)\*\*", r"\1", candidate)
+    candidate = re.sub(r"__(.+?)__", r"\1", candidate)
+    candidate = re.sub(r"(?<!\*)\*(?!\*)([^*]+)\*(?!\*)", r"\1", candidate)
+    candidate = re.sub(r"(?<!_)_(?!_)([^_]+)_(?!_)", r"\1", candidate)
+    candidate = re.sub(r"\s+", " ", candidate).strip()
+
+    if len(candidate) > max_chars:
+        truncated = candidate[:max_chars]
+        # Prefer cutting at the last sentence-end or comma in the truncation window
+        cut = max(truncated.rfind("."), truncated.rfind(","), truncated.rfind(";"))
+        if cut > max_chars * 0.6:
+            candidate = truncated[: cut + 1].rstrip(",;") + ("" if truncated[cut] == "." else "&hellip;")
+        else:
+            candidate = truncated.rsplit(" ", 1)[0] + "&hellip;"
+    return candidate
+
+
 def _stddev(values):
     """Population standard deviation. Returns 0.0 for empty / single-element input."""
     if not values or len(values) < 2:
@@ -667,22 +735,30 @@ def _build_map_svg(coords_2d, frames, distances, max_frame_dist, min_frame_dist,
     return "\n".join(parts)
 
 
-def _build_frame_card(frame, response, status, distance, max_dist, idx_str, is_open=False):
+def _build_frame_card(frame, response, status, distance, max_dist, idx_str,
+                      is_open=False, lean=""):
     """Build a frame-list article in the v3 table layout.
 
-    Open by default for the closest frame to the centroid.
+    Open by default for the closest frame to the centroid. ``lean`` is the
+    one-line verdict shown in the Lean column (extracted upstream from the
+    frame response). Failed frames render an italic ``frame failed`` line so
+    the row keeps a meaningful slot.
     """
     body = _md_to_html(response)
     bar_pct = min(100, (distance / max_dist) * 100) if max_dist > 0 else 0
-    status_label = "OK" if status == "ok" else "FAILED"
     open_class = " open" if is_open else ""
-    suffix_html = ""
+    if status != "ok":
+        lean_html = "<em>frame failed</em>"
+    elif lean:
+        lean_html = html_mod.escape(lean).replace("&amp;hellip;", "&hellip;")
+    else:
+        lean_html = ""
     return f"""
     <article class="frame{open_class}" data-frame="{html_mod.escape(frame)}">
       <div class="frame-row">
         <span class="f-idx">#{idx_str}</span>
         <span class="f-name">{html_mod.escape(frame)}</span>
-        <span class="f-tag"><span class="d"></span>{status_label}{suffix_html}</span>
+        <span class="f-lean">{lean_html}</span>
         <span class="f-bar"><i style="width:{bar_pct:.0f}%"></i></span>
         <span class="f-d">d <b>{distance:.3f}</b></span>
         <span class="f-caret">›</span>
@@ -695,19 +771,33 @@ def _build_frame_card(frame, response, status, distance, max_dist, idx_str, is_o
 
 
 def _build_frame_card_with_flag(frame, response, status, distance, max_dist, idx_str,
-                                is_open=False, flag=None):
-    """Same as _build_frame_card but injects a closest/farthest tag suffix."""
+                                is_open=False, flag=None, flag_kind=None, lean=""):
+    """Same as _build_frame_card but appends a closest/farthest chip to the name.
+
+    ``flag`` is the localized label ("closest" / "más cercano" / ...).
+    ``flag_kind`` is the canonical key ("closest" / "farthest") used to pick
+    the chip variant in CSS — solid chartreuse for closest, outlined for farthest.
+    """
     body = _md_to_html(response)
     bar_pct = min(100, (distance / max_dist) * 100) if max_dist > 0 else 0
-    status_label = "OK" if status == "ok" else "FAILED"
     open_class = " open" if is_open else ""
-    flag_html = f' · <b>{html_mod.escape(flag)}</b>' if flag else ""
+    if flag:
+        kind_class = f" {html_mod.escape(flag_kind)}" if flag_kind else ""
+        flag_html = f' <span class="f-mark{kind_class}">{html_mod.escape(flag)}</span>'
+    else:
+        flag_html = ""
+    if status != "ok":
+        lean_html = "<em>frame failed</em>"
+    elif lean:
+        lean_html = html_mod.escape(lean).replace("&amp;hellip;", "&hellip;")
+    else:
+        lean_html = ""
     return f"""
     <article class="frame{open_class}" data-frame="{html_mod.escape(frame)}">
       <div class="frame-row">
         <span class="f-idx">#{idx_str}</span>
-        <span class="f-name">{html_mod.escape(frame)}</span>
-        <span class="f-tag"><span class="d"></span>{status_label}{flag_html}</span>
+        <span class="f-name">{html_mod.escape(frame)}{flag_html}</span>
+        <span class="f-lean">{lean_html}</span>
         <span class="f-bar"><i style="width:{bar_pct:.0f}%"></i></span>
         <span class="f-d">d <b>{distance:.3f}</b></span>
         <span class="f-caret">›</span>
@@ -797,6 +887,10 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
             flag=(t(locale, "flag_closest") if i == closest_frame_idx
                   else t(locale, "flag_farthest") if i == most_divergent_idx
                   else None),
+            flag_kind=("closest" if i == closest_frame_idx
+                       else "farthest" if i == most_divergent_idx
+                       else None),
+            lean=_extract_lean(responses[i]) if statuses[i] == "ok" else "",
         )
         for i in frame_order
     )
@@ -823,13 +917,14 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
 
     # Consensus block (optional). v3-styled card placed before the tenth-man.
     consensus_block_html = ""
+    consensus_title = ""
     if consensus:
         consensus_title, consensus_body_md = _split_consensus_title(consensus)
         if not consensus_title:
             consensus_title = t(locale, "consensus_default_title")
         consensus_html = _md_to_html(consensus_body_md)
         consensus_block_html = f"""
-    <article class="consensus-card">
+    <article class="consensus-card" id="consensus">
       <header class="consensus-top">
         <div>
           <div class="consensus-tag"><span class="d"></span>{t(locale, "consensus_tag_prefix")}{html_mod.escape(verdict_short.upper())}</div>
@@ -847,6 +942,12 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
     </article>
 """
 
+    # Hero quote teasers — derived from the consensus title and the tenth response.
+    # Both are shown on the hero panels and link to their full sections below.
+    nine_lean = consensus_title or t(locale, "consensus_default_title")
+    tenth_lean_raw = _extract_lean(responses[9], max_chars=110)
+    tenth_lean_html = html_mod.escape(tenth_lean_raw).replace("&amp;hellip;", "&hellip;")
+
     timestamp = datetime.now().strftime("%Y·%m·%d %H:%M CLT")
     timestamp_short = datetime.now().strftime("%Y·%m·%d")
     report_id = datetime.now().strftime("%H%M")
@@ -861,6 +962,18 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,450;9..40,500;9..40,600&family=Fraunces:opsz,wght@9..144,400;9..144,500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  /* Resolve theme before first paint to avoid FOUC.
+     Stored preference wins; otherwise follow system. */
+  (function() {{
+    var stored = null;
+    try {{ stored = localStorage.getItem('henge-theme'); }} catch (e) {{}}
+    var theme = (stored === 'light' || stored === 'dark')
+      ? stored
+      : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    document.documentElement.setAttribute('data-theme', theme);
+  }})();
+</script>
 <style>
   :root{{
     --midnight-navy: #1b2540;
@@ -874,14 +987,56 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
     --storm: #596075;
     --fog: #b1b5c0;
 
+    /* Tinted whites for use on dark surfaces */
+    --on-dark:        #fafeff;
+    --on-dark-92:     rgba(224,246,255,0.92);
+    --on-dark-78:     rgba(224,246,255,0.78);
+    --on-dark-62:     rgba(224,246,255,0.62);
+    --on-dark-32:     rgba(224,246,255,0.32);
+    --on-dark-border-strong: rgba(224,246,255,0.18);
+
+    /* Translucent surfaces */
+    --surface-glass-08:   rgba(255,255,255,0.08);
+    --surface-glass-soft: rgba(255,255,255,0.55);
+
+    /* Border/rule semantic aliases (for new components) */
+    --border-subtle: rgba(0,39,80,0.06);
+    --border-rule:   rgba(0,39,80,0.08);
+
+    /* Chartreuse alpha ramp */
+    --chartreuse-04: rgba(208,241,0,0.04);
+    --chartreuse-10: rgba(208,241,0,0.10);
+    --chartreuse-14: rgba(208,241,0,0.14);
+    --chartreuse-18: rgba(208,241,0,0.18);
+    --chartreuse-20: rgba(208,241,0,0.20);
+    --chartreuse-25: rgba(208,241,0,0.25);
+    --chartreuse-28: rgba(208,241,0,0.28);
+    --chartreuse-32: rgba(208,241,0,0.32);
+    --chartreuse-55: rgba(208,241,0,0.55);
+
+    /* Glow — used on tenth-quote panel */
+    --glow-chartreuse:       0 0 0 1px var(--chartreuse-20), 0 0 24px var(--chartreuse-18), 0 0 60px var(--chartreuse-10);
+    --glow-chartreuse-hover: 0 0 0 1px var(--chartreuse-32), 0 0 28px var(--chartreuse-28), 0 0 70px var(--chartreuse-14);
+
+    /* Map line tint (midnight-navy alpha) */
+    --navy-08: rgba(27,37,64,0.08);
+
     --shadow-xl: rgba(0,39,80,0.03) 0 56px 72px -16px, rgba(0,39,80,0.03) 0 32px 32px -16px, rgba(0,39,80,0.04) 0 6px 12px -3px, rgba(0,39,80,0.04) 0 0 0 1px;
     --shadow-md: rgba(0,39,80,0.08) 0 6px 16px -3px, rgba(0,39,80,0.04) 0 0 0 1px;
     --shadow-subtle: rgba(255,255,255,0.72) 0 1px 1px 0 inset, rgba(4,33,80,0.02) 0 8px 16px 0, rgba(4,33,80,0.03) 0 4px 12px 0, rgba(4,33,80,0.06) 0 1px 2px 0, rgba(4,33,80,0.04) 0 0 0 1px;
+    --ring-subtle: rgba(0,39,80,0.04) 0 0 0 1px;
+    --ring-rule:   rgba(0,39,80,0.06) 0 0 0 1px;
 
     --sans:  'DM Sans', ui-sans-serif, system-ui, sans-serif;
     --serif: 'Fraunces', Georgia, serif;
     --mono:  'JetBrains Mono', ui-monospace, monospace;
+
+    color-scheme: light dark;
   }}
+
+  /* Dark mode — token flips live alongside :root above; component overrides
+     are at the bottom of this stylesheet so they win over base declarations. */
+
   *{{ box-sizing: border-box; }}
   html, body{{ margin:0; padding:0; }}
   body{{
@@ -902,7 +1057,7 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
     padding: 18px 32px 14px;
     display: flex; align-items: center; justify-content: space-between;
     gap: 16px; flex-wrap: wrap;
-    border-bottom: 1px solid rgba(0,39,80,0.08);
+    border-bottom: 1px solid var(--border-rule);
   }}
   .logo{{
     display:flex; align-items:center; gap: 10px;
@@ -940,6 +1095,7 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
     border-color: var(--midnight-navy);
   }}
   .mast-index-btn svg{{ flex-shrink: 0; }}
+  .mast-actions{{ display: inline-flex; align-items: center; gap: 8px; }}
 
   /* Hero */
   .hero{{
@@ -948,8 +1104,8 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
     border-radius: 20px;
     overflow: hidden;
     position: relative;
-    box-shadow: var(--shadow-xl);
-    color: #fafeff;
+    box-shadow: var(--shadow-md);
+    color: var(--on-dark);
     isolation: isolate;
   }}
   .hero-bg{{
@@ -989,38 +1145,82 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
     margin: 0;
     max-width: 52ch;
     font-size: 15.5px; line-height: 1.5;
-    color: rgba(224,246,255,0.92);
+    color: var(--on-dark-92);
     letter-spacing: -0.09px;
   }}
 
-  .hero-stats{{
+  /* Hero verdict eyebrow */
+  .hero-verdict{{
+    display: inline-flex; gap: 8px; align-items: baseline;
+    font-family: var(--mono); font-size: 11px;
+    color: var(--on-dark-78);
+    text-transform: uppercase; letter-spacing: 0.06em;
+    margin-bottom: 14px;
+  }}
+  .hero-verdict b{{ color: var(--chartreuse); font-weight: 500; }}
+  .hero-verdict .sep{{ color: var(--on-dark-32); }}
+
+  /* Hero quote panels — translucent glass over the painting */
+  .hero-quotes{{
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
+    gap: 12px;
   }}
-  .hero-stat{{
-    background: rgba(255,255,255,0.08);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(224,246,255,0.18);
-    border-radius: 14px;
-    padding: 14px 16px;
+  .hero-quote{{
+    display: block;
+    background: var(--surface-glass-08);
+    backdrop-filter: blur(14px) saturate(120%);
+    -webkit-backdrop-filter: blur(14px) saturate(120%);
+    border: 1px solid var(--on-dark-border-strong);
+    border-radius: 16px;
+    padding: 14px 18px;
+    text-decoration: none;
+    color: inherit;
+    transition: border-color .2s ease, transform .2s ease, box-shadow .2s ease;
   }}
-  .hero-stat .lbl{{
-    font-family: var(--mono); font-size: 10.5px;
-    color: rgba(224,246,255,0.78);
-    text-transform: uppercase; letter-spacing: 0.04em;
-    margin-bottom: 6px;
+  .hero-quote:hover{{ transform: translateY(-1px); }}
+  .hero-quote:focus-visible{{ outline: 2px solid var(--chartreuse); outline-offset: 3px; }}
+  .hero-quote.consensus:hover{{ border-color: var(--on-dark-32); }}
+  .hero-quote.tenth{{
+    background: linear-gradient(180deg, var(--chartreuse-04), var(--surface-glass-08));
+    border-color: var(--chartreuse-55);
+    box-shadow: var(--glow-chartreuse);
   }}
-  .hero-stat .val{{
+  .hero-quote.tenth:hover{{
+    border-color: var(--chartreuse);
+    box-shadow: var(--glow-chartreuse-hover);
+  }}
+  .hero-quote .mark{{
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--mono); font-size: 10px;
+    color: var(--on-dark-78);
+    text-transform: uppercase; letter-spacing: 0.08em;
+    margin-bottom: 8px;
+  }}
+  .hero-quote.consensus .mark .d{{
+    width: 6px; height: 6px; border-radius: 9999px;
+    background: var(--on-dark-32);
+  }}
+  .hero-quote.tenth .mark .d{{
+    width: 7px; height: 7px; border-radius: 9999px;
+    background: var(--chartreuse);
+    box-shadow: 0 0 0 2px var(--chartreuse-25);
+  }}
+  .hero-quote.tenth .mark .ord{{ color: var(--chartreuse); font-weight: 500; }}
+  .hero-q{{
+    margin: 0 0 8px;
     font-family: var(--serif); font-weight: 400;
-    font-size: 22px; line-height: 1; letter-spacing: -0.22px;
-    color: #fafeff;
-    font-variant-numeric: tabular-nums;
+    font-size: 16px; line-height: 1.3;
+    letter-spacing: -0.16px;
+    color: var(--on-dark);
+    text-wrap: balance;
+    quotes: none;
   }}
-  .hero-stat .val.acc{{ color: var(--chartreuse); }}
-  .hero-stat .sub{{
-    margin-top: 4px;
-    font-size: 12px; color: rgba(224,246,255,0.70);
+  .hero-q em{{ font-style: italic; color: var(--chartreuse); }}
+  .hero-quote .cite{{
+    font-family: var(--mono); font-size: 9.5px;
+    color: var(--on-dark-62);
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
   }}
 
   /* Sections */
@@ -1084,7 +1284,7 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
   .map-top{{
     display: flex; justify-content: space-between; align-items: center;
     padding: 20px 24px;
-    border-bottom: 1px solid rgba(0,39,80,0.06);
+    border-bottom: 1px solid var(--border-subtle);
   }}
   .map-top .l{{ display:flex; align-items:center; gap: 14px; }}
   .map-top .pill{{
@@ -1094,7 +1294,7 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
     padding: 5px 12px;
     font-family: var(--mono); font-size: 11px;
     color: var(--midnight-navy);
-    box-shadow: rgba(0,39,80,0.04) 0 0 0 1px;
+    box-shadow: var(--ring-subtle);
   }}
   .map-top .pill .d{{ width: 6px; height: 6px; border-radius: 9999px; background: var(--chartreuse); }}
   .map-top .meta{{
@@ -1119,11 +1319,11 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
     display: grid;
     grid-template-columns: 1fr 1fr 1fr 1fr;
     gap: 0;
-    border-top: 1px solid rgba(0,39,80,0.06);
+    border-top: 1px solid var(--border-subtle);
   }}
   .map-foot .cell{{
     padding: 16px 20px;
-    border-right: 1px solid rgba(0,39,80,0.06);
+    border-right: 1px solid var(--border-subtle);
   }}
   .map-foot .cell:last-child{{ border-right: 0; }}
   .map-foot .cell .lbl{{
@@ -1163,7 +1363,7 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
     display: grid; grid-template-columns: 1fr auto;
     align-items: start; gap: 24px;
     padding: 24px 28px;
-    border-bottom: 1px solid rgba(0,39,80,0.06);
+    border-bottom: 1px solid var(--border-subtle);
   }}
   .consensus-tag{{
     display: inline-flex; align-items: center; gap: 8px;
@@ -1190,11 +1390,11 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
   }}
   .consensus-d{{
     text-align: right;
-    background: rgba(255,255,255,0.55);
+    background: var(--surface-glass-soft);
     backdrop-filter: blur(4px);
     border-radius: 16px;
     padding: 14px 18px;
-    box-shadow: rgba(0,39,80,0.06) 0 0 0 1px;
+    box-shadow: var(--ring-rule);
     font-family: var(--mono); font-size: 11px;
     color: var(--slate-ink);
     text-transform: uppercase; letter-spacing: 0.04em;
@@ -1211,7 +1411,7 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
     padding: 28px 32px;
     column-count: 2;
     column-gap: 40px;
-    column-rule: 1px solid rgba(0,39,80,0.06);
+    column-rule: 1px solid var(--border-subtle);
     font-size: 16px;
     line-height: 1.55;
     color: var(--midnight-navy);
@@ -1240,7 +1440,7 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
     background: var(--ghost-canvas);
     border-radius: 16px;
     padding: 14px 18px;
-    box-shadow: rgba(0,39,80,0.04) 0 0 0 1px;
+    box-shadow: var(--ring-subtle);
     font-family: var(--serif); font-weight: 400;
     font-size: 18px; line-height: 1.35; letter-spacing: -0.18px;
     color: var(--midnight-navy);
@@ -1265,7 +1465,7 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
     display: grid; grid-template-columns: 1fr auto;
     align-items: start; gap: 24px;
     padding: 24px 28px;
-    border-bottom: 1px solid rgba(0,39,80,0.06);
+    border-bottom: 1px solid var(--border-subtle);
   }}
   .tenth-tag{{
     display: inline-flex; align-items: center; gap: 8px;
@@ -1297,7 +1497,7 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
     background: var(--ghost-canvas);
     border-radius: 16px;
     padding: 14px 18px;
-    box-shadow: rgba(0,39,80,0.04) 0 0 0 1px;
+    box-shadow: var(--ring-subtle);
     font-family: var(--mono); font-size: 11px;
     color: var(--slate-ink);
     text-transform: uppercase; letter-spacing: 0.04em;
@@ -1336,7 +1536,7 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
     background: var(--ghost-canvas);
     border-radius: 16px;
     padding: 18px 20px;
-    box-shadow: rgba(0,39,80,0.04) 0 0 0 1px;
+    box-shadow: var(--ring-subtle);
     font-family: var(--serif); font-weight: 400;
     font-size: 22px; line-height: 1.29; letter-spacing: -0.22px;
     color: var(--midnight-navy);
@@ -1358,7 +1558,7 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
     background: var(--ghost-canvas);
     border-radius: 16px;
     padding: 18px;
-    box-shadow: rgba(0,39,80,0.04) 0 0 0 1px;
+    box-shadow: var(--ring-subtle);
   }}
   .mode .ord{{
     font-family: var(--mono); font-size: 11px;
@@ -1379,7 +1579,7 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
 
   .tenth-foot{{
     padding: 14px 28px;
-    border-top: 1px solid rgba(0,39,80,0.06);
+    border-top: 1px solid var(--border-subtle);
     background: var(--ghost-canvas);
     display: flex; justify-content: space-between;
     font-family: var(--mono); font-size: 12px;
@@ -1400,14 +1600,14 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
     grid-template-columns: 60px 220px 1fr 160px 100px 24px;
     gap: 16px;
     padding: 14px 24px;
-    border-bottom: 1px solid rgba(0,39,80,0.06);
+    border-bottom: 1px solid var(--border-subtle);
     background: var(--ghost-canvas);
     font-family: var(--mono); font-size: 11px;
     color: var(--slate-ink);
     text-transform: uppercase; letter-spacing: 0.04em;
   }}
   .frame{{
-    border-bottom: 1px solid rgba(0,39,80,0.06);
+    border-bottom: 1px solid var(--border-subtle);
     cursor: pointer;
     transition: background .15s ease;
   }}
@@ -1425,24 +1625,34 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
     font-family: var(--mono); font-size: 12px; color: var(--slate-ink);
   }}
   .f-name{{
+    display: inline-flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
     font-family: var(--sans); font-weight: 480;
     font-size: 17px; letter-spacing: -0.09px;
     color: var(--midnight-navy);
   }}
-  .f-tag{{
-    display: inline-flex; align-items: center; gap: 6px;
-    background: var(--pure);
-    border-radius: 9999px;
-    padding: 4px 10px;
-    font-family: var(--mono); font-size: 11px;
-    color: var(--storm);
-    box-shadow: rgba(0,39,80,0.04) 0 0 0 1px;
-    width: max-content;
+  .f-name .f-mark{{
+    font-family: var(--mono); font-size: 9.5px; font-weight: 500;
+    color: var(--midnight-navy);
+    background: var(--chartreuse);
+    text-transform: uppercase; letter-spacing: 0.06em;
+    padding: 2px 7px; border-radius: 9999px;
+    transform: translateY(-1px);
   }}
-  .f-tag .d{{ width: 5px; height: 5px; border-radius: 9999px; background: var(--chartreuse); }}
-  .f-tag b{{ color: var(--midnight-navy); font-weight: 500; }}
+  .f-name .f-mark.farthest{{
+    background: transparent; color: var(--storm);
+    box-shadow: var(--ring-rule);
+  }}
+  .f-lean{{
+    font-family: var(--serif); font-style: italic;
+    font-weight: 400; font-size: 14.5px;
+    line-height: 1.35; letter-spacing: -0.09px;
+    color: var(--storm);
+    max-width: 38ch;
+    text-wrap: balance;
+  }}
+  .f-lean strong{{ color: var(--midnight-navy); font-weight: 500; font-style: normal; }}
   .f-bar{{
-    height: 6px; background: rgba(27,37,64,0.08);
+    height: 6px; background: var(--navy-08);
     border-radius: 9999px;
     position: relative; overflow: hidden;
   }}
@@ -1607,7 +1817,7 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
   .guide-panel-foot{{
     flex-shrink: 0;
     padding: 14px 24px 18px;
-    border-top: 1px solid rgba(0,39,80,0.08);
+    border-top: 1px solid var(--border-rule);
     background: var(--ghost-canvas);
   }}
   .guide-panel .kicker{{
@@ -1638,7 +1848,7 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
     counter-increment: g;
     position: relative;
     padding: 12px 0 12px 30px;
-    border-top: 1px solid rgba(0,39,80,0.06);
+    border-top: 1px solid var(--border-subtle);
     font-size: 13.5px;
     line-height: 1.5;
     color: var(--storm);
@@ -1680,7 +1890,7 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
     max-width: 1200px;
     margin: 80px auto 0;
     padding: 32px;
-    border-top: 1px solid rgba(0,39,80,0.08);
+    border-top: 1px solid var(--border-rule);
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
     gap: 24px;
@@ -1691,15 +1901,146 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
   footer.colophon .center{{ text-align: center; font-style: italic; font-family: var(--serif); }}
   footer.colophon .right{{ text-align: right; }}
 
+  /* === Dark mode ===
+     Activated by JS setting [data-theme="dark"] on <html>. The inline script
+     in <head> resolves the effective theme (stored preference > system) before
+     first paint to avoid FOUC. Fallback when JS is disabled: page renders in
+     light always (acceptable trade-off for static reports). */
+  :root[data-theme="dark"] {{
+    --ghost-canvas:  #0b1124;
+    --pure:          #14192a;
+    --ice-veil:      #0d1734;
+    --midnight-navy: #e6eefb;     /* primary text only */
+    --slate-ink:     #8a92a7;
+    --ash:           #6b7184;
+    --storm:         #b1b5c0;
+    --fog:           #4a5168;
+
+    --on-dark-border-strong: rgba(255,255,255,0.14);
+    --surface-glass-soft:    rgba(20,25,42,0.55);
+
+    --border-faint:  rgba(255,255,255,0.04);
+    --border-subtle: rgba(255,255,255,0.06);
+    --border-rule:   rgba(255,255,255,0.10);
+    --border-strong: rgba(255,255,255,0.14);
+
+    --navy-08:     rgba(255,255,255,0.10);
+    --ring-subtle: rgba(255,255,255,0.06) 0 0 0 1px;
+    --ring-rule:   rgba(255,255,255,0.08) 0 0 0 1px;
+
+    --shadow-xl:     rgba(0,0,0,0.45) 0 56px 72px -16px, rgba(0,0,0,0.40) 0 32px 32px -16px, rgba(0,0,0,0.35) 0 6px 12px -3px, rgba(255,255,255,0.05) 0 0 0 1px;
+    --shadow-md:     rgba(0,0,0,0.35) 0 6px 16px -3px, rgba(255,255,255,0.05) 0 0 0 1px;
+    --shadow-subtle: rgba(255,255,255,0.04) 0 1px 1px 0 inset, rgba(0,0,0,0.30) 0 8px 16px 0, rgba(0,0,0,0.25) 0 4px 12px 0, rgba(0,0,0,0.20) 0 1px 2px 0, rgba(255,255,255,0.05) 0 0 0 1px;
+  }}
+
+  /* Components that use --midnight-navy AS A BACKGROUND need a fixed
+     dark navy in dark mode — the flipped token would invert them. */
+  [data-theme="dark"] .logo .mk         {{ background: #1b2540; color: var(--chartreuse); }}
+  [data-theme="dark"] .sec-eyebrow .n   {{ background: #1b2540; color: var(--on-dark); }}
+  [data-theme="dark"] .consensus-tag    {{ background: #1b2540; color: var(--on-dark); }}
+  [data-theme="dark"] .tenth-tag        {{ background: #1b2540; color: var(--chartreuse); }}
+  [data-theme="dark"] .guide-toggle     {{ background: #1b2540; color: var(--chartreuse);
+                                           box-shadow: rgba(0,0,0,0.55) 0 1px 3px 0,
+                                                       rgba(0,0,0,0.65) 0 12px 24px -12px,
+                                                       rgba(255,255,255,0.06) 0 0.5px 0.5px 0 inset; }}
+  [data-theme="dark"] .guide-toggle:hover{{ background: #243054;
+                                            box-shadow: rgba(0,0,0,0.65) 0 1px 3px 0,
+                                                        rgba(0,0,0,0.75) 0 16px 28px -12px,
+                                                        rgba(255,255,255,0.08) 0 0.5px 0.5px 0 inset; }}
+  /* Closest chip — chartreuse bg, force dark text */
+  [data-theme="dark"] .f-name .f-mark           {{ color: #1b2540; background: var(--chartreuse); }}
+  [data-theme="dark"] .f-name .f-mark.farthest  {{ background: transparent; color: var(--storm);
+                                                   box-shadow: 0 0 0 1px rgba(255,255,255,0.20); }}
+
+  /* Past-reports button: solid white in light → translucent in dark */
+  [data-theme="dark"] .mast-index-btn       {{ background: rgba(255,255,255,0.04);
+                                               border: 1px solid rgba(255,255,255,0.14);
+                                               color: var(--midnight-navy); }}
+  [data-theme="dark"] .mast-index-btn:hover {{ background: var(--chartreuse);
+                                               border-color: var(--chartreuse);
+                                               color: #1b2540; }}
+
+  /* Hard-coded borders that aren't on tokens yet */
+  [data-theme="dark"] .masthead         {{ border-bottom-color: rgba(255,255,255,0.10); }}
+  [data-theme="dark"] footer.colophon   {{ border-top-color: rgba(255,255,255,0.10); }}
+
+  /* Map card surfaces */
+  [data-theme="dark"] .map-svg          {{ background: var(--pure); }}
+  [data-theme="dark"] .map-help summary {{ background: var(--pure); color: var(--storm); }}
+  [data-theme="dark"] .map-help summary:hover,
+  [data-theme="dark"] .map-help[open] summary {{ background: #1b2540; color: var(--chartreuse); }}
+  [data-theme="dark"] .map-help-popover           {{ background: var(--pure); }}
+  [data-theme="dark"] .map-help-popover p         {{ color: var(--midnight-navy); }}
+  [data-theme="dark"] .map-help-popover .map-help-title {{ color: var(--slate-ink); }}
+
+  /* SVG ink overrides — split by element + attribute so fill="none"
+     circles don't accidentally fill in. Order: more specific first. */
+  [data-theme="dark"] .map-svg svg circle[fill="#1b2540"]            {{ fill: var(--midnight-navy); }}
+  [data-theme="dark"] .map-svg svg circle[fill="none"][stroke="#1b2540"] {{ stroke: rgba(255,255,255,0.28); }}
+  [data-theme="dark"] .map-svg svg rect[fill="#1b2540"]              {{ fill: #1b2540; }}
+  [data-theme="dark"] .map-svg svg rect[fill="none"][stroke="#1b2540"]   {{ stroke: rgba(255,255,255,0.36); }}
+  [data-theme="dark"] .map-svg svg g[fill="#1b2540"]                 {{ fill: var(--midnight-navy); }}
+  [data-theme="dark"] .map-svg svg g[fill="#7c8293"]                 {{ fill: var(--slate-ink); }}
+  [data-theme="dark"] .map-svg svg text[fill="#1b2540"]              {{ fill: var(--midnight-navy); }}
+  [data-theme="dark"] .map-svg svg text[fill="#d0f100"]              {{ fill: var(--chartreuse); }}
+  [data-theme="dark"] .map-svg svg text[fill="#6b7184"]              {{ fill: var(--storm); }}
+  [data-theme="dark"] .map-svg svg text[fill="#7c8293"]              {{ fill: var(--slate-ink); }}
+  [data-theme="dark"] .map-svg svg g[stroke="rgba(0,39,80,0.06)"]    {{ stroke: rgba(255,255,255,0.06); }}
+  [data-theme="dark"] .map-svg svg g[stroke="rgba(0,39,80,0.10)"]    {{ stroke: rgba(255,255,255,0.10); }}
+  [data-theme="dark"] .map-svg svg g[stroke="rgba(27,37,64,0.20)"]   {{ stroke: rgba(255,255,255,0.16); }}
+
+  /* Subtle pill/header backgrounds layered on dark surface */
+  [data-theme="dark"] .map-top .pill                    {{ background: rgba(255,255,255,0.04); }}
+  [data-theme="dark"] .frames-head                      {{ background: rgba(255,255,255,0.02); }}
+  [data-theme="dark"] .tenth-foot                       {{ background: rgba(255,255,255,0.02); }}
+  [data-theme="dark"] .mode                             {{ background: rgba(255,255,255,0.03); }}
+  [data-theme="dark"] .tenth-body .pull,
+  [data-theme="dark"] .consensus-body .pull,
+  [data-theme="dark"] .f-body .pull                     {{ background: rgba(255,255,255,0.04); }}
+  [data-theme="dark"] .frame:hover                      {{ background: rgba(255,255,255,0.02); }}
+  [data-theme="dark"] .frame.open                       {{ background: rgba(255,255,255,0.03); }}
+  [data-theme="dark"] .guide-panel-foot                 {{ background: rgba(255,255,255,0.03); }}
+
+  /* Painting on hero — slight dim for visual continuity */
+  [data-theme="dark"] .hero-bg                          {{ filter: brightness(0.75); }}
+
+  /* === Theme toggle button === */
+  .theme-toggle{{
+    appearance: none; -webkit-appearance: none;
+    background: transparent;
+    border: 1px solid var(--border-strong);
+    color: var(--midnight-navy);
+    width: 32px; height: 32px;
+    border-radius: 999px;
+    cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
+    flex-shrink: 0;
+  }}
+  .theme-toggle:hover{{ background: var(--border-subtle); }}
+  .theme-toggle:focus-visible{{ outline: 2px solid var(--chartreuse); outline-offset: 2px; }}
+  .theme-toggle svg{{ width: 16px; height: 16px; display: block; }}
+  .theme-toggle .icon-moon{{ display: none; }}
+  .theme-toggle .icon-sun{{ display: block; }}
+  [data-theme="dark"] .theme-toggle{{
+    border-color: rgba(255,255,255,0.18);
+    color: var(--chartreuse);
+  }}
+  [data-theme="dark"] .theme-toggle:hover{{ background: rgba(255,255,255,0.06); }}
+  [data-theme="dark"] .theme-toggle .icon-sun{{ display: none; }}
+  [data-theme="dark"] .theme-toggle .icon-moon{{ display: block; }}
+
   @media (max-width: 920px){{
     .hero-inner{{ grid-template-columns: 1fr; padding: 40px 24px 24px; }}
-    .hero-stats{{ grid-template-columns: 1fr 1fr; }}
+    .hero-quote.consensus{{ display: none; }}
+    .hero-q{{ font-size: 15px; }}
     .map-foot{{ grid-template-columns: 1fr 1fr; }}
-    .map-foot .cell{{ border-bottom: 1px solid rgba(0,39,80,0.06); }}
+    .map-foot .cell{{ border-bottom: 1px solid var(--border-subtle); }}
     .modes{{ grid-template-columns: 1fr; }}
     .frames-head{{ display: none; }}
-    .frame-row{{ grid-template-columns: 40px 1fr 80px 16px; }}
-    .frame-row .f-tag, .frame-row .f-bar{{ display: none; }}
+    .frame-row{{ grid-template-columns: 40px 1fr 80px 16px; row-gap: 4px; }}
+    .frame-row .f-bar{{ display: none; }}
+    .frame-row .f-lean{{ grid-column: 2; grid-row: 2; font-size: 13px; max-width: none; }}
     .f-body{{ padding: 4px 24px 22px 24px; }}
     .tenth-top{{ grid-template-columns: 1fr; }}
     .tenth-d-stat{{ text-align: left; }}
@@ -1717,42 +2058,40 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
     <div class="mast-meta">
       <b>{t(locale, "masthead_report")} #{report_id}</b><span class="sep">·</span>{timestamp}<span class="sep">·</span>v0.4
     </div>
-    <a class="mast-index-btn" href="../index.html" aria-label="{t(locale, "masthead_index_aria")}">
-      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M2 3.5h12M2 8h12M2 12.5h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-      <span>{t(locale, "masthead_index_btn")}</span>
-    </a>
+    <div class="mast-actions">
+      <a class="mast-index-btn" href="../index.html" aria-label="{t(locale, "masthead_index_aria")}">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M2 3.5h12M2 8h12M2 12.5h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <span>{t(locale, "masthead_index_btn")}</span>
+      </a>
+      <button type="button" class="theme-toggle" aria-label="{t(locale, "theme_toggle_aria")}" title="{t(locale, "theme_toggle_aria")}">
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+    </div>
   </header>
 
   <section class="hero">
     <div class="hero-bg" aria-hidden="true"></div>
     <div class="hero-inner">
       <div>
+        <div class="hero-verdict">
+          <span>{t(locale, "hero_verdict_consensus")}</span><span class="sep">&middot;</span><b>{html_mod.escape(hero_verdict_label)}</b><span class="sep">&middot;</span><span>&sigma; {spread_sigma:.3f}</span>
+        </div>
         <h1 class="hero-h">{t(locale, "hero_h_a")}<br><em>{t(locale, "hero_h_b")}</em></h1>
         <p class="hero-dek">{t(locale, "hero_dek")}</p>
       </div>
 
-      <div class="hero-stats">
-        <div class="hero-stat">
-          <div class="lbl">{t(locale, "stat_tenth_d")}</div>
-          <div class="val acc">{tenth_distance:.3f}</div>
-          <div class="sub">{t(locale, "stat_vs_centroid")}</div>
-        </div>
-        <div class="hero-stat">
-          <div class="lbl">{t(locale, "stat_closest")}</div>
-          <div class="val">{min_frame_distance:.3f}</div>
-          <div class="sub">{html_mod.escape(closest_name)}</div>
-        </div>
-        <div class="hero-stat">
-          <div class="lbl">{t(locale, "stat_most_divergent")}</div>
-          <div class="val">{max_frame_distance:.3f}</div>
-          <div class="sub">{html_mod.escape(most_divergent_name)}</div>
-        </div>
-        <div class="hero-stat" title="Consensus Fragility Index — see docs/cfi-spec.md">
-          <div class="lbl">{t(locale, "stat_verdict")}</div>
-          <div class="val">{html_mod.escape(hero_verdict_label)}</div>
-          <div class="sub">{html_mod.escape(hero_verdict_sub)}</div>
-          <div class="sub" style="opacity:.7;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.04em;margin-top:2px">{html_mod.escape(hero_cfi_line)}</div>
-        </div>
+      <div class="hero-quotes">
+        <a class="hero-quote consensus" href="#consensus">
+          <div class="mark"><span class="d"></span>{t(locale, "hero_quote_nine_mark")}</div>
+          <blockquote class="hero-q">{html_mod.escape(nine_lean)}</blockquote>
+          <div class="cite">{t(locale, "hero_quote_consensus_cite")} &middot; &sigma; {spread_sigma:.3f}</div>
+        </a>
+        <a class="hero-quote tenth" href="#tenth">
+          <div class="mark"><span class="ord">{t(locale, "hero_quote_tenth_mark_ord")}</span> &middot; {t(locale, "hero_quote_tenth_mark_label")}</div>
+          <blockquote class="hero-q">{tenth_lean_html}</blockquote>
+          <div class="cite">{t(locale, "hero_quote_tenth_cite")} &middot; d {tenth_distance:.3f}</div>
+        </a>
       </div>
     </div>
   </section>
@@ -1821,7 +2160,7 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
 
     {consensus_block_html}
 
-    <article class="tenth-card">
+    <article class="tenth-card" id="tenth">
       <header class="tenth-top">
         <div>
           <div class="tenth-tag"><span class="d"></span>{t(locale, "tenth_tag_label")}</div>
@@ -1859,7 +2198,7 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
       <div class="frames-head">
         <span>{t(locale, "frames_head_idx")}</span>
         <span>{t(locale, "frames_head_frame")}</span>
-        <span>{t(locale, "frames_head_status")}</span>
+        <span>{t(locale, "frames_head_lean")}</span>
         <span>{t(locale, "frames_head_distance")}</span>
         <span style="text-align:right;">{t(locale, "frames_head_d")}</span>
         <span></span>
@@ -1929,6 +2268,30 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
         btn.setAttribute('aria-expanded', 'false');
       }}
     }});
+  }})();
+
+  /* Theme toggle — cycles light <-> dark, persists to localStorage. */
+  (function(){{
+    var btn = document.querySelector('.theme-toggle');
+    if (!btn) return;
+    btn.addEventListener('click', function(){{
+      var current = document.documentElement.getAttribute('data-theme');
+      var next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      try {{ localStorage.setItem('henge-theme', next); }} catch (e) {{}}
+    }});
+    /* Live-react to system changes only when user hasn't picked. */
+    if (window.matchMedia) {{
+      var mq = window.matchMedia('(prefers-color-scheme: dark)');
+      var handler = function(e){{
+        var stored = null;
+        try {{ stored = localStorage.getItem('henge-theme'); }} catch(_){{}}
+        if (stored === 'light' || stored === 'dark') return;
+        document.documentElement.setAttribute('data-theme', e.matches ? 'dark' : 'light');
+      }};
+      if (mq.addEventListener) mq.addEventListener('change', handler);
+      else if (mq.addListener) mq.addListener(handler);
+    }}
   }})();
 </script>
 </body>
