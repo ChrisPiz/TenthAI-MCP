@@ -34,6 +34,12 @@ from .scoping import (
     generate_questions,
     run_scoping,
 )
+from .claims import (
+    ClaimVerification,
+    ENABLE_CLAIM_VERIFICATION,
+    extract_claims,
+    verify_claims,
+)
 from .meta_frame import (
     ENABLE_META_FRAME,
     MetaFrameResult,
@@ -357,6 +363,19 @@ async def decide(
     successful_frames = [(f, r) for f, r, s, _ in results[:9] if s == "ok"]
     consensus_text, consensus_usage = await synthesize_consensus(client, successful_frames, question)
 
+    # Phase 6: extract falsifiable claims from the consensus, then cross-lab
+    # verify each against the 9 advisors. Catches the case where Haiku
+    # hallucinated a claim that no advisor actually wrote.
+    claim_verifications: list[ClaimVerification] = []
+    extract_claims_usage: dict | None = None
+    verify_claims_usage: dict | None = None
+    if ENABLE_CLAIM_VERIFICATION and consensus_text:
+        extracted, extract_claims_usage = await extract_claims(consensus_text)
+        if extracted:
+            claim_verifications, verify_claims_usage = await verify_claims(
+                extracted, successful_frames
+            )
+
     # v0.5 fix: previously embedded ALL 10 responses, including the
     # "[failed: ...]" stub for failed frames. That polluted the centroid and
     # silently corrupted distances when 1-2 frames failed (8/9 minimum allows
@@ -453,6 +472,16 @@ async def decide(
                 "what_discarded": informed.what_discarded,
             } if informed is not None else None
         ),
+        claims=[
+            {
+                "claim_text": v.claim_text,
+                "claim_type": v.claim_type,
+                "supporting_frames": v.supporting_frames,
+                "contesting_frames": v.contesting_frames,
+                "support_strength": v.support_strength,
+            }
+            for v in claim_verifications
+        ],
     )
 
     n_frames_succeeded = sum(1 for _, _, s, _ in results[:9] if s == "ok")
@@ -525,6 +554,16 @@ async def decide(
                 "gpt5_usage": informed.gpt5_usage,
             },
         },
+        "consensus_claims": [
+            {
+                "claim_text": v.claim_text,
+                "claim_type": v.claim_type,
+                "supporting_frames": v.supporting_frames,
+                "contesting_frames": v.contesting_frames,
+                "support_strength": v.support_strength,
+            }
+            for v in claim_verifications
+        ],
         "summary": {
             # legacy fields — deprecated, kept until v1.0 for compat
             "tenth_man_distance": tenth_distance,
@@ -648,6 +687,16 @@ async def decide(
             "distance": round(tenth_distance, 3) if tenth_distance is not None else None,
             "response": results[9][1],  # full text
         },
+        "consensus_claims": [
+            {
+                "claim_text": v.claim_text,
+                "claim_type": v.claim_type,
+                "supporting_frames": v.supporting_frames,
+                "contesting_frames": v.contesting_frames,
+                "support_strength": v.support_strength,
+            }
+            for v in claim_verifications
+        ],
         "summary": {
             # legacy — deprecated, kept until v1.0
             "tenth_man_distance": (

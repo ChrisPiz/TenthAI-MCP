@@ -516,6 +516,77 @@ def _informed_card_html(informed_dict, locale: str = "es") -> str:
     )
 
 
+def _claims_panel_html(claims_list, locale: str = "es") -> str:
+    """Render the Claims+support panel after the consensus.
+
+    ``claims_list`` is a list of dicts with claim_text, claim_type,
+    supporting_frames, contesting_frames, support_strength. May be None
+    (legacy reports) — returns "" in that case.
+    """
+    if not claims_list:
+        return ""
+
+    title = "Claims del consensus + soporte" if locale == "es" else "Consensus claims + support"
+    sub = (
+        "Sonnet extrae proposiciones falsables del consensus; gpt-5 cross-lab verifica cada una contra los 9."
+        if locale == "es"
+        else "Sonnet extracts falsifiable claims from the consensus; gpt-5 cross-lab verifies each against the 9."
+    )
+
+    sup_label = "Sostienen" if locale == "es" else "Support"
+    con_label = "Contradicen" if locale == "es" else "Contest"
+    none_label = "—"
+
+    strength_label = {
+        "strong":      ("alto", "strong") if locale == "es" else ("strong", "strong"),
+        "moderate":    ("moderado", "moderate") if locale == "es" else ("moderate", "moderate"),
+        "weak":        ("débil", "weak") if locale == "es" else ("weak", "weak"),
+        "unsupported": ("sin soporte", "unsupported") if locale == "es" else ("unsupported", "unsupported"),
+    }
+    type_label = {
+        "factual":      "factual",
+        "prescriptive": "prescriptiva" if locale == "es" else "prescriptive",
+        "causal":       "causal",
+        "unknown":      "?",
+    }
+
+    items_html = []
+    for c in claims_list:
+        text = html_mod.escape(str(c.get("claim_text", "")).strip())
+        ctype = c.get("claim_type", "unknown")
+        strength = c.get("support_strength", "unsupported")
+        s_text, s_class = strength_label.get(strength, ("?", "unsupported"))
+        sup = c.get("supporting_frames") or []
+        con = c.get("contesting_frames") or []
+        sup_n = len(sup)
+        sup_names = ", ".join(html_mod.escape(s) for s in sup) if sup else none_label
+        con_names = ", ".join(html_mod.escape(s) for s in con) if con else none_label
+
+        items_html.append(
+            f'<li class="claim-item claim-{html_mod.escape(s_class)}">'
+            f'<div class="claim-row1">'
+            f'<span class="claim-type">{html_mod.escape(type_label.get(ctype, "?"))}</span>'
+            f'<span class="claim-strength claim-strength-{html_mod.escape(s_class)}">{html_mod.escape(s_text)}</span>'
+            f'</div>'
+            f'<p class="claim-text">{text}</p>'
+            f'<div class="claim-meta">'
+            f'<span class="claim-support"><b>{html_mod.escape(sup_label)}</b> ({sup_n}/9): {sup_names}</span>'
+            f'<span class="claim-contest"><b>{html_mod.escape(con_label)}:</b> {con_names}</span>'
+            f'</div>'
+            f'</li>'
+        )
+
+    return (
+        '<section class="claims-panel">'
+        f'  <header class="claims-head">'
+        f'    <h3>{html_mod.escape(title)}</h3>'
+        f'    <p class="claims-sub">{html_mod.escape(sub)}</p>'
+        f'  </header>'
+        f'  <ul class="claims-list">{"".join(items_html)}</ul>'
+        '</section>'
+    )
+
+
 def _split_consensus_title(text: str):
     """Pull a leading ``# Title`` line out of the consensus output.
 
@@ -902,7 +973,7 @@ def _build_frame_card_with_flag(frame, response, status, distance, max_dist, idx
     """
 
 
-def render(question, results, coords_2d, distances, provider, model, cost_estimate_usd, consensus=None, cfi_data=None, meta_frame=None, informed=None):
+def render(question, results, coords_2d, distances, provider, model, cost_estimate_usd, consensus=None, cfi_data=None, meta_frame=None, informed=None, claims=None):
     """Render the TenthAI/Antimetal-style disagreement report. Returns full HTML.
 
     Persistence and browser-open are handled by the caller (server.py orchestrates
@@ -916,6 +987,7 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
     locale = detect_locale(question)
     meta_html = _meta_card_html(meta_frame, locale=locale)
     informed_card_html = _informed_card_html(informed, locale=locale) if informed else ""
+    claims_panel_html = _claims_panel_html(claims, locale=locale) if claims else ""
 
     frames = [r[0] for r in results]
     responses = [r[1] for r in results]
@@ -1741,6 +1813,47 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
   [data-theme="dark"] .informed-list{{ color: var(--on-dark-92); }}
   [data-theme="dark"] .informed-list.discarded li{{ color: var(--on-dark-62); }}
 
+  /* Claims panel */
+  .claims-panel{{
+    margin: 16px 0 0;
+    padding: 18px 22px;
+    border: 1px solid var(--border-rule);
+    border-radius: 14px;
+    background: var(--surface-glass-soft);
+    box-shadow: var(--ring-rule);
+    font-family: var(--sans);
+  }}
+  .claims-head h3{{ margin: 0 0 4px; font-family: var(--serif); font-size: 20px; font-weight: 500; color: var(--midnight-navy); }}
+  .claims-sub{{ margin: 0 0 12px; font-size: 13px; color: var(--storm); }}
+  .claims-list{{ list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }}
+  .claim-item{{
+    padding: 10px 14px; border: 1px solid var(--border-subtle); border-radius: 10px;
+    background: white;
+  }}
+  .claim-row1{{ display: flex; gap: 8px; align-items: center; margin-bottom: 6px; }}
+  .claim-type{{
+    font-size: 10px; font-family: var(--mono); text-transform: uppercase;
+    letter-spacing: 0.06em; color: var(--storm);
+    padding: 2px 6px; border: 1px solid var(--border-subtle); border-radius: 999px;
+  }}
+  .claim-strength{{
+    font-size: 10px; font-family: var(--mono); text-transform: uppercase;
+    letter-spacing: 0.06em; padding: 2px 8px; border-radius: 999px;
+  }}
+  .claim-strength-strong{{      background: rgba(0,150,80,0.12);   color: #047a47;  border: 1px solid rgba(0,150,80,0.30); }}
+  .claim-strength-moderate{{    background: var(--chartreuse-14);  color: var(--midnight-navy); border: 1px solid var(--chartreuse-32); }}
+  .claim-strength-weak{{        background: rgba(220,140,0,0.10);  color: #a36800;  border: 1px solid rgba(220,140,0,0.30); }}
+  .claim-strength-unsupported{{ background: rgba(200,40,40,0.10);  color: #b32424;  border: 1px solid rgba(200,40,40,0.32); }}
+  .claim-text{{ margin: 0 0 8px; font-size: 14px; line-height: 1.5; color: var(--midnight-navy); }}
+  .claim-meta{{ display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--storm); }}
+  [data-theme="dark"] .claims-panel{{ background: var(--surface-glass-08); border-color: var(--on-dark-border-strong); }}
+  [data-theme="dark"] .claims-head h3{{ color: var(--on-dark); }}
+  [data-theme="dark"] .claims-sub{{ color: var(--on-dark-78); }}
+  [data-theme="dark"] .claim-item{{ background: rgba(0,0,0,0.20); border-color: var(--on-dark-border-strong); }}
+  [data-theme="dark"] .claim-text{{ color: var(--on-dark-92); }}
+  [data-theme="dark"] .claim-meta{{ color: var(--on-dark-78); }}
+  [data-theme="dark"] .claim-type{{ color: var(--on-dark-78); border-color: var(--on-dark-border-strong); }}
+
   /* Frames table */
   .frames{{
     margin-top: 4px;
@@ -2315,6 +2428,8 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
     </section>
 
     {consensus_block_html}
+
+    {claims_panel_html}
 
     <article class="tenth-card" id="tenth">
       <header class="tenth-top">
