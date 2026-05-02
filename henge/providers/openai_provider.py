@@ -1,0 +1,71 @@
+"""OpenAIProvider — wraps openai.AsyncOpenAI with canonical id mapping.
+
+If ``gpt-5`` is not yet available at implementation time, update ``_RAW_MODEL``
+to point ``openai/gpt-5`` to the frontier model actually shipped (e.g.
+``gpt-5-mini`` or current frontier). The canonical id is the contract — do
+NOT change it elsewhere.
+
+OpenAI normalisation notes:
+- ``messages`` is system+user (no system kwarg like Anthropic).
+- ``max_completion_tokens`` replaces ``max_tokens`` for newer models.
+- Token usage exposed as ``prompt_tokens``/``completion_tokens``.
+- ``finish_reason`` lives on each choice.
+"""
+from __future__ import annotations
+
+from typing import Any
+
+from henge.providers.base import (
+    CompletionRequest,
+    CompletionResponse,
+    ProviderBase,
+)
+from henge.providers.pricing import cost_for
+
+_RAW_MODEL = {
+    "openai/gpt-5": "gpt-5",
+}
+
+
+class OpenAIProvider(ProviderBase):
+    def __init__(self, client: Any | None = None):
+        if client is None:
+            from openai import AsyncOpenAI
+            client = AsyncOpenAI()
+        self._client = client
+
+    def supports(self, model_id: str) -> bool:
+        return model_id in _RAW_MODEL
+
+    async def complete(
+        self, model_id: str, req: CompletionRequest
+    ) -> CompletionResponse:
+        if not self.supports(model_id):
+            raise ValueError(f"OpenAIProvider does not support {model_id}")
+        raw = _RAW_MODEL[model_id]
+
+        completion = await self._client.chat.completions.create(
+            model=raw,
+            messages=[
+                {"role": "system", "content": req.system},
+                {"role": "user", "content": req.user},
+            ],
+            max_completion_tokens=req.max_tokens,
+            temperature=req.temperature,
+        )
+
+        choice = completion.choices[0]
+        usage = getattr(completion, "usage", None)
+        return CompletionResponse(
+            text=choice.message.content or "",
+            input_tokens=int(getattr(usage, "prompt_tokens", 0) or 0),
+            output_tokens=int(getattr(usage, "completion_tokens", 0) or 0),
+            model=model_id,
+            raw_model=raw,
+            finish_reason=str(getattr(choice, "finish_reason", "") or ""),
+        )
+
+    def cost_usd(
+        self, model_id: str, input_tokens: int, output_tokens: int
+    ) -> float:
+        return cost_for(model_id, input_tokens, output_tokens)
