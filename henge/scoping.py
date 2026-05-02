@@ -291,3 +291,36 @@ async def finalize_context(question: str, context: str) -> CanonicalContext:
         flags=flags,
         opus_usage=_usage_dict(resp),
     )
+
+
+# Back-compat shim — server.py used to import (HAIKU, generate_questions).
+# Phase 3 introduces the multi-step pipeline above; this shim adapts the old
+# call shape to the new ScopingResult so any code path that still imports
+# the legacy names keeps working until Phase 8 cleanup.
+HAIKU = "claude-haiku-4-5-20251001"
+
+
+async def generate_questions(client, question):
+    """Legacy shape: returns (list_of_strings, usage_dict_or_None).
+
+    The ``client`` arg is ignored — scoping now goes through the registry.
+    Aggregates usage from Haiku + (optional) gpt-5 into a single dict so cost
+    accounting upstream still picks it up.
+    """
+    result = await run_scoping(question)
+    questions = [q.text for q in result.questions]
+    usage_total: dict | None = None
+    if result.haiku_usage:
+        usage_total = dict(result.haiku_usage)
+    if result.gpt5_usage:
+        if usage_total is None:
+            usage_total = dict(result.gpt5_usage)
+        else:
+            usage_total = {
+                "model": usage_total["model"],
+                "input_tokens": usage_total["input_tokens"] + result.gpt5_usage["input_tokens"],
+                "output_tokens": usage_total["output_tokens"] + result.gpt5_usage["output_tokens"],
+            }
+    if not questions:
+        return None, usage_total
+    return questions, usage_total

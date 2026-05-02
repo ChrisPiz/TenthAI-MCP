@@ -27,7 +27,13 @@ from .consensus import HAIKU as CONSENSUS_HAIKU
 from .consensus import synthesize_consensus
 from .embed import embed_responses, project_mds
 from .scoping import HAIKU as SCOPING_HAIKU
-from .scoping import generate_questions
+from .scoping import (
+    CanonicalContext,
+    ScopingResult,
+    finalize_context,
+    generate_questions,
+    run_scoping,
+)
 from .storage import make_report_dir, make_report_id, write_index, write_record
 from .updater import get_update_status, update_message
 from .viz import compute_cfi, consensus_verdict, render
@@ -234,22 +240,45 @@ async def decide(
     client = AsyncAnthropic()
 
     if not context and not skip_scoping:
-        questions, scoping_usage = await generate_questions(client, question)
-        if questions is None:
+        scoping_result = await run_scoping(question)
+        scoping_usage: dict | None = None
+        if scoping_result.haiku_usage:
+            scoping_usage = dict(scoping_result.haiku_usage)
+        if scoping_result.gpt5_usage:
+            if scoping_usage is None:
+                scoping_usage = dict(scoping_result.gpt5_usage)
+            else:
+                scoping_usage = {
+                    "model": scoping_usage["model"],
+                    "input_tokens": scoping_usage["input_tokens"] + scoping_result.gpt5_usage["input_tokens"],
+                    "output_tokens": scoping_usage["output_tokens"] + scoping_result.gpt5_usage["output_tokens"],
+                }
+        if not scoping_result.questions:
             return {
                 "status": "scoping_failed",
                 "reason": "Could not generate scoping questions. Pass skip_scoping=True or provide context to proceed.",
             }
         return {
             "status": "needs_context",
-            "questions": questions,
+            "questions": [
+                {
+                    "id": q.id,
+                    "text": q.text,
+                    "source": q.source,
+                    "challenges_assumption": q.challenges_assumption,
+                }
+                for q in scoping_result.questions
+            ],
+            "adversarial_count": scoping_result.adversarial_count,
             "note": (
                 "Present these questions to the user in a numbered message, wait for "
                 "their reply, then call decide() again with question + their answers "
-                "as context. ALSO tell the user — at the bottom of the questions "
-                "message — that they can skip the questions and run immediately by "
-                "saying 'skip' / 'omitir' / 'corre ya', in which case call decide "
-                "again with skip_scoping=True."
+                "as context. Adversarial questions (source='adversarial') challenge a "
+                "hidden assumption in the original question — surface those distinctly. "
+                "ALSO tell the user — at the bottom of the questions message — that "
+                "they can skip the questions and run immediately by saying 'skip' / "
+                "'omitir' / 'corre ya', in which case call decide again with "
+                "skip_scoping=True."
             ),
             "skip_hint": (
                 "Optional escape hatch: if you'd rather not answer, just say 'skip' "
@@ -262,8 +291,20 @@ async def decide(
 
     primary_temperature = run_temperature if k_runs > 1 else TEMPERATURE
 
+    # Phase 3: when the user provided free-form context, run Opus canonicalization
+    # so the 9 frames see a tight executive summary instead of raw user prose.
+    # Behind HENGE_ENABLE_CANONICAL_CONTEXT (default true). Falls back to passthrough
+    # on flag=false or Opus failure (graceful, see scoping.finalize_context).
+    canonical_usage: dict | None = None
+    if context and not skip_scoping:
+        canonical = await finalize_context(question, context)
+        effective_context = canonical.summary
+        canonical_usage = canonical.opus_usage
+    else:
+        effective_context = context
+
     try:
-        results = await run_agents(client, question, context, temperature=primary_temperature)
+        results = await run_agents(client, question, effective_context, temperature=primary_temperature)
     except RuntimeError as exc:
         return {"error": "agents_failed", "reason": str(exc)}
 
@@ -299,7 +340,7 @@ async def decide(
     advisor_usages = [u for _, _, _, u in results]
     cost_breakdown = pricing.total_cost(
         advisor_usages=advisor_usages,
-        scoping_usage=scoping_usage if not context and not skip_scoping else None,
+        scoping_usage=None,  # scoping returns early before reaching here
         consensus_usage=consensus_usage,
         embedding_model=embed_result["model"],
         embedding_input_tokens=0,
@@ -379,7 +420,7 @@ async def decide(
             {"frame": f, "status": s, "usage": u}
             for f, _, s, u in results
         ],
-        "scoping": scoping_usage if not context and not skip_scoping else None,
+        "scoping": None,  # scoping returns early before reaching here
         "consensus": consensus_usage,
         "embedding": {
             "provider": embed_result["provider"],
