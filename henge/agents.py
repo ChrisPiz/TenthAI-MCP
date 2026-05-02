@@ -68,8 +68,13 @@ PROMPTS_HASH = _compute_prompts_hash()
 
 SONNET = "claude-sonnet-4-6"
 OPUS = "claude-opus-4-7"
-FRAME_MAX_TOKENS = 1500   # 4-6 paragraphs of reasoning per frame
-TENTH_MAX_TOKENS = 3500   # 5-7 paragraphs for tenth-man (more cognitively demanding)
+# gpt-5 (used by 6 of 9 frames) is a reasoning model that burns ~1500+
+# tokens internally on chain-of-thought before producing visible output.
+# Below ~2500 the visible content can be empty (finish_reason='length').
+# 4000 leaves headroom for reasoning + 4-6 paragraphs of visible content.
+# Same reasoning applies to TENTH_MAX_TOKENS — Opus 4.7 is also reasoning.
+FRAME_MAX_TOKENS = 4000   # 4-6 paragraphs of reasoning per frame
+TENTH_MAX_TOKENS = 6000   # 5-7 paragraphs for tenth-man (more cognitively demanding)
 
 # v0.5: temperature=0 pinned across all calls. Reproducibility > stylistic
 # variance — see WHITEPAPER.md "Pre-registered runtime decisions".
