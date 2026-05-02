@@ -22,6 +22,8 @@ import os
 import re
 from datetime import datetime
 
+from henge.config.frame_assignment import FRAME_MODEL_MAP
+
 
 # ───────── Locale ─────────
 # A) auto-detect from the question's character/word frequency
@@ -194,6 +196,8 @@ TRANSLATIONS = {
         "guide_rule_5": "<b>Read the metrics.</b> High fragility + high tenth-man distance = weak consensus, dissent matters more. Low fragility = robust consensus, dissent is rhetorical.",
         "guide_rule_6": "<b>Apply the asymmetric test.</b> If the tenth names a risk you recognize as real in your life, add it even if you don't switch sides. If you don't recognize it, discard.",
         "guide_rule_7": "<b>You decide.</b> No advisor knows your full context. The report exposes tensions; the choice is yours.",
+        "guide_rule_8": "<b>The meta-frame audits your question first.</b> If it suggests reformulating, the run short-circuits before the 9 advisors fire — read the suggested rewrite carefully, it usually sharpens the actual decision.",
+        "guide_rule_9": "<b>Map points are coloured by model family.</b> Blue = Anthropic, green = OpenAI. If the dispersion comes from one family alone, the disagreement may be a model-style artefact more than a true disagreement on the substance.",
         "guide_foot": "Consensus protects against the obvious error. The tenth protects against the shared one. You need both lenses — and neither replaces your judgment.",
         "colophon_tagline": "Nine voices aligned aren't signal — just coherent noise.",
     },
@@ -285,6 +289,8 @@ TRANSLATIONS = {
         "guide_rule_5": "<b>Mira las métricas.</b> Fragilidad alta + distancia 10º alta = consenso débil, el disenso pesa más. Fragilidad baja = consenso robusto, el disenso es retórico.",
         "guide_rule_6": "<b>Aplica el test asimétrico.</b> Si el décimo nombra un riesgo que reconoces como real en tu vida, súmalo aunque no cambies de bando. Si no lo reconoces, descártalo.",
         "guide_rule_7": "<b>Tú decides.</b> Ningún consejero conoce tu contexto completo. El reporte expone tensiones; la elección es tuya.",
+        "guide_rule_8": "<b>El meta-frame audita tu pregunta primero.</b> Si sugiere reformular, la corrida se corta antes de gastar en los 9 consejeros — lee la reformulación propuesta con cuidado, suele afilar la decisión real.",
+        "guide_rule_9": "<b>Los puntos del mapa se colorean por familia de modelo.</b> Azul = Anthropic, verde = OpenAI. Si la dispersión viene de una sola familia, la divergencia puede ser un artefacto de estilo y no un desacuerdo de fondo.",
         "guide_foot": "El consenso protege contra el error obvio. El décimo protege contra el error compartido. Necesitas ambos lentes — y ninguno reemplaza tu juicio.",
         "colophon_tagline": "Nueve voces alineadas no son señal — son ruido coherente.",
     },
@@ -729,6 +735,30 @@ def _stddev(values):
     return math.sqrt(sum((v - mean) ** 2 for v in values) / len(values))
 
 
+# ───────── Phase 9: family colors ─────────
+# Anthropic stays in the existing midnight-navy palette (matches consensus card).
+# OpenAI gets a distinct green that reads as "different lab" without screaming.
+_FAMILY_COLOR = {
+    "anthropic": "var(--midnight-navy)",
+    "openai":    "#1b8c5a",  # forest green, accessible on both light + dark
+}
+
+
+def _family_for_model(model_id: str) -> str:
+    if not model_id:
+        return "anthropic"
+    if model_id.startswith("openai/"):
+        return "openai"
+    return "anthropic"
+
+
+def _color_for_frame(frame_name: str) -> str:
+    """Return CSS color for a frame's assigned canonical model family."""
+    model_id = FRAME_MODEL_MAP.get(frame_name, "")
+    family = _family_for_model(model_id)
+    return _FAMILY_COLOR.get(family, "var(--midnight-navy)")
+
+
 # ───────── Map SVG (TenthAI v3 layout) ─────────
 # viewBox 1200x638, centroid at (600, 319), three concentric distance rings,
 # nine consensus nodes in midnight-navy, tenth-man with chartreuse halo.
@@ -844,8 +874,9 @@ def _build_map_svg(coords_2d, frames, distances, max_frame_dist, min_frame_dist,
             suffix = " · " + t(locale, "flag_closest")
         elif is_farthest:
             suffix = " · " + t(locale, "flag_farthest")
+        node_color = _color_for_frame(frame)
         parts.append('<g>')
-        parts.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="{marker_r}" fill="#1b2540"/>')
+        parts.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="{marker_r}" fill="{node_color}"/>')
         if is_closest:
             parts.append(
                 f'<circle cx="{x:.1f}" cy="{y:.1f}" r="14" fill="none" '
@@ -950,6 +981,12 @@ def _build_frame_card_with_flag(frame, response, status, distance, max_dist, idx
         flag_html = f' <span class="f-mark{kind_class}">{html_mod.escape(flag)}</span>'
     else:
         flag_html = ""
+    # Phase 9: canonical model-id chip
+    chip_html = ""
+    cid = FRAME_MODEL_MAP.get(frame, "")
+    if cid:
+        fam = _family_for_model(cid)
+        chip_html = f'<span class="frame-model-chip frame-model-{fam}">{html_mod.escape(cid)}</span>'
     if status != "ok":
         lean_html = "<em>frame failed</em>"
     elif lean:
@@ -960,7 +997,7 @@ def _build_frame_card_with_flag(frame, response, status, distance, max_dist, idx
     <article class="frame{open_class}" data-frame="{html_mod.escape(frame)}">
       <div class="frame-row">
         <span class="f-idx">#{idx_str}</span>
-        <span class="f-name">{html_mod.escape(frame)}{flag_html}</span>
+        <span class="f-name">{html_mod.escape(frame)}{flag_html}{chip_html}</span>
         <span class="f-lean">{lean_html}</span>
         <span class="f-bar"><i style="width:{bar_pct:.0f}%"></i></span>
         <span class="f-d">d <b>{distance:.3f}</b></span>
@@ -1038,6 +1075,15 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
         max_frame_dist=max_frame_distance,
         min_frame_dist=min_frame_distance,
         locale=locale,
+    )
+
+    # Phase 9: family-color legend below the SVG
+    map_legend_html = (
+        '<div class="map-legend">'
+        f'  <span class="legend-dot" style="background: {_FAMILY_COLOR["anthropic"]};"></span>Anthropic'
+        f'  <span class="legend-dot" style="background: {_FAMILY_COLOR["openai"]};"></span>OpenAI'
+        '  <span class="legend-dot legend-tenth"></span>Tenth-man (blind)'
+        '</div>'
     )
 
     # Frames sorted by distance ASC; closest is default open
@@ -2020,6 +2066,31 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
   .map-help-popover p:last-child{{ margin-bottom: 0; }}
   .map-help-popover strong{{ font-weight: 600; }}
 
+  /* Phase 9: family-color legend below the SVG */
+  .map-legend{{
+    display: flex; gap: 14px; align-items: center; flex-wrap: wrap;
+    font-size: 12px; font-family: var(--mono); color: var(--storm);
+    margin: 8px 0 0; letter-spacing: 0.04em;
+  }}
+  .map-legend .legend-dot{{
+    display: inline-block; width: 10px; height: 10px; border-radius: 50%;
+    margin-right: 6px; vertical-align: middle;
+  }}
+  .map-legend .legend-tenth{{ background: var(--chartreuse); border: 1px solid var(--midnight-navy); }}
+  [data-theme="dark"] .map-legend{{ color: var(--on-dark-78); }}
+  [data-theme="dark"] .map-legend .legend-tenth{{ border-color: var(--on-dark); }}
+
+  /* Phase 9: model-family chip on frame cards */
+  .frame-model-chip{{
+    display: inline-block; padding: 2px 8px; margin-left: 8px;
+    font-size: 10px; font-family: var(--mono); letter-spacing: 0.04em;
+    border-radius: 999px; vertical-align: middle;
+  }}
+  .frame-model-anthropic{{ background: rgba(27,37,64,0.08); color: var(--midnight-navy); }}
+  .frame-model-openai{{    background: rgba(27,140,90,0.10); color: #1b8c5a; }}
+  [data-theme="dark"] .frame-model-anthropic{{ background: var(--surface-glass-08); color: var(--on-dark-92); }}
+  [data-theme="dark"] .frame-model-openai{{    background: rgba(27,140,90,0.18); color: #4dd49a; }}
+
   /* Reading guide — fixed floating bottom-right */
   .guide{{
     position: fixed;
@@ -2401,6 +2472,7 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
           </div>
         </details>
         {map_svg}
+        {map_legend_html}
       </div>
 
       <div class="map-foot">
@@ -2512,6 +2584,8 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
         <li>{t(locale, "guide_rule_5")}</li>
         <li>{t(locale, "guide_rule_6")}</li>
         <li>{t(locale, "guide_rule_7")}</li>
+        <li>{t(locale, "guide_rule_8")}</li>
+        <li>{t(locale, "guide_rule_9")}</li>
       </ol>
     </div>
     <div class="guide-panel-foot">
