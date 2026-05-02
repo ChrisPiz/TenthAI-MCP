@@ -62,3 +62,182 @@ class CanonicalContext:
 # Pipeline functions (run_scoping, finalize_context) are added in Tasks 3.2 / 3.3.
 # Back-compat shim ``generate_questions(client, question)`` lives at the bottom
 # (added in Task 3.4) so server.py keeps booting until its call-sites migrate.
+
+
+from henge.providers import CompletionRequest, complete
+
+
+_HAIKU_MODEL = "anthropic/haiku-4-5"
+_GPT5_MODEL = "openai/gpt-5"
+_OPUS_MODEL = "anthropic/opus-4-7"
+
+SCOPING_MAX_TOKENS = 800
+ADVERSARIAL_MAX_TOKENS = 600
+CANONICAL_MAX_TOKENS = 1200
+
+
+_SCOPING_SYSTEM = """You will receive a decision question. Your job: generate 4-7 concrete questions an expert advisor would ask the user before being able to give grounded advice.
+
+The answers will feed 9 advisors with distinct cognitive angles: empirical (data, numbers), historical (precedents, cases), first-principles (constraints), analogical, systemic (second-order), ethical (stakeholders), contrarian (assumptions), pre-mortem (failure modes), optimist (upside).
+
+Look for questions that cover (when relevant to the domain):
+- Personal quantitative data (income, savings, deadlines, debts, age, dependents)
+- Constraints and deal-breakers
+- Geography, community, location
+- Relationships and affected stakeholders
+- Subjective preferences, life philosophy, priorities
+- Information NOT already in the original question
+
+Rules:
+- 4-7 questions, no more, no less.
+- Each concrete, specific to the domain. NOT generic.
+- One question per entry — no "and"-compound questions.
+- DO NOT repeat information already in the question.
+- Match the language of the original question.
+
+Output: JSON array of strings. ONLY the JSON, no prose, no markdown fence.
+Format example: ["What is your approximate net monthly income?", "Which neighborhoods would you be willing to live in?"]"""
+
+
+_ADVERSARIAL_SYSTEM = """You audit scoping questions from a different reasoning school.
+
+Inputs you receive:
+1. The user's original decision question.
+2. A set of base scoping questions another model generated.
+
+Your job: identify 2-4 ADDITIONAL questions that challenge an unexamined assumption in the original question OR fill a gap the base set missed. Each adversarial question must:
+- Surface an assumption hidden inside the question itself (not just request more data).
+- Be answerable by the user (not philosophical).
+- Avoid duplicating any base question.
+
+Match the language of the original question.
+
+Output: JSON array of objects with this exact shape, no prose, no markdown fence:
+[
+  {"text": "What if you are not actually trying to optimize for X?", "challenges_assumption": "that X is the right objective"},
+  ...
+]"""
+
+
+def _strip_md_fence(text: str) -> str:
+    text = text.strip()
+    if text.startswith("```"):
+        text = text.split("\n", 1)[1] if "\n" in text else text
+        if "```" in text:
+            text = text.rsplit("```", 1)[0]
+    return text.strip()
+
+
+def _usage_dict(resp) -> dict:
+    return {
+        "model": resp.model,
+        "input_tokens": resp.input_tokens,
+        "output_tokens": resp.output_tokens,
+    }
+
+
+async def _haiku_initial_scoping(question: str) -> tuple[list[str], dict | None]:
+    """Returns (base_question_strings, usage). Empty list on parse failure."""
+    req = CompletionRequest(
+        system=_SCOPING_SYSTEM,
+        user=question,
+        max_tokens=SCOPING_MAX_TOKENS,
+        temperature=0.0,
+    )
+    try:
+        resp = await complete(_HAIKU_MODEL, req)
+    except Exception:
+        return [], None
+
+    text = _strip_md_fence(resp.text)
+    try:
+        parsed = json.loads(text)
+    except json.JSONDecodeError:
+        return [], _usage_dict(resp)
+
+    if not isinstance(parsed, list):
+        return [], _usage_dict(resp)
+    if not (3 <= len(parsed) <= 8):
+        return [], _usage_dict(resp)
+    return [str(q).strip() for q in parsed if str(q).strip()], _usage_dict(resp)
+
+
+async def _gpt5_adversarial_review(
+    question: str, base_questions: list[str]
+) -> tuple[list[dict], dict | None]:
+    """Returns (adversarial_objects, usage). Empty list on parse failure."""
+    user = (
+        f"Original question:\n{question}\n\n"
+        f"Base scoping questions already generated:\n"
+        + "\n".join(f"- {q}" for q in base_questions)
+    )
+    req = CompletionRequest(
+        system=_ADVERSARIAL_SYSTEM,
+        user=user,
+        max_tokens=ADVERSARIAL_MAX_TOKENS,
+        temperature=0.0,
+    )
+    try:
+        resp = await complete(_GPT5_MODEL, req)
+    except Exception:
+        return [], None
+
+    text = _strip_md_fence(resp.text)
+    try:
+        parsed = json.loads(text)
+    except json.JSONDecodeError:
+        return [], _usage_dict(resp)
+
+    if not isinstance(parsed, list):
+        return [], _usage_dict(resp)
+    cleaned = []
+    for item in parsed:
+        if not isinstance(item, dict):
+            continue
+        text_val = str(item.get("text", "")).strip()
+        if not text_val:
+            continue
+        challenges = item.get("challenges_assumption")
+        cleaned.append({
+            "text": text_val,
+            "challenges_assumption": str(challenges).strip() if challenges else None,
+        })
+    return cleaned, _usage_dict(resp)
+
+
+async def run_scoping(question: str) -> ScopingResult:
+    """Multi-step scoping: Haiku base + (optional) gpt-5 adversarial review."""
+    base_strings, haiku_usage = await _haiku_initial_scoping(question)
+
+    questions: list[ScopedQuestion] = [
+        ScopedQuestion(
+            id=f"q_{i+1:03d}",
+            text=q,
+            source="scoping",
+            challenges_assumption=None,
+        )
+        for i, q in enumerate(base_strings)
+    ]
+
+    gpt5_usage: dict | None = None
+    adv_objs: list[dict] = []
+    if ENABLE_ADVERSARIAL:
+        adv_objs, gpt5_usage = await _gpt5_adversarial_review(question, base_strings)
+        offset = len(questions)
+        for j, obj in enumerate(adv_objs):
+            questions.append(
+                ScopedQuestion(
+                    id=f"q_{offset + j + 1:03d}",
+                    text=obj["text"],
+                    source="adversarial",
+                    challenges_assumption=obj.get("challenges_assumption"),
+                )
+            )
+
+    return ScopingResult(
+        questions=questions,
+        adversarial_count=len(adv_objs),
+        version="v0.6",
+        haiku_usage=haiku_usage,
+        gpt5_usage=gpt5_usage,
+    )
