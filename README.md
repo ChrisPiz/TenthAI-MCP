@@ -8,7 +8,7 @@ One must disagree.
 
 Henge is an MCP server that measures AI consensus and uses a structured dissent role — the **Tenth Man** — implemented through **steel-manning** to challenge the consensus before you act. Built for humans making serious decisions with AI in the loop — also drivable by autonomous agents.
 
-**[→ See a live demo report](https://chrispiz.github.io/Henge/demo.html)**
+**[→ See a live demo report](https://chrispiz.github.io/Henge/demo.html)**  ·  **[→ Install with Claude Code](#quickstart--claude-code-30s)**
 
 ---
 
