@@ -463,6 +463,59 @@ def _meta_card_html(meta_dict, locale: str = "es") -> str:
     )
 
 
+def _informed_card_html(informed_dict, locale: str = "es") -> str:
+    """Render the gpt-5 informed reconciliation card (Phase 5 dual tenth-man).
+
+    Sits below the blind tenth-card. Shows what holds, what got revised, what
+    was discarded as Opus bias. ``informed_dict`` may be None on legacy reports.
+    """
+    if not informed_dict:
+        return ""
+    text = (informed_dict.get("text") or "").strip()
+    holds = informed_dict.get("what_holds") or []
+    revised = informed_dict.get("what_revised") or []
+    discarded = informed_dict.get("what_discarded") or []
+
+    if not (text or holds or revised or discarded):
+        return ""
+
+    title = "Disenso refinado (cross-lab)" if locale == "es" else "Refined dissent (cross-lab)"
+    holds_label = "Lo que se sostiene" if locale == "es" else "What holds"
+    revised_label = "Lo que se revisa" if locale == "es" else "What gets revised"
+    discarded_label = "Lo que se descarta" if locale == "es" else "What was lab bias"
+    sub = (
+        "gpt-5 audita el disenso ciego de Opus contra los 9 marcos."
+        if locale == "es"
+        else "gpt-5 audits Opus's blind dissent against the 9 advisors."
+    )
+
+    def _list_html(items, css_class):
+        if not items:
+            return ""
+        lis = "".join(f"<li>{html_mod.escape(str(item))}</li>" for item in items)
+        return f'<ul class="informed-list {css_class}">{lis}</ul>'
+
+    text_html = _md_to_html(text) if text else ""
+
+    return (
+        '<article class="informed-card" id="informed">'
+        f'  <header class="informed-top">'
+        f'    <div class="informed-tag">cross-lab</div>'
+        f'    <h3>{html_mod.escape(title)}</h3>'
+        f'    <p class="informed-sub">{html_mod.escape(sub)}</p>'
+        f'  </header>'
+        f'  <div class="informed-body">'
+        f'    {text_html}'
+        f'    <div class="informed-grid">'
+        f'      <div class="informed-col"><h4>{html_mod.escape(holds_label)}</h4>{_list_html(holds, "holds")}</div>'
+        f'      <div class="informed-col"><h4>{html_mod.escape(revised_label)}</h4>{_list_html(revised, "revised")}</div>'
+        f'      <div class="informed-col"><h4>{html_mod.escape(discarded_label)}</h4>{_list_html(discarded, "discarded")}</div>'
+        f'    </div>'
+        f'  </div>'
+        f'</article>'
+    )
+
+
 def _split_consensus_title(text: str):
     """Pull a leading ``# Title`` line out of the consensus output.
 
@@ -849,7 +902,7 @@ def _build_frame_card_with_flag(frame, response, status, distance, max_dist, idx
     """
 
 
-def render(question, results, coords_2d, distances, provider, model, cost_estimate_usd, consensus=None, cfi_data=None, meta_frame=None):
+def render(question, results, coords_2d, distances, provider, model, cost_estimate_usd, consensus=None, cfi_data=None, meta_frame=None, informed=None):
     """Render the TenthAI/Antimetal-style disagreement report. Returns full HTML.
 
     Persistence and browser-open are handled by the caller (server.py orchestrates
@@ -862,6 +915,7 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
     """
     locale = detect_locale(question)
     meta_html = _meta_card_html(meta_frame, locale=locale)
+    informed_card_html = _informed_card_html(informed, locale=locale) if informed else ""
 
     frames = [r[0] for r in results]
     responses = [r[1] for r in results]
@@ -1649,6 +1703,44 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
   }}
   .tenth-foot b{{ color: var(--midnight-navy); }}
 
+  /* Informed dissent card (Phase 5 cross-lab reconciliation) */
+  .informed-card{{
+    margin: 16px 0 0;
+    padding: 20px 22px;
+    border: 1px solid var(--border-rule);
+    border-radius: 14px;
+    background: var(--surface-glass-soft);
+    box-shadow: var(--ring-rule);
+  }}
+  .informed-top{{ margin-bottom: 14px; }}
+  .informed-tag{{
+    display: inline-block; padding: 2px 8px; margin-bottom: 6px;
+    font-size: 10px; font-family: var(--mono); letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--midnight-navy);
+    background: var(--chartreuse); border-radius: 999px;
+  }}
+  .informed-top h3{{ margin: 0 0 4px; font-family: var(--serif); font-size: 22px; font-weight: 500; color: var(--midnight-navy); }}
+  .informed-sub{{ margin: 0; font-size: 13px; color: var(--storm); font-family: var(--sans); }}
+  .informed-body{{ font-family: var(--sans); }}
+  .informed-body p{{ margin: 0 0 12px; line-height: 1.55; color: var(--midnight-navy); }}
+  .informed-grid{{
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 14px;
+  }}
+  .informed-col h4{{
+    margin: 0 0 6px; font-size: 11px; text-transform: uppercase;
+    letter-spacing: 0.06em; color: var(--storm); font-weight: 600;
+  }}
+  .informed-list{{ margin: 0; padding-left: 16px; font-size: 13px; line-height: 1.45; color: var(--midnight-navy); }}
+  .informed-list li{{ margin-bottom: 6px; }}
+  .informed-list.discarded li{{ color: var(--storm); text-decoration: line-through; opacity: 0.75; }}
+  @media (max-width: 720px){{ .informed-grid{{ grid-template-columns: 1fr; }} }}
+  [data-theme="dark"] .informed-card{{ background: var(--surface-glass-08); border-color: var(--on-dark-border-strong); }}
+  [data-theme="dark"] .informed-top h3{{ color: var(--on-dark); }}
+  [data-theme="dark"] .informed-sub{{ color: var(--on-dark-78); }}
+  [data-theme="dark"] .informed-body p{{ color: var(--on-dark-92); }}
+  [data-theme="dark"] .informed-list{{ color: var(--on-dark-92); }}
+  [data-theme="dark"] .informed-list.discarded li{{ color: var(--on-dark-62); }}
+
   /* Frames table */
   .frames{{
     margin-top: 4px;
@@ -2247,6 +2339,8 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
         <span>embed <b>{html_mod.escape(provider)}/{html_mod.escape(model)}</b> · ~USD {cost_estimate_usd:.2f}</span>
       </footer>
     </article>
+
+    {informed_card_html}
   </section>
 
   <section class="section">

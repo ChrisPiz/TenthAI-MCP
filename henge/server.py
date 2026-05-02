@@ -445,6 +445,14 @@ async def decide(
                 "reasoning": meta.reasoning,
             } if meta is not None else None
         ),
+        informed=(
+            {
+                "text": informed.text,
+                "what_holds": informed.what_holds,
+                "what_revised": informed.what_revised,
+                "what_discarded": informed.what_discarded,
+            } if informed is not None else None
+        ),
     )
 
     n_frames_succeeded = sum(1 for _, _, s, _ in results[:9] if s == "ok")
