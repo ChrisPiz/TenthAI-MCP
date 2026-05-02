@@ -12,39 +12,6 @@ Henge is an MCP server that measures AI consensus and uses a structured dissent 
 
 ---
 
-## Quickstart · Claude Code (30s)
-
-Paste this prompt into Claude Code and it self-installs by running a deterministic shell script — no LLM step-following, no drift:
-
-````
-Install Henge from https://github.com/ChrisPiz/Henge. Idempotent flow:
-
-1. Clone shallow (or pull if already there):
-   git clone --single-branch --depth 1 https://github.com/ChrisPiz/Henge.git ~/Henge \
-     || (cd ~/Henge && git pull --ff-only)
-
-2. cd ~/Henge && cp -n .env.example .env
-
-3. Ask me for ANTHROPIC_API_KEY and OPENAI_API_KEY one at a time. When I paste each one, update the matching line in ~/Henge/.env in-place. Confirm only the LENGTH back to me ("got it, 108 chars") — never echo the value to the chat or any other tool.
-
-4. Run the setup script — it handles Python ≥3.11 (with a 15-minute pyenv install fallback if missing), the venv, the editable install, the cross-cwd sanity check, key validation, MCP registration for every host installed (Claude Code, Claude Desktop, Cursor), and the /decide slash command:
-   cd ~/Henge && ./setup
-
-5. When the script prints "✓ Henge installed.", tell me to fully quit Claude Code (close ALL terminals running `claude`) and reopen, then try `/decide should I take the new job?`.
-````
-
-Restart Claude Code fully when it's done, then try:
-
-```
-/decide should I take the new job?
-```
-
-> **Note:** the `/decide` slash command is **Claude Code only**. In Claude Desktop and Cursor, MCP tools don't appear as slash commands — you invoke Henge by writing your question normally ("Should I quit my job to start a company?") and Claude picks up the `decide` tool from its description, or you can mention it explicitly ("use the decide tool to analyze ...").
-
-For Claude Desktop, Cursor or any other MCP host, see [Manual install](#manual-install) at the bottom.
-
----
-
 ## The problem
 
 AI systems don't fail because they lack intelligence.
@@ -123,13 +90,14 @@ Henge does not simulate debate. It analyzes the structure of thought, then quant
 
 ---
 
-## Before you install
+## What this is NOT
 
-Quick checklist so the install doesn't surprise you:
+- not a chatbot
+- not a debate simulator
+- not a multi-agent chat
+- not a vibe-checker
 
-- **Python ≥3.11.** macOS still ships Python 3.9. The Claude Code paste prompt detects this and installs Python 3.11.9 via pyenv automatically (no admin/sudo, but the build takes ~10 min the first time).
-- **Two API keys.** `ANTHROPIC_API_KEY` (mandatory — runs the 10 advisors) and `OPENAI_API_KEY` (embedding provider).
-- **Restart Claude Code fully after install.** Close ALL terminals running `claude`, then reopen. The MCP catalog is loaded once at startup; a running session will never pick up a freshly-registered server.
+It is a **decision-quality** tool. The output is a measurable structure of agreement and disagreement, not a longer answer.
 
 ---
 
@@ -216,14 +184,46 @@ Typical cost per full run: **~USD 0.65** (range USD 0.50–0.80 depending on tok
 
 ---
 
-## What this is NOT
+## Before you install
 
-- not a chatbot
-- not a debate simulator
-- not a multi-agent chat
-- not a vibe-checker
+Quick checklist so the install doesn't surprise you:
 
-It is a **decision-quality** tool. The output is a measurable structure of agreement and disagreement, not a longer answer.
+- **Python ≥3.11.** macOS still ships Python 3.9. The Claude Code paste prompt detects this and installs Python 3.11.9 via pyenv automatically (no admin/sudo, but the build takes ~10 min the first time).
+- **Two API keys.** `ANTHROPIC_API_KEY` (mandatory — runs the 10 advisors) and `OPENAI_API_KEY` (embedding provider).
+- **Restart Claude Code fully after install.** Close ALL terminals running `claude`, then reopen. The MCP catalog is loaded once at startup; a running session will never pick up a freshly-registered server.
+
+---
+
+## Quickstart · Claude Code (30s)
+
+Paste this prompt into Claude Code and it self-installs by running a deterministic shell script — no LLM step-following, no drift:
+
+````
+Install Henge from https://github.com/ChrisPiz/Henge. Idempotent flow:
+
+1. Clone shallow (or pull if already there):
+   git clone --single-branch --depth 1 https://github.com/ChrisPiz/Henge.git ~/Henge \
+     || (cd ~/Henge && git pull --ff-only)
+
+2. cd ~/Henge && cp -n .env.example .env
+
+3. Ask me for ANTHROPIC_API_KEY and OPENAI_API_KEY one at a time. When I paste each one, update the matching line in ~/Henge/.env in-place. Confirm only the LENGTH back to me ("got it, 108 chars") — never echo the value to the chat or any other tool.
+
+4. Run the setup script — it handles Python ≥3.11 (with a 15-minute pyenv install fallback if missing), the venv, the editable install, the cross-cwd sanity check, key validation, MCP registration for every host installed (Claude Code, Claude Desktop, Cursor), and the /decide slash command:
+   cd ~/Henge && ./setup
+
+5. When the script prints "✓ Henge installed.", tell me to fully quit Claude Code (close ALL terminals running `claude`) and reopen, then try `/decide should I take the new job?`.
+````
+
+Restart Claude Code fully when it's done, then try:
+
+```
+/decide should I take the new job?
+```
+
+> **Note:** the `/decide` slash command is **Claude Code only**. In Claude Desktop and Cursor, MCP tools don't appear as slash commands — you invoke Henge by writing your question normally ("Should I quit my job to start a company?") and Claude picks up the `decide` tool from its description, or you can mention it explicitly ("use the decide tool to analyze ...").
+
+For Claude Desktop, Cursor or any other MCP host, see the [Manual install section in DEVELOPER.md](DEVELOPER.md#manual-install).
 
 ---
 
