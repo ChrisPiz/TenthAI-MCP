@@ -3,6 +3,9 @@ import asyncio
 import hashlib
 from pathlib import Path
 
+from henge.config.frame_assignment import FRAME_MODEL_MAP, model_for
+from henge.providers import CompletionRequest, complete
+
 FRAMES = [
     "empirical",
     "historical",
@@ -136,11 +139,29 @@ async def _call_anthropic(client, model, system, user, max_tokens, temperature=T
     return msg.content[0].text, _extract_usage(msg, model)
 
 
-async def run_agent(client, frame, question, context=None, temperature=TEMPERATURE):
-    """Run one cognitive frame. Returns ``(text, usage_dict)``."""
+async def run_agent(frame, question, context=None, temperature=TEMPERATURE):
+    """Run one cognitive frame via its assigned model. Returns (text, usage_dict).
+
+    The frame→model mapping comes from ``henge.config.frame_assignment``.
+    Each canonical id (e.g. ``openai/gpt-5``) is resolved through the
+    provider registry; the raw SDK model string never appears here.
+    """
+    model_id = model_for(frame)
     system = PROMPTS[frame]
     user = question if not context else f"{question}\n\nAdditional context:\n{context}"
-    return await _call_anthropic(client, SONNET, system, user, FRAME_MAX_TOKENS, temperature)
+    req = CompletionRequest(
+        system=system,
+        user=user,
+        max_tokens=FRAME_MAX_TOKENS,
+        temperature=temperature,
+    )
+    resp = await complete(model_id, req)
+    usage = {
+        "model": model_id,
+        "input_tokens": resp.input_tokens,
+        "output_tokens": resp.output_tokens,
+    }
+    return resp.text, usage
 
 
 async def run_tenth_man(client, successful_frames, question, temperature=TEMPERATURE):
@@ -163,15 +184,20 @@ async def run_tenth_man(client, successful_frames, question, temperature=TEMPERA
 
 
 async def run_agents(client, question, context=None, temperature=TEMPERATURE):
-    """Run all 9 frames in parallel, then tenth-man.
+    """Run all 9 frames in parallel via the registry, then tenth-man on ``client``.
 
-    Returns: list of (frame_name, response_text, status, usage_dict) tuples, length 10.
-    status is "ok" or "failed". On "failed", usage_dict is None.
+    The ``client`` parameter is ONLY used by the tenth-man path (still on
+    Anthropic Opus directly until Phase 5 introduces the dual blind/informed
+    refactor). The 9 frames each go through ``providers.complete()`` with
+    their assigned model id from ``FRAME_MODEL_MAP``.
+
+    Returns: list of (frame_name, response_text, status, usage_dict) tuples,
+    length 10. ``status`` is "ok" or "failed". On "failed", usage_dict is None.
 
     Raises RuntimeError if fewer than 8/9 frames succeeded — without enough
     cognitive coverage, the dissenter has no real consensus to attack.
     """
-    tasks = [run_agent(client, frame, question, context, temperature) for frame in FRAMES]
+    tasks = [run_agent(frame, question, context, temperature) for frame in FRAMES]
     raw = await asyncio.gather(*tasks, return_exceptions=True)
 
     nine = []
