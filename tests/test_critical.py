@@ -16,27 +16,36 @@ from henge.viz import compute_cfi
 
 @pytest.mark.asyncio
 async def test_partial_failure_8of9(mock_anthropic_client, mock_providers):
-    """1 frame falla → sistema continúa con 8 frames + tenth-man, marca el faltante."""
+    """1 frame falla → sistema continúa con 8 frames + blind + informed, marca el faltante.
+
+    The blind tenth-man fires in parallel with the 9; informed runs sequentially.
+    Failure injection on the 3rd frame call only — blind path is untouched.
+    """
     call_count = [0]
-    base_side_effect = mock_providers.side_effect  # underlying frame router
+    base_side_effect = mock_providers.side_effect
 
     async def maybe_fail(model_id, req):
         call_count[0] += 1
+        # Skip the blind/informed paths — only inject on the 3rd FRAME call.
+        if model_id in ("anthropic/opus-4-7", "openai/gpt-5") and (
+            "tenth" in (req.system or "").lower() or "blind dissent" in (req.system or "").lower()
+        ):
+            return await base_side_effect(model_id, req)
         if call_count[0] == 3:
             raise RuntimeError("Simulated 1-of-9 frame failure")
         return await base_side_effect(model_id, req)
 
     mock_providers.side_effect = maybe_fail
 
-    results = await run_agents(mock_anthropic_client, "Pregunta de prueba")
+    result = await run_agents("Pregunta de prueba")
 
-    assert len(results) == 10
-    failed = [r for r in results if r[2] == "failed"]
-    ok = [r for r in results if r[2] == "ok"]
+    assert isinstance(result, dict)
+    nine = result["nine"]
+    assert len(nine) == 9
+    failed = [r for r in nine if r[2] == "failed"]
     assert len(failed) == 1, f"Expected exactly 1 failed frame, got {len(failed)}"
-    assert len(ok) == 9, "8 frames + 1 tenth-man = 9 ok"
-    assert results[-1][0] == TENTH_MAN
-    assert results[-1][2] == "ok"
+    assert "blind" in result
+    assert "informed" in result
 
 
 @pytest.mark.asyncio
@@ -54,7 +63,7 @@ async def test_partial_failure_abort_lt_8(mock_anthropic_client, mock_providers)
     mock_providers.side_effect = fail_two
 
     with pytest.raises(RuntimeError, match=r"7/9"):
-        await run_agents(mock_anthropic_client, "Pregunta de prueba")
+        await run_agents("Pregunta de prueba")
 
 
 def test_centroid_excludes_tenth(synthetic_embeddings_10):
@@ -82,53 +91,28 @@ def test_centroid_excludes_tenth(synthetic_embeddings_10):
 
 @pytest.mark.asyncio
 async def test_temperature_is_zero(mock_anthropic_client, mock_providers):
-    """Cada frame pasa ``temperature=0`` por reproducibilidad. Tenth-man (Opus)
-    omite el kwarg porque Opus 4.7 con extended thinking lo rechaza.
+    """Cada call a través del registry pasa temperature=0 por reproducibilidad.
 
-    Sin esto, mismo input produce verdict distinto entre corridas y la
-    palabra "measurement" del README es marketing. v0.5/v0.6 lo fija como
-    decisión pre-registrada (ver WHITEPAPER.md §4).
+    Blind (Opus) tolera temperature=0; Anthropic provider lo silencia para Opus.
+    Frames + informed pasan temperature explícito al CompletionRequest.
     """
-    from henge.agents import MODELS_WITHOUT_TEMPERATURE
-
-    frame_temps = []  # captured req.temperature for each frame call
+    captured = []
     base_side_effect = mock_providers.side_effect
 
-    async def capture_frame(model_id, req):
-        frame_temps.append((model_id, req.temperature))
+    async def capture(model_id, req):
+        captured.append((model_id, req.temperature))
         return await base_side_effect(model_id, req)
 
-    mock_providers.side_effect = capture_frame
+    mock_providers.side_effect = capture
 
-    tenth_man_calls = []  # captured kwargs for the tenth-man (Anthropic client) call
-    original_create = mock_anthropic_client.messages.create
-
-    async def capture_tenth(**kwargs):
-        tenth_man_calls.append((kwargs.get("model"), kwargs.get("temperature")))
-        return await original_create(**kwargs)
-
-    mock_anthropic_client.messages.create = AsyncMock(side_effect=capture_tenth)
-
-    await run_agents(mock_anthropic_client, "Pregunta de prueba")
+    await run_agents("Pregunta de prueba")
 
     assert TEMPERATURE == 0, "Module-level TEMPERATURE constant must be 0"
 
-    # 9 frames captured at the registry layer
-    assert len(frame_temps) == 9
-    for model_id, temp in frame_temps:
-        assert temp == 0, f"Frame {model_id} must use temperature=0; got {temp!r}"
-
-    # 1 tenth-man captured at the Anthropic client layer
-    assert len(tenth_man_calls) == 1
-    tenth_model, tenth_temp = tenth_man_calls[0]
-    if tenth_model in MODELS_WITHOUT_TEMPERATURE:
-        assert tenth_temp is None, (
-            f"{tenth_model} rejects temperature; we must omit the kwarg, got {tenth_temp!r}"
-        )
-    else:
-        assert tenth_temp == 0, (
-            f"{tenth_model} must use temperature=0 for reproducibility; got {tenth_temp!r}"
-        )
+    # 9 frames + 1 blind + 1 informed = 11 calls total
+    assert len(captured) == 11, f"Expected 11 calls, got {len(captured)}"
+    for model_id, temp in captured:
+        assert temp == 0, f"{model_id} should pass temperature=0; got {temp!r}"
 
 
 def test_project_mds_excludes_failed_frames():

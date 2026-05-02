@@ -85,6 +85,18 @@ def _mock_complete_factory():
     async def _mock_complete(model_id, req):
         system = (req.system or "").lower()
 
+        # Informed tenth-man (gpt-5): needs JSON-shaped response for json.loads()
+        if "audit a blind dissent" in system or "blind tenth-man dissent" in system:
+            text = '{"text":"refined dissent in mock","what_holds":[],"what_revised":[],"what_discarded":[]}'
+            return _CompletionResponse(
+                text=text,
+                input_tokens=120,
+                output_tokens=80,
+                model=model_id,
+                raw_model=model_id.split("/", 1)[1] if "/" in model_id else model_id,
+                finish_reason="end_turn",
+            )
+
         if "empírico" in system or "empirical" in system:
             text = "Análisis empírico: base rate ~30%, fuente: estudio 2023."
         elif "histórico" in system or "historical" in system:
@@ -120,11 +132,15 @@ def _mock_complete_factory():
 
 @pytest.fixture
 def mock_providers():
-    """Patch ``henge.agents.complete`` so the 9 frames return deterministic text.
+    """Patch ``henge.agents.complete`` and ``henge.tenth_man.complete`` so all
+    provider calls (9 frames + blind + informed) return deterministic text.
 
-    Yields the AsyncMock instance so individual tests can install side_effects
-    (e.g. raise on the 3rd call to simulate a frame failure).
+    Both modules bind ``complete`` at import time, so we must patch both
+    references to intercept every call. Yields the AsyncMock instance so
+    individual tests can install side_effects (e.g. raise on the 3rd call to
+    simulate a frame failure).
     """
     mock = AsyncMock(side_effect=_mock_complete_factory())
-    with _patch("henge.agents.complete", new=mock):
+    with _patch("henge.agents.complete", new=mock), \
+         _patch("henge.tenth_man.complete", new=mock):
         yield mock

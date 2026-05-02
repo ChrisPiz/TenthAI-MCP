@@ -131,7 +131,11 @@ async def _compute_cfi_only(client, question, context, temperature):
     plus per-run cost, or an error dict.
     """
     try:
-        results = await run_agents(client, question, context, temperature=temperature)
+        agent_result = await run_agents(question, context, temperature=temperature)
+        nine = agent_result["nine"]
+        blind = agent_result["blind"]
+        blind_status = "ok" if blind.opus_usage else "failed"
+        results = list(nine) + [(TENTH_MAN, blind.text, blind_status, blind.opus_usage)]
     except RuntimeError as exc:
         return {"error": "agents_failed", "reason": str(exc)}
 
@@ -334,9 +338,19 @@ async def decide(
             }
 
     try:
-        results = await run_agents(client, question, effective_context, temperature=primary_temperature)
+        agent_result = await run_agents(question, effective_context, temperature=primary_temperature)
     except RuntimeError as exc:
         return {"error": "agents_failed", "reason": str(exc)}
+
+    nine = agent_result["nine"]
+    blind = agent_result["blind"]
+    informed = agent_result["informed"]
+
+    # Build the v0.5-shape ``results`` list (9 frames + blind as the tenth slot)
+    # so the consensus / embedding / distance / cost code below keeps working
+    # unchanged. The blind output drives the distance metric (per Phase 5 spec).
+    blind_status = "ok" if blind.opus_usage else "failed"
+    results = list(nine) + [(TENTH_MAN, blind.text, blind_status, blind.opus_usage)]
 
     # results: list of (frame, response, status, usage) tuples, length 10.
     # status "ok" → usage is dict; status "failed" → usage is None.
@@ -489,9 +503,19 @@ async def decide(
             for i, (frame, response, status, _) in enumerate(results[:9])
         ],
         "tenth_man": {
-            "response": results[9][1],
-            "distance": distances_list[9],
-            "embedding_2d": coords_list[9],
+            "blind": {
+                "text": blind.text,
+                "distance": distances_list[9],
+                "opus_usage": blind.opus_usage,
+                "embedding_2d": coords_list[9],
+            },
+            "informed": {
+                "text": informed.text,
+                "what_holds": informed.what_holds,
+                "what_revised": informed.what_revised,
+                "what_discarded": informed.what_discarded,
+                "gpt5_usage": informed.gpt5_usage,
+            },
         },
         "summary": {
             # legacy fields — deprecated, kept until v1.0 for compat
