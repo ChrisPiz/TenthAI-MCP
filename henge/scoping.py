@@ -1,76 +1,64 @@
-"""Scoping phase — generates clarifying questions before running the 10 agents.
+"""Scoping phase — multi-step pipeline.
 
-Without scoping, frames speculate or stay generic. With scoping, the user provides
-the missing context (income, location, constraints) so frames apply to facts.
+v0.6 pipeline:
+  1. Haiku 4.5 [Anthropic] generates 4-7 base scoping questions.
+  2. gpt-5 [OpenAI] adversarial review: 2-4 additional questions that
+     challenge unexamined assumptions in the original question.
+  3. Combined set returns to user.
+  4. User responds (handled by server.py).
+  5. Opus 4.7 [Anthropic] canonicalizes the user's responses into a
+     summary + flags any inconsistencies.
 
-Uses Haiku for speed/cost: 1 call ≈ USD 0.01, returns in ~3-5s.
+Feature flags (env, default ``true``):
+  - ``HENGE_ENABLE_ADVERSARIAL_SCOPING`` — skip step 2 if set to ``false``.
+  - ``HENGE_ENABLE_CANONICAL_CONTEXT`` — skip step 5 if set to ``false``.
+
+Cross-lab rationale: Haiku and Opus are Anthropic; gpt-5 is OpenAI. If Haiku
+has a systematic bias about what counts as a "good scoping question", gpt-5
+catches it from a different reasoning lineage.
 """
+from __future__ import annotations
+
 import json
-
-HAIKU = "claude-haiku-4-5-20251001"
-SCOPING_MAX_TOKENS = 800
-
-SCOPING_SYSTEM = """You will receive a decision question. Your job: generate 4-7 concrete questions an expert advisor would ask the user before being able to give grounded advice.
-
-The answers will feed 9 advisors with distinct cognitive angles: empirical (data, numbers), historical (precedents, cases), first-principles (constraints), analogical, systemic (second-order), ethical (stakeholders), contrarian (assumptions), pre-mortem (failure modes), optimist (upside).
-
-Look for questions that cover (when relevant to the domain):
-- Personal quantitative data (income, savings, deadlines, debts, age, dependents)
-- Constraints and deal-breakers
-- Geography, community, location
-- Relationships and affected stakeholders
-- Subjective preferences, life philosophy, priorities
-- Information NOT already in the original question
-
-Rules:
-- 4-7 questions, no more, no less.
-- Each concrete, specific to the domain. NOT generic.
-- One question per entry — no "and"-compound questions.
-- DO NOT repeat information already in the question.
-- Match the language of the original question.
-
-Output: JSON array of strings. ONLY the JSON, no prose, no markdown fence.
-Format example: ["What is your approximate net monthly income?", "Which neighborhoods would you be willing to live in?"]"""
+import os
+from dataclasses import dataclass, field
+from typing import Literal
 
 
-async def generate_questions(client, question):
-    """Returns ``(questions, usage)``. On any failure: ``(None, None)``.
+# Feature flags read at import time. Override via .env or env vars.
+def _flag(name: str, default: bool = True) -> bool:
+    val = os.getenv(name, "true" if default else "false").strip().lower()
+    return val in ("1", "true", "yes", "on")
 
-    Tolerates 3-8 questions to handle edge cases. Strips markdown code fences
-    that Haiku sometimes wraps around JSON.
-    """
-    try:
-        msg = await client.messages.create(
-            model=HAIKU,
-            max_tokens=SCOPING_MAX_TOKENS,
-            temperature=0,
-            system=SCOPING_SYSTEM,
-            messages=[{"role": "user", "content": question}],
-        )
-        text = msg.content[0].text.strip()
-    except Exception:
-        return None, None
 
-    usage_obj = getattr(msg, "usage", None)
-    usage = {
-        "model": HAIKU,
-        "input_tokens": int(getattr(usage_obj, "input_tokens", 0) or 0),
-        "output_tokens": int(getattr(usage_obj, "output_tokens", 0) or 0),
-    }
+ENABLE_ADVERSARIAL = _flag("HENGE_ENABLE_ADVERSARIAL_SCOPING", True)
+ENABLE_CANONICAL_CONTEXT = _flag("HENGE_ENABLE_CANONICAL_CONTEXT", True)
 
-    if text.startswith("```"):
-        text = text.split("\n", 1)[1] if "\n" in text else text
-        if "```" in text:
-            text = text.rsplit("```", 1)[0]
-    text = text.strip()
 
-    try:
-        questions = json.loads(text)
-    except json.JSONDecodeError:
-        return None, usage
+@dataclass
+class ScopedQuestion:
+    id: str
+    text: str
+    source: Literal["scoping", "adversarial"]
+    challenges_assumption: str | None
 
-    if not isinstance(questions, list):
-        return None, usage
-    if not (3 <= len(questions) <= 8):
-        return None, usage
-    return [str(q).strip() for q in questions if str(q).strip()], usage
+
+@dataclass
+class ScopingResult:
+    questions: list[ScopedQuestion]
+    adversarial_count: int
+    version: str
+    haiku_usage: dict | None
+    gpt5_usage: dict | None
+
+
+@dataclass
+class CanonicalContext:
+    summary: str
+    flags: list[str] = field(default_factory=list)
+    opus_usage: dict | None = None
+
+
+# Pipeline functions (run_scoping, finalize_context) are added in Tasks 3.2 / 3.3.
+# Back-compat shim ``generate_questions(client, question)`` lives at the bottom
+# (added in Task 3.4) so server.py keeps booting until its call-sites migrate.
