@@ -87,11 +87,15 @@ def detect_locale(question: str) -> str:
     return "es" if spanish_hits > english_hits else "en"
 
 
-# Calibration for consensus_verdict() — empirical defaults for voyage-3-large /
-# text-embedding-3-small over Spanish reasoning text. Tighten or loosen if you
-# observe systematic miscalibration over many runs.
-TIGHT_THRESHOLD = 0.15  # max_frame below this = the 9 are clustered
-DISSENT_RATIO = 1.6     # tenth_distance / max_frame above this = tenth meaningfully separated
+# Calibration for consensus_verdict() — provider-agnostic.
+# Different embedding models baseline at different absolute distance ranges
+# (text-embedding-3-small ≈ 0.6–0.7, voyage-3-large ≈ 0.05–0.10). What stays
+# stable across providers is the *spread* across the 9 when they're clustered.
+# We use σ over the 9 frame distances (not their absolute distance to centroid)
+# to detect tight clustering, and a z-score-style σ-multiple to detect when
+# the tenth has meaningfully separated from the cluster.
+TIGHT_SIGMA = 0.03   # σ across the 9 frame distances below this → clustered
+DISSENT_SIGMA = 3.0  # tenth ≥ this many σ above cluster mean → meaningful dissent
 
 
 TRANSLATIONS = {
@@ -142,7 +146,7 @@ TRANSLATIONS = {
         "consensus_lead": "What the nine advisors agree on, in one line:",
         "consensus_d_label_html": "max · vs centroid",
         "consensus_default_title": "What the nine agree on",
-        "tenth_tag_label": "The dissent of the tenth · STEEL-MAN",
+        "tenth_tag_label": "Tenth Man · forced dissent · method: steel-man",
         "tenth_lead": "The mandatory dissenter's strongest case against the nine:",
         "tenth_h3_a": "Why the nine ",
         "tenth_h3_em": "might be wrong",
@@ -225,7 +229,7 @@ TRANSLATIONS = {
         "consensus_lead": "En lo que los nueve coinciden, en una línea:",
         "consensus_d_label_html": "max · vs centroide",
         "consensus_default_title": "Lo que los nueve coinciden",
-        "tenth_tag_label": "El disenso del décimo · STEEL-MAN",
+        "tenth_tag_label": "Décimo Hombre · disidente obligado · método: steel-man",
         "tenth_lead": "El argumento más fuerte del disidente obligado contra los nueve:",
         "tenth_h3_a": "Por qué los nueve ",
         "tenth_h3_em": "podrían estar equivocados",
@@ -271,25 +275,32 @@ def t(locale: str, key: str) -> str:
     )
 
 
-def consensus_verdict(tenth_distance: float, max_frame_distance: float, locale: str = "en") -> dict:
+def consensus_verdict(tenth_distance: float, frame_distances: list[float], locale: str = "en") -> dict:
     """Three-state classification of the consensus shape.
 
-    - aligned-stable:  9 advisors tight, tenth's dissent is moderate. The consensus holds.
-    - aligned-fragile: 9 tight, but the tenth is far enough to coherently break it.
-    - divided:         the 9 themselves are spread — there was no strong consensus to break.
+    Provider-agnostic: classification is driven by the *spread* across the 9
+    (σ) and the tenth's z-score relative to the cluster mean, not by absolute
+    distance to the centroid. This avoids the previous bug where openai's
+    higher absolute-distance baseline (~0.65) made every run come back
+    "divided" while voyage's tighter scale (~0.07) worked correctly.
 
-    The previous binary model conflated "aligned + moderate dissent" with "divided",
-    which mislabeled tightly-clustered 9s as divided whenever the tenth wasn't
-    extreme. This helper is the single source of truth for the verdict text.
+    - aligned-stable:  9 advisors tight (σ < TIGHT_SIGMA), tenth's dissent is moderate.
+    - aligned-fragile: 9 tight, but tenth is ≥ DISSENT_SIGMA σ above the cluster mean.
+    - divided:         σ across the 9 is high — there was no strong consensus to break.
     """
-    tight_nine = max_frame_distance < TIGHT_THRESHOLD
+    n = len(frame_distances)
+    mean_d = sum(frame_distances) / n
+    sigma = (sum((d - mean_d) ** 2 for d in frame_distances) / n) ** 0.5
+
+    tight_nine = sigma < TIGHT_SIGMA
     if not tight_nine:
         return {
             "state": "divided",
             "label_short": "divided",
             "verdict": t(locale, "verdict_text_divided"),
         }
-    if tenth_distance > DISSENT_RATIO * max_frame_distance:
+    sigma_floor = max(sigma, 1e-6)  # avoid div-by-zero on extremely tight clusters
+    if (tenth_distance - mean_d) > DISSENT_SIGMA * sigma_floor:
         return {
             "state": "aligned-fragile",
             "label_short": "fragile consensus",
@@ -684,7 +695,7 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
     closest_name = frames[closest_frame_idx]
     spread_sigma = _stddev(frame_distances)
 
-    verdict = consensus_verdict(tenth_distance, max_frame_distance, locale=locale)
+    verdict = consensus_verdict(tenth_distance, frame_distances, locale=locale)
     fragility_text = verdict["verdict"]
     verdict_short = verdict["label_short"]
     verdict_state = verdict["state"]

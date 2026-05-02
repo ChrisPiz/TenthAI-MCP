@@ -195,7 +195,7 @@ async def decide(question: str, context: str | None = None, skip_scoping: bool =
     min_frame_distance = min(frame_distances)
     most_divergent_frame = results[frame_distances.index(max_frame_distance)][0]
     closest_frame = results[frame_distances.index(min_frame_distance)][0]
-    verdict = consensus_verdict(distances_list[9], max_frame_distance)
+    verdict = consensus_verdict(distances_list[9], frame_distances)
 
     report_id = make_report_id(question)
     report_dir = make_report_dir(report_id)

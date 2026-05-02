@@ -25,7 +25,7 @@ _FILE_MAP = {
     "soft-contrarian": "07-soft-contrarian.md",
     "radical-optimist": "08-radical-optimist.md",
     "pre-mortem": "09-pre-mortem.md",
-    "tenth-man": "10-tenth-man.md",
+    "tenth-man": "10-tenth-man-steelman.md",
 }
 
 _PROMPT_DIR = Path(__file__).parent / "prompts"

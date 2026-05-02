@@ -6,7 +6,7 @@ Ten pillars.
 Nine align.
 One must disagree.
 
-Henge is an MCP server that measures AI consensus and forces a steel-man counter-argument before you act. Built for humans making serious decisions with AI in the loop — also drivable by autonomous agents.
+Henge is an MCP server that measures AI consensus and uses a structured dissent role — the **Tenth Man** — implemented through **steel-manning** to challenge the consensus before you act. Built for humans making serious decisions with AI in the loop — also drivable by autonomous agents.
 
 **[→ See a live demo report](https://chrispiz.github.io/Henge/demo.html)**
 
@@ -67,7 +67,7 @@ Henge runs your question through ten cognitive perspectives and:
 1. Asks 4–7 scoping questions before reasoning, so the advisors apply to facts instead of speculation
 2. Runs nine cognitive frames in parallel — each with its own lens
 3. Embeds the answers, projects them with classical MDS, and measures cosine distance to the centroid of the nine
-4. Forces a tenth advisor to steel-man the dissent against whatever consensus emerged
+4. Assigns a **Tenth Man** (mandatory dissent role) and runs **steel-manning** to build the strongest possible case against whatever consensus emerged
 5. Persists a full HTML report + JSON record on disk and opens it in your browser
 
 ---
@@ -78,8 +78,38 @@ Henge runs your question through ten cognitive perspectives and:
 | --------------------- | ----------------------------- | ---------------------------------- |
 | Single LLM            | Overconfident answers         | Multi-frame reasoning              |
 | Multi-agent debate    | Noisy, redundant              | Measures structure, doesn't echo   |
-| Devil's advocate      | Always contradicts            | Tenth-man only when warranted      |
-| Fixed "tenth man" rule| Hard-coded contrarian         | Steel-man with measurable distance |
+| Devil's advocate      | Weakly argues against         | Tenth Man steel-mans the strongest opposing case |
+| Fixed "tenth man" rule| Hard-coded contrarian         | Tenth Man triggers + measurable distance         |
+
+---
+
+## How dissent works
+
+Henge separates **role** from **method**.
+
+- **Tenth Man** is the *role* — a structural, mandatory dissenter, assigned regardless of how much the 9 agree. The role exists to test the consensus, not to disagree with it for the sake of disagreement.
+- **Steel-manning** is the *method* — the dissenter does not argue weakly or randomly. It builds the strongest possible version of the opposing case, grounded in the best precedents and cleanest reasoning available.
+
+```
+Role:    Tenth Man
+Method:  Steel-man
+Purpose: Challenge the consensus by constructing the strongest opposing case
+```
+
+The dissenter runs four steps, in order:
+
+1. Assume the consensus may be wrong
+2. Identify the strongest alternative perspective
+3. Steel-man that alternative — make it as strong as possible
+4. Show under what conditions it defeats the consensus
+
+### Not a devil's advocate
+
+This is not a devil's advocate.
+
+A devil's advocate weakly argues against something — often for sport, often without conviction.
+
+Henge's Tenth Man builds the **strongest** version of the opposing view. If you walk away from the report disagreeing with the dissent, it should be because you genuinely defeated the strongest case against you — not because the case was easy to dismiss.
 
 ---
 
@@ -122,7 +152,7 @@ question
 │ ↓                             │
 │ consensus synthesis (Haiku)   │
 │ ↓                             │
-│ tenth-man steel-man (Opus)    │
+│ Tenth Man via steel-man (Opus)│
 │ ↓                             │
 │ disagreement map + report     │
 └───────────────────────────────┘
@@ -151,13 +181,13 @@ Nine consensus frames + one mandatory dissenter:
 | 7 | soft-contrarian    | surgical reframe of the loaded silent assumption          |
 | 8 | radical-optimist   | what unlocks if it goes 10× better                        |
 | 9 | pre-mortem         | assume it failed in 12 months — describe how              |
-| 10| **tenth-man**      | steel-man dissent, mandatory, after the nine align        |
+| 10| **Tenth Man**      | mandatory dissent role · method: steel-man, after the nine align |
 
 All frames respond in the **same language as the question** (Spanish question → Spanish answer; English → English). The report chrome (headings, labels, reading guide) follows the same rule by auto-detecting the question's language; force a single locale with `HENGE_LOCALE=en` or `HENGE_LOCALE=es` in your `.env`.
 
 ![Frames ranked by distance to centroid — closest is the most representative voice, farthest reasons most alone](docs/frames-table.png)
 
-![Tenth-man steel-man dissent — premises accepted, where the consensus fails, the question behind the question, and consensus failure modes](docs/tenth-man-dissent.png)
+![Tenth Man dissent built via steel-manning — premises accepted, where the consensus fails, the question behind the question, and consensus failure modes](docs/tenth-man-dissent.png)
 
 ---
 
@@ -206,6 +236,10 @@ It is a **decision-quality** tool. The output is a measurable structure of agree
 - streaming results
 - multi-model support (Gemini, GPT, local)
 - local embeddings (sentence-transformers, no API key required)
+- **dissent methods** — alternative implementations of the Tenth Man role:
+  - steel-man (current default)
+  - risk analysis (planned)
+  - data-driven contradiction (planned)
 
 ---
 
@@ -394,7 +428,7 @@ const phase2 = await mcp.tools.decide({
 }
 ```
 
-The HTML at `viz_path` ships with the disagreement map, sortable frames table, consensus card, tenth-man steel-man, and a per-run hero painting bundled inside `report_dir/assets/`.
+The HTML at `viz_path` ships with the disagreement map, sortable frames table, consensus card, Tenth Man dissent (built via steel-manning), and a per-run hero painting bundled inside `report_dir/assets/`.
 
 ---
 
