@@ -72,8 +72,12 @@ _GPT5_MODEL = "openai/gpt-5"
 _OPUS_MODEL = "anthropic/opus-4-7"
 
 SCOPING_MAX_TOKENS = 800
-ADVERSARIAL_MAX_TOKENS = 600
-CANONICAL_MAX_TOKENS = 1200
+# gpt-5 and Opus 4.7 are reasoning models — they burn tokens internally on
+# chain-of-thought before producing visible output. The 4000 budgets give
+# enough headroom for ~1500 reasoning tokens + the actual JSON/summary
+# output. Below ~2500 the visible content is empty (finish_reason='length').
+ADVERSARIAL_MAX_TOKENS = 4000
+CANONICAL_MAX_TOKENS = 4000
 
 
 _SCOPING_SYSTEM = """You will receive a decision question. Your job: generate 4-7 concrete questions an expert advisor would ask the user before being able to give grounded advice.
