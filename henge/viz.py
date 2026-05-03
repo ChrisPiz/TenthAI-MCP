@@ -1070,7 +1070,12 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
     locale = detect_locale(question)
     meta_html = _meta_card_html(meta_frame, locale=locale)
     informed_card_html = _informed_card_html(informed, locale=locale) if informed else ""
-    claims_panel_html = _claims_panel_html(claims, locale=locale) if claims else ""
+    # v0.6 cosmetic: claims panel hidden in the HTML — Phase 6 data still
+    # extracted by the pipeline and persisted in report.json under
+    # "consensus_claims". Toggle this back to the original expression to
+    # surface the panel again. Helper kept for that case + downstream tools.
+    _ = _claims_panel_html  # silence unused-import linter
+    claims_panel_html = ""
 
     frames = [r[0] for r in results]
     responses = [r[1] for r in results]
