@@ -1531,7 +1531,7 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
   }}
   .hero-quote .mark{{
     display: inline-flex; align-items: center; gap: 8px;
-    font-family: var(--mono); font-size: 10px;
+    font-family: var(--mono); font-size: 11px;
     color: var(--on-dark-78);
     text-transform: uppercase; letter-spacing: 0.08em;
     margin-bottom: 8px;
@@ -1557,7 +1557,7 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
   }}
   .hero-q em{{ font-style: italic; color: var(--chartreuse); }}
   .hero-quote .cite{{
-    font-family: var(--mono); font-size: 9.5px;
+    font-family: var(--mono); font-size: 11px;
     color: var(--on-dark-62);
     letter-spacing: 0.02em;
     text-transform: uppercase;
@@ -1593,7 +1593,7 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
   .sec-eyebrow .n{{
     background: var(--midnight-navy); color: var(--pure);
     padding: 2px 7px; border-radius: 9999px;
-    font-size: 10.5px; letter-spacing: 0.06em;
+    font-size: 11.5px; letter-spacing: 0.06em;
   }}
   .sec-head h2{{
     margin: 0;
@@ -1648,7 +1648,7 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
   .map-top .meta{{
     font-family: var(--mono); font-size: 12px; color: var(--storm);
   }}
-  .legend-row{{ display:flex; gap: 16px; align-items: center; font-size: 13px; color: var(--storm); }}
+  .legend-row{{ display:flex; gap: 16px; align-items: center; font-size: 14px; color: var(--storm); }}
   .legend-row .ld{{
     display: inline-block; width: 9px; height: 9px;
     border-radius: 9999px; margin-right: 7px; transform: translateY(-1px);
@@ -1695,7 +1695,7 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
   }}
   .map-foot .cell .sub{{
     margin-top: 4px;
-    font-size: 13px; color: var(--storm);
+    font-size: 14px; color: var(--storm);
   }}
 
   /* Consensus card (navy-themed) */
@@ -1823,7 +1823,7 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
     font-family: var(--sans);
   }}
   .meta-cell-axis{{
-    font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.06em;
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.06em;
     text-transform: uppercase; color: var(--storm); margin-bottom: 4px;
   }}
   .meta-cell-value{{
@@ -1839,7 +1839,7 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
   .meta-cell-warn .meta-cell-value{{ color: var(--midnight-navy); }}
   .meta-cell-stop{{  background: rgba(200,40,40,0.08); border-color: rgba(200,40,40,0.28); }}
   .meta-cell-stop .meta-cell-value{{ color: #b32424; }}
-  .meta-reasoning{{ font-size: 14px; line-height: 1.55; color: var(--storm); font-family: var(--sans); }}
+  .meta-reasoning{{ font-size: 15px; line-height: 1.55; color: var(--storm); font-family: var(--sans); }}
   .meta-reasoning p{{ margin: 0 0 10px; }}
   .meta-reasoning p:last-child{{ margin-bottom: 0; }}
   [data-theme="dark"] .meta-card{{ background: var(--surface-glass-08); border-color: var(--on-dark-border-strong); }}
@@ -1999,12 +1999,12 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
   .informed-top{{ margin-bottom: 14px; }}
   .informed-tag{{
     display: inline-block; padding: 2px 8px; margin-bottom: 6px;
-    font-size: 10px; font-family: var(--mono); letter-spacing: 0.08em;
+    font-size: 11px; font-family: var(--mono); letter-spacing: 0.08em;
     text-transform: uppercase; color: var(--midnight-navy);
     background: var(--chartreuse); border-radius: 999px;
   }}
   .informed-top h3{{ margin: 0 0 4px; font-family: var(--serif); font-size: 22px; font-weight: 500; color: var(--midnight-navy); }}
-  .informed-sub{{ margin: 0; font-size: 13px; color: var(--storm); font-family: var(--sans); }}
+  .informed-sub{{ margin: 0; font-size: 14px; color: var(--storm); font-family: var(--sans); }}
   .informed-body{{ font-family: var(--sans); }}
   .informed-body p{{ margin: 0 0 12px; line-height: 1.55; color: var(--midnight-navy); }}
   .informed-grid{{
@@ -2027,7 +2027,7 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
     font-size: 17px; letter-spacing: -0.09px;
     color: var(--midnight-navy);
   }}
-  .informed-list{{ margin: 0; padding-left: 16px; font-size: 13px; line-height: 1.45; color: var(--midnight-navy); }}
+  .informed-list{{ margin: 0; padding-left: 16px; font-size: 14px; line-height: 1.45; color: var(--midnight-navy); }}
   .informed-list li{{ margin-bottom: 6px; }}
   .informed-list.discarded li{{ color: var(--storm); text-decoration: line-through; opacity: 0.75; }}
   @media (max-width: 720px){{ .informed-grid{{ grid-template-columns: 1fr; }} }}
@@ -2050,7 +2050,7 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
     font-family: var(--sans);
   }}
   .claims-head h3{{ margin: 0 0 4px; font-family: var(--serif); font-size: 20px; font-weight: 500; color: var(--midnight-navy); }}
-  .claims-sub{{ margin: 0 0 12px; font-size: 13px; color: var(--storm); }}
+  .claims-sub{{ margin: 0 0 12px; font-size: 14px; color: var(--storm); }}
   .claims-grid{{
     display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;
   }}
@@ -2062,12 +2062,12 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
   }}
   .claim-head{{ display: flex; gap: 8px; align-items: center; justify-content: space-between; }}
   .claim-type{{
-    font-size: 10px; font-family: var(--mono); text-transform: uppercase;
+    font-size: 11px; font-family: var(--mono); text-transform: uppercase;
     letter-spacing: 0.06em; color: var(--storm);
     padding: 2px 6px; border: 1px solid var(--border-subtle); border-radius: 999px;
   }}
   .claim-strength{{
-    font-size: 10px; font-family: var(--mono); text-transform: uppercase;
+    font-size: 11px; font-family: var(--mono); text-transform: uppercase;
     letter-spacing: 0.06em; padding: 2px 8px; border-radius: 999px;
     white-space: nowrap;
   }}
@@ -2142,7 +2142,7 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
     color: var(--midnight-navy);
   }}
   .f-name .f-mark{{
-    font-family: var(--mono); font-size: 9.5px; font-weight: 500;
+    font-family: var(--mono); font-size: 11px; font-weight: 500;
     color: var(--midnight-navy);
     background: var(--chartreuse);
     text-transform: uppercase; letter-spacing: 0.06em;
@@ -2173,7 +2173,7 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
     border-radius: 9999px;
   }}
   .f-d{{
-    font-family: var(--mono); font-size: 13px;
+    font-family: var(--mono); font-size: 14px;
     color: var(--midnight-navy);
     text-align: right;
     font-variant-numeric: tabular-nums;
@@ -2285,7 +2285,7 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
   .f-name-text{{ display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }}
   .frame-model-chip{{
     display: inline-block; padding: 2px 8px;
-    font-size: 10px; font-family: var(--mono); letter-spacing: 0.04em;
+    font-size: 11px; font-family: var(--mono); letter-spacing: 0.04em;
     border-radius: 999px;
   }}
   .frame-model-anthropic{{ background: rgba(27,37,64,0.08); color: var(--midnight-navy); }}
@@ -2362,7 +2362,7 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
   }}
   .guide-panel .kicker{{
     font-family: var(--mono);
-    font-size: 10.5px;
+    font-size: 11.5px;
     letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--storm);
@@ -2399,7 +2399,7 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
     position: absolute;
     left: 0; top: 12px;
     font-family: var(--mono);
-    font-size: 10.5px;
+    font-size: 11.5px;
     color: var(--storm);
     letter-spacing: 0.06em;
   }}
@@ -2408,7 +2408,7 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
     margin: 0 0 12px;
     font-family: var(--serif);
     font-style: italic;
-    font-size: 13px;
+    font-size: 14px;
     line-height: 1.45;
     color: var(--storm);
   }}
@@ -2583,7 +2583,7 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
     .frames-head{{ display: none; }}
     .frame-row{{ grid-template-columns: 40px 1fr 80px 16px; row-gap: 4px; }}
     .frame-row .f-bar{{ display: none; }}
-    .frame-row .f-lean{{ grid-column: 2; grid-row: 2; font-size: 13px; max-width: none; }}
+    .frame-row .f-lean{{ grid-column: 2; grid-row: 2; font-size: 14px; max-width: none; }}
     .f-body{{ padding: 4px 24px 22px 24px; }}
     .tenth-top{{ grid-template-columns: 1fr; }}
     .tenth-d-stat{{ text-align: left; }}
