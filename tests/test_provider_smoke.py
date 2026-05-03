@@ -13,7 +13,9 @@ from henge.providers import CompletionRequest, complete
 
 def _is_real_key(name: str) -> bool:
     val = os.getenv(name, "")
-    return bool(val) and not val.startswith(("sk-test", "test-", "stub"))
+    if not val:
+        return False
+    return "test" not in val.lower() and "stub" not in val.lower()
 
 
 _HAS_ANTHROPIC = _is_real_key("ANTHROPIC_API_KEY")
