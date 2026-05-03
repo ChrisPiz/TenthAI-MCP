@@ -11,8 +11,13 @@ import pytest
 
 from henge.providers import CompletionRequest, complete
 
-_HAS_ANTHROPIC = bool(os.getenv("ANTHROPIC_API_KEY"))
-_HAS_OPENAI = bool(os.getenv("OPENAI_API_KEY"))
+def _is_real_key(name: str) -> bool:
+    val = os.getenv(name, "")
+    return bool(val) and not val.startswith(("sk-test", "test-", "stub"))
+
+
+_HAS_ANTHROPIC = _is_real_key("ANTHROPIC_API_KEY")
+_HAS_OPENAI = _is_real_key("OPENAI_API_KEY")
 
 
 @pytest.mark.asyncio
