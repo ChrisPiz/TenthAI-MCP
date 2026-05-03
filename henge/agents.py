@@ -88,70 +88,6 @@ TENTH_MAX_TOKENS = 6000   # 5-7 paragraphs for tenth-man (more cognitively deman
 # variance — see WHITEPAPER.md "Pre-registered runtime decisions".
 TEMPERATURE = 0
 
-# Reasoning-tier models (e.g. Opus 4.7 with extended thinking enabled by
-# default) reject the ``temperature`` parameter outright. We omit it for
-# those models and rely on the model's built-in determinism for the
-# tenth-man dissent. Sonnet 4.6 and Haiku 4.5 still accept temperature=0.
-# Add models to this set as Anthropic ships new reasoning models that
-# refuse temperature; the runtime fallback below will also catch unknown
-# cases gracefully.
-MODELS_WITHOUT_TEMPERATURE = {OPUS}
-
-
-def _extract_usage(msg, model):
-    """Read token counts from an Anthropic message. Tolerant to mock objects.
-
-    Real Anthropic responses always populate ``usage``. Tests may stub messages
-    without it; in that case we record zeros so cost accounting still works.
-    """
-    usage = getattr(msg, "usage", None)
-    return {
-        "model": model,
-        "input_tokens": int(getattr(usage, "input_tokens", 0) or 0),
-        "output_tokens": int(getattr(usage, "output_tokens", 0) or 0),
-    }
-
-
-async def _call_anthropic(client, model, system, user, max_tokens, temperature=TEMPERATURE):
-    """Run a single Anthropic call. Returns ``(text, usage_dict)``.
-
-    Usage dict: ``{"model": ..., "input_tokens": int, "output_tokens": int}``.
-
-    ``temperature`` defaults to the pre-registered ``TEMPERATURE = 0`` so any
-    caller that does not opt in still gets reproducible runs. K-runs mode
-    (server.decide(k_runs=K, run_temperature=T)) overrides per call.
-
-    Models in ``MODELS_WITHOUT_TEMPERATURE`` reject the parameter (reasoning-
-    tier with mandatory extended thinking) — we omit it for those. Any other
-    model that surfaces a temperature-related API error triggers a one-shot
-    retry without the parameter so we degrade gracefully when Anthropic adds
-    new reasoning models without us shipping a code update.
-    """
-    base_kwargs = {
-        "model": model,
-        "max_tokens": max_tokens,
-        "system": system,
-        "messages": [{"role": "user", "content": user}],
-    }
-
-    if model in MODELS_WITHOUT_TEMPERATURE:
-        msg = await client.messages.create(**base_kwargs)
-    else:
-        try:
-            msg = await client.messages.create(**base_kwargs, temperature=temperature)
-        except Exception as exc:
-            err = str(exc).lower()
-            temperature_rejected = any(
-                kw in err
-                for kw in ("temperature", "extended thinking", "thinking is enabled")
-            )
-            if not temperature_rejected:
-                raise
-            msg = await client.messages.create(**base_kwargs)
-
-    return msg.content[0].text, _extract_usage(msg, model)
-
-
 async def run_agent(frame, question, context=None, temperature=TEMPERATURE):
     """Run one cognitive frame via its assigned model. Returns (text, usage_dict).
 
@@ -179,28 +115,6 @@ async def run_agent(frame, question, context=None, temperature=TEMPERATURE):
         "output_tokens": resp.output_tokens,
     }
     return resp.text, usage
-
-
-# Legacy v0.5 single-tenth-man path. Replaced in Phase 5 by run_tenth_man_blind
-# (Opus, sees no advisors) + run_tenth_man_informed (gpt-5, sees the 9 + blind).
-# Kept here as dead code until Phase 8 schema cleanup; do not call from run_agents.
-async def run_tenth_man(client, successful_frames, question, temperature=TEMPERATURE):
-    """Receives only successful frame responses, returns ``(text, usage_dict)``.
-
-    successful_frames: list of (frame_name, response_text) tuples.
-    """
-    consensus_block = "\n\n".join(
-        f"### Advisor {i+1} — {frame}\n{resp}"
-        for i, (frame, resp) in enumerate(successful_frames)
-    )
-    user = (
-        f"Original question:\n{question}\n\n"
-        f"The following analyses converge on a consensus. "
-        f"Your job: assume they are ALL wrong and build the strongest, most coherent counter-argument possible. "
-        f"Steel-man the dissent, never straw-man.\n\n"
-        f"{consensus_block}"
-    )
-    return await _call_anthropic(client, OPUS, PROMPTS[TENTH_MAN], user, TENTH_MAX_TOKENS, temperature)
 
 
 async def run_agents(question, context=None, temperature=TEMPERATURE):
