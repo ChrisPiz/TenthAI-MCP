@@ -568,30 +568,64 @@ def _claims_panel_html(claims_list, locale: str = "es") -> str:
         "unknown":      "?",
     }
 
+    # 9 advisors in canonical order — used for the support strip
+    from henge.config.frame_assignment import FRAME_MODEL_MAP
+    canonical_frames = list(FRAME_MODEL_MAP.keys())
+    frame_short = {  # 3-letter abbreviation for tiny dot label
+        "empirical":        "EMP",
+        "historical":       "HIS",
+        "first-principles": "1ST",
+        "analogical":       "ANA",
+        "systemic":         "SYS",
+        "ethical":          "ETH",
+        "soft-contrarian":  "CON",
+        "radical-optimist": "OPT",
+        "pre-mortem":       "PRE",
+    }
+
+    def _normalize(name: str) -> str:
+        # Server may emit "empirical" or "Advisor 1 — empirical" — normalize.
+        n = str(name).strip().lower()
+        if "—" in n:
+            n = n.split("—", 1)[1].strip()
+        return n
+
     items_html = []
     for c in claims_list:
         text = html_mod.escape(str(c.get("claim_text", "")).strip())
         ctype = c.get("claim_type", "unknown")
         strength = c.get("support_strength", "unsupported")
         s_text, s_class = strength_label.get(strength, ("?", "unsupported"))
-        sup = c.get("supporting_frames") or []
-        con = c.get("contesting_frames") or []
-        sup_n = len(sup)
-        sup_names = ", ".join(html_mod.escape(s) for s in sup) if sup else none_label
-        con_names = ", ".join(html_mod.escape(s) for s in con) if con else none_label
+        sup = {_normalize(x) for x in (c.get("supporting_frames") or [])}
+        con = {_normalize(x) for x in (c.get("contesting_frames") or [])}
+        sup_n = sum(1 for f in canonical_frames if f in sup)
+
+        # Build the 9-dot support strip
+        dots = []
+        for f in canonical_frames:
+            if f in con:
+                state = "contest"
+            elif f in sup:
+                state = "support"
+            else:
+                state = "neutral"
+            dots.append(
+                f'<span class="claim-dot claim-dot-{state}" title="{html_mod.escape(f)}">'
+                f'{frame_short.get(f, "?")}</span>'
+            )
+        strip_html = f'<div class="claim-strip">{"".join(dots)}</div>'
 
         items_html.append(
-            f'<li class="claim-item claim-{html_mod.escape(s_class)}">'
-            f'<div class="claim-row1">'
+            f'<article class="claim-card claim-{html_mod.escape(s_class)}">'
+            f'<header class="claim-head">'
             f'<span class="claim-type">{html_mod.escape(type_label.get(ctype, "?"))}</span>'
-            f'<span class="claim-strength claim-strength-{html_mod.escape(s_class)}">{html_mod.escape(s_text)}</span>'
-            f'</div>'
+            f'<span class="claim-strength claim-strength-{html_mod.escape(s_class)}">'
+            f'{sup_n}/9 · {html_mod.escape(s_text)}'
+            f'</span>'
+            f'</header>'
             f'<p class="claim-text">{text}</p>'
-            f'<div class="claim-meta">'
-            f'<span class="claim-support"><b>{html_mod.escape(sup_label)}</b> ({sup_n}/9): {sup_names}</span>'
-            f'<span class="claim-contest"><b>{html_mod.escape(con_label)}:</b> {con_names}</span>'
-            f'</div>'
-            f'</li>'
+            f'{strip_html}'
+            f'</article>'
         )
 
     return (
@@ -600,7 +634,7 @@ def _claims_panel_html(claims_list, locale: str = "es") -> str:
         f'    <h3>{html_mod.escape(title)}</h3>'
         f'    <p class="claims-sub">{html_mod.escape(sub)}</p>'
         f'  </header>'
-        f'  <ul class="claims-list">{"".join(items_html)}</ul>'
+        f'  <div class="claims-grid">{"".join(items_html)}</div>'
         '</section>'
     )
 
@@ -1898,12 +1932,16 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
   }}
   .claims-head h3{{ margin: 0 0 4px; font-family: var(--serif); font-size: 20px; font-weight: 500; color: var(--midnight-navy); }}
   .claims-sub{{ margin: 0 0 12px; font-size: 13px; color: var(--storm); }}
-  .claims-list{{ list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }}
-  .claim-item{{
-    padding: 10px 14px; border: 1px solid var(--border-subtle); border-radius: 10px;
+  .claims-grid{{
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;
+  }}
+  @media (max-width: 820px){{ .claims-grid{{ grid-template-columns: 1fr; }} }}
+  .claim-card{{
+    display: flex; flex-direction: column; gap: 10px;
+    padding: 14px 16px; border: 1px solid var(--border-subtle); border-radius: 12px;
     background: white;
   }}
-  .claim-row1{{ display: flex; gap: 8px; align-items: center; margin-bottom: 6px; }}
+  .claim-head{{ display: flex; gap: 8px; align-items: center; justify-content: space-between; }}
   .claim-type{{
     font-size: 10px; font-family: var(--mono); text-transform: uppercase;
     letter-spacing: 0.06em; color: var(--storm);
@@ -1912,20 +1950,34 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
   .claim-strength{{
     font-size: 10px; font-family: var(--mono); text-transform: uppercase;
     letter-spacing: 0.06em; padding: 2px 8px; border-radius: 999px;
+    white-space: nowrap;
   }}
   .claim-strength-strong{{      background: rgba(0,150,80,0.12);   color: #047a47;  border: 1px solid rgba(0,150,80,0.30); }}
   .claim-strength-moderate{{    background: var(--chartreuse-14);  color: var(--midnight-navy); border: 1px solid var(--chartreuse-32); }}
   .claim-strength-weak{{        background: rgba(220,140,0,0.10);  color: #a36800;  border: 1px solid rgba(220,140,0,0.30); }}
   .claim-strength-unsupported{{ background: rgba(200,40,40,0.10);  color: #b32424;  border: 1px solid rgba(200,40,40,0.32); }}
-  .claim-text{{ margin: 0 0 8px; font-size: 14px; line-height: 1.5; color: var(--midnight-navy); }}
-  .claim-meta{{ display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--storm); }}
+  .claim-text{{ margin: 0; font-size: 14px; line-height: 1.5; color: var(--midnight-navy); }}
+  .claim-strip{{
+    display: grid; grid-template-columns: repeat(9, 1fr); gap: 4px;
+    margin-top: 2px;
+  }}
+  .claim-dot{{
+    display: flex; align-items: center; justify-content: center;
+    height: 22px; border-radius: 6px;
+    font-family: var(--mono); font-size: 9px; letter-spacing: 0.04em;
+    border: 1px solid var(--border-subtle);
+    cursor: default;
+  }}
+  .claim-dot-support{{ background: rgba(0,150,80,0.18);  color: #047a47;  border-color: rgba(0,150,80,0.40); font-weight: 600; }}
+  .claim-dot-contest{{ background: rgba(200,40,40,0.18); color: #b32424;  border-color: rgba(200,40,40,0.45); font-weight: 600; text-decoration: line-through; }}
+  .claim-dot-neutral{{ background: transparent;          color: var(--fog); border-color: var(--border-subtle); }}
   [data-theme="dark"] .claims-panel{{ background: var(--surface-glass-08); border-color: var(--on-dark-border-strong); }}
   [data-theme="dark"] .claims-head h3{{ color: var(--on-dark); }}
   [data-theme="dark"] .claims-sub{{ color: var(--on-dark-78); }}
-  [data-theme="dark"] .claim-item{{ background: rgba(0,0,0,0.20); border-color: var(--on-dark-border-strong); }}
+  [data-theme="dark"] .claim-card{{ background: rgba(0,0,0,0.20); border-color: var(--on-dark-border-strong); }}
   [data-theme="dark"] .claim-text{{ color: var(--on-dark-92); }}
-  [data-theme="dark"] .claim-meta{{ color: var(--on-dark-78); }}
   [data-theme="dark"] .claim-type{{ color: var(--on-dark-78); border-color: var(--on-dark-border-strong); }}
+  [data-theme="dark"] .claim-dot-neutral{{ color: var(--on-dark-32); border-color: var(--on-dark-border-strong); }}
 
   /* Frames table */
   .frames{{
