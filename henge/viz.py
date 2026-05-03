@@ -1317,6 +1317,10 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
     --deep-cosmos: #001033;
     --chartreuse: #d0f100;
     --ice-veil: #e0f6ff;
+    --amber-veil: #fff3e6;
+    --amber:      #d97a1c;
+    --amber-soft: rgba(217,122,28,0.12);
+    --amber-rule: rgba(217,122,28,0.32);
     --ghost-canvas: #f8f9fc;
     --pure: #ffffff;
     --ash: #7c8293;
@@ -1848,9 +1852,9 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
   [data-theme="dark"] .meta-cell-stop{{  background: rgba(200,40,40,0.18); border-color: rgba(200,40,40,0.40); }}
   [data-theme="dark"] .meta-reasoning{{ color: var(--on-dark-92); }}
 
-  /* Tenth-man feature card */
+  /* Tenth-man feature card — amber-themed counterpoint to the celeste consensus */
   .tenth-card{{
-    background: var(--pure);
+    background: linear-gradient(180deg, var(--amber-veil) 0%, var(--pure) 100%);
     border-radius: 20px;
     box-shadow: var(--shadow-xl);
     overflow: hidden;
@@ -1861,17 +1865,18 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
     display: grid; grid-template-columns: 1fr auto;
     align-items: start; gap: 24px;
     padding: 24px 28px;
-    border-bottom: 1px solid var(--border-subtle);
+    border-bottom: 1px solid var(--amber-rule);
   }}
   .tenth-tag{{
     display: inline-flex; align-items: center; gap: 8px;
-    background: var(--midnight-navy); color: var(--chartreuse);
+    background: var(--midnight-navy); color: var(--amber);
     border-radius: 9999px; padding: 4px 10px;
     font-family: var(--mono); font-size: 11px;
     text-transform: uppercase; letter-spacing: 0.06em;
     margin-bottom: 12px;
   }}
-  .tenth-tag .d{{ width: 5px; height: 5px; border-radius: 9999px; background: var(--chartreuse); }}
+  .tenth-tag .d{{ width: 5px; height: 5px; border-radius: 9999px; background: var(--amber); }}
+  .tenth-top h3 em{{ color: var(--amber); }}
   .tenth-lead{{
     margin: 0 0 8px;
     font-size: 14px;
@@ -1886,14 +1891,14 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
     text-wrap: balance;
     max-width: 24ch;
   }}
-  .tenth-top h3 em{{ font-style: italic; }}
+  .tenth-top h3 em{{ font-style: italic; color: var(--amber); }}
 
   .tenth-d-stat{{
     text-align: right;
-    background: var(--ghost-canvas);
+    background: var(--amber-soft);
     border-radius: 16px;
     padding: 14px 18px;
-    box-shadow: var(--ring-subtle);
+    box-shadow: 0 0 0 1px var(--amber-rule);
     font-family: var(--mono); font-size: 11px;
     color: var(--storm);
     text-transform: uppercase; letter-spacing: 0.04em;
@@ -2445,6 +2450,10 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
     --ghost-canvas:  #0b1124;
     --pure:          #14192a;
     --ice-veil:      #0d1734;
+    --amber-veil:    #1f160b;
+    --amber:         #ff9a4d;
+    --amber-soft:    rgba(255,154,77,0.16);
+    --amber-rule:    rgba(255,154,77,0.36);
     --midnight-navy: #e6eefb;     /* primary text only */
     --ash:           #6b7184;
     --storm:         #b1b5c0;
@@ -2472,7 +2481,7 @@ def render(question, results, coords_2d, distances, provider, model, cost_estima
   [data-theme="dark"] .logo .mk         {{ background: #1b2540; color: var(--chartreuse); }}
   [data-theme="dark"] .sec-eyebrow .n   {{ background: #1b2540; color: var(--on-dark); }}
   [data-theme="dark"] .consensus-tag    {{ background: #1b2540; color: var(--on-dark); }}
-  [data-theme="dark"] .tenth-tag        {{ background: #1b2540; color: var(--chartreuse); }}
+  [data-theme="dark"] .tenth-tag        {{ background: #1b2540; color: var(--amber); }}
   [data-theme="dark"] .guide-toggle     {{ background: #1b2540; color: var(--chartreuse);
                                            box-shadow: rgba(0,0,0,0.55) 0 1px 3px 0,
                                                        rgba(0,0,0,0.65) 0 12px 24px -12px,
